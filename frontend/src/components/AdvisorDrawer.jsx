@@ -179,6 +179,18 @@ export default function AdvisorDrawer({ isOpen, onClose, profile, currentStep = 
         onEscape={onClose}
         disableAutoFocus={true}
       />
+      {/* Frosted Glass Backdrop */}
+      <div 
+        onClick={onClose}
+        style={{
+          position: 'fixed',
+          inset: 0,
+          background: 'rgba(6, 11, 20, 0.45)',
+          backdropFilter: 'blur(6px)',
+          WebkitBackdropFilter: 'blur(6px)',
+          zIndex: 1299
+        }}
+      />
       <div 
         ref={drawerRef}
         id="ai-assistant"
@@ -195,7 +207,7 @@ export default function AdvisorDrawer({ isOpen, onClose, profile, currentStep = 
         maxWidth: '100vw',
         background: 'var(--bg-card)',
         borderLeft: '1px solid var(--border-architectural)',
-        boxShadow: '-12px 0 40px rgba(0, 0, 0, 0.25)',
+        boxShadow: '-12px 0 40px rgba(0, 0, 0, 0.35)',
         zIndex: 1300,
         display: 'flex',
         flexDirection: 'column',

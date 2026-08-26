@@ -112,19 +112,27 @@ export default function MonteCarloChart({ investmentData, years }) {
             <YAxis stroke="var(--text-secondary)" tickFormatter={(val) => `€${(val/1000).toFixed(0)}k`} fontSize={11} />
             <Tooltip 
               formatter={(val, name) => [`€${Number(val).toLocaleString()}`, name]}
-              contentStyle={{ background: 'var(--bg-card)', color: 'var(--text-primary)', borderRadius: '8px', border: '1px solid var(--border-architectural)', fontSize: '0.82rem' }}
+              contentStyle={{ 
+                background: 'rgba(10, 18, 30, 0.92)', 
+                backdropFilter: 'blur(16px)',
+                color: '#ffffff', 
+                borderRadius: '10px', 
+                border: '1px solid rgba(197, 160, 89, 0.4)', 
+                fontSize: '0.82rem',
+                boxShadow: '0 8px 32px rgba(0, 0, 0, 0.35)'
+              }}
             />
             {visibleBands.p90 && (
-              <Area type="monotone" dataKey="p90_bull" stroke="var(--maison-gold)" strokeWidth={2} fill="url(#p90Grad2)" name="P90 (Bull Market)" isAnimationActive={false} />
+              <Area type="monotone" dataKey="p90_bull" stroke="#c5a059" strokeWidth={2.2} fill="url(#p90Grad2)" name="P90 (Bull Market)" isAnimationActive={false} />
             )}
             {visibleBands.p50 && (
-              <Area type="monotone" dataKey="p50_median" stroke="var(--text-primary)" strokeWidth={3} fill="url(#p50Grad2)" name="P50 (Median Base)" isAnimationActive={false} />
+              <Area type="monotone" dataKey="p50_median" stroke="#38bdf8" strokeWidth={3} fill="url(#p50Grad2)" name="P50 (Median Base)" isAnimationActive={false} />
             )}
             {visibleBands.p10 && (
-              <Area type="monotone" dataKey="p10_bear" stroke="var(--accent-coral)" strokeWidth={1.5} strokeDasharray="3 3" fill="url(#p10Grad2)" name="P10 (Bear Floor)" isAnimationActive={false} />
+              <Area type="monotone" dataKey="p10_bear" stroke="#f87171" strokeWidth={1.75} strokeDasharray="4 4" fill="url(#p10Grad2)" name="P10 (Bear Floor)" isAnimationActive={false} />
             )}
             {visibleBands.contributions && (
-              <Area type="monotone" dataKey="contributions" stroke="var(--text-secondary)" strokeWidth={1.5} fill="var(--bg-card-subtle)" name="Your Capital Principal" isAnimationActive={false} />
+              <Area type="monotone" dataKey="contributions" stroke="#94a3b8" strokeWidth={1.5} fill="transparent" name="Your Capital Principal" isAnimationActive={false} />
             )}
           </AreaChart>
         </ResponsiveContainer>

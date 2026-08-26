@@ -96,14 +96,22 @@ export default function HistoricalBacktestChart() {
             <YAxis stroke="var(--text-secondary)" tickFormatter={(v) => `€${v}`} fontSize={11} />
             <Tooltip
               formatter={(val, name) => [`€${val}`, name]}
-              contentStyle={{ background: 'var(--bg-card)', color: 'var(--text-primary)', borderRadius: '8px', border: '1px solid var(--border-architectural)', fontSize: '0.82rem', boxShadow: 'var(--shadow-elevated)' }}
+              contentStyle={{ 
+                background: 'rgba(10, 18, 30, 0.92)', 
+                backdropFilter: 'blur(16px)',
+                color: '#ffffff', 
+                borderRadius: '10px', 
+                border: '1px solid rgba(197, 160, 89, 0.4)', 
+                fontSize: '0.82rem',
+                boxShadow: '0 8px 32px rgba(0, 0, 0, 0.35)'
+              }}
             />
             <Legend />
             {(selectedAsset === 'all' || selectedAsset === 'msciWorld') && (
               <Line type="monotone" dataKey="msciWorld" name="MSCI World" stroke="#38bdf8" strokeWidth={2.5} dot={false} />
             )}
             {(selectedAsset === 'all' || selectedAsset === 'balanced') && (
-              <Line type="monotone" dataKey="balanced" name="70/30 Balanced" stroke="var(--maison-gold)" strokeWidth={2.5} dot={false} />
+              <Line type="monotone" dataKey="balanced" name="70/30 Balanced" stroke="#c5a059" strokeWidth={2.5} dot={false} />
             )}
             {(selectedAsset === 'all' || selectedAsset === 'bonds') && (
               <Line type="monotone" dataKey="bonds" name="EU Gov Bonds" stroke="#34d399" strokeWidth={1.8} strokeDasharray="4 4" dot={false} />

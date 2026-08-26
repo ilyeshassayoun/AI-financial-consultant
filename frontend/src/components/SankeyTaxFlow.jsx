@@ -104,7 +104,15 @@ export default function SankeyTaxFlow({ taxData, profile, gross: propGross, taxe
           >
             <Tooltip
               formatter={(val) => [formatEUR(val), 'Volume']}
-              contentStyle={{ background: 'var(--bg-card)', color: 'var(--text-primary)', borderRadius: '8px', border: '1px solid var(--border-architectural)', fontSize: '0.82rem' }}
+              contentStyle={{ 
+                background: 'rgba(10, 18, 30, 0.92)', 
+                backdropFilter: 'blur(16px)',
+                color: '#ffffff', 
+                borderRadius: '10px', 
+                border: '1px solid rgba(197, 160, 89, 0.4)', 
+                fontSize: '0.82rem',
+                boxShadow: '0 8px 32px rgba(0, 0, 0, 0.35)'
+              }}
             />
           </Sankey>
         </ResponsiveContainer>
