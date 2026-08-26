@@ -1,0 +1,73 @@
+.floatingButton {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  z-index: 1500;
+  height: 42px;
+  padding: 0 16px 0 12px;
+  border-radius: 24px;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: linear-gradient(135deg, var(--maison-pine-deep) 0%, var(--maison-obsidian) 100%);
+  color: #ffffff;
+  border: 1.2px solid var(--maison-gold);
+  cursor: pointer;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4), 0 0 14px rgba(197, 160, 89, 0.25);
+  transition: all 0.24s var(--ease-luxury);
+  backdrop-filter: blur(10px);
+}
+
+.floatingButton:hover {
+  transform: translateY(-2px) scale(1.03);
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.5), 0 0 24px rgba(197, 160, 89, 0.4);
+  border-color: var(--maison-gold-border);
+}
+
+.label {
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  color: #ffffff;
+  white-space: nowrap;
+}
+
+.sparkleIcon {
+  opacity: 0.85;
+  transition: transform 0.2s ease;
+}
+
+.floatingButton:hover .sparkleIcon {
+  transform: rotate(15deg) scale(1.15);
+}
+
+.iconWrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.liveDot {
+  position: absolute;
+  top: -2px;
+  right: -2px;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--accent-emerald, #059669);
+  box-shadow: 0 0 6px var(--accent-emerald, #059669);
+}
+
+@media (max-width: 640px) {
+  .label, .sparkleIcon {
+    display: none;
+  }
+  .floatingButton {
+    width: 44px;
+    height: 44px;
+    padding: 0;
+    justify-content: center;
+    border-radius: 50%;
+  }
+}

@@ -1,0 +1,59 @@
+from pydantic import BaseModel, ConfigDict
+from typing import List, Optional, Dict, Any
+from .tax import TaxResponse, TaxLabResponse
+from .investment import InvestmentResponse, InvestmentLabResponse
+from .insurance import InsuranceLabResponse
+from .retirement import RetirementLabResponse, OptimizationResponse
+
+
+class AdvisoryPlanAction(BaseModel):
+    model_config = ConfigDict(allow_inf_nan=False, extra="allow")
+    phase: str
+    order: int
+    title: str
+    description: str
+    rationale: str
+    reference: str
+
+
+class AdvisoryPlan(BaseModel):
+    model_config = ConfigDict(allow_inf_nan=False, extra="allow")
+    liquidity_reserve: Optional[Dict[str, Any]] = None
+    debt_repayment: Optional[Dict[str, Any]] = None
+    insurance_gaps: List[AdvisoryPlanAction]
+    tax_optimizations: List[AdvisoryPlanAction]
+    investment_plan: List[AdvisoryPlanAction]
+    retirement_plan: List[AdvisoryPlanAction]
+
+
+class FullAnalysisResponse(BaseModel):
+    model_config = ConfigDict(allow_inf_nan=False, extra="allow")
+    tax: TaxResponse
+    tax_lab: TaxLabResponse
+    investment: InvestmentResponse
+    investment_lab: InvestmentLabResponse
+    insurance: List[Dict[str, Any]]
+    insurance_lab: InsuranceLabResponse
+    retirement: RetirementLabResponse
+    retirement_lab: RetirementLabResponse
+    optimization: OptimizationResponse
+    advisory_plan: AdvisoryPlan
+
+
+class ConsultantInsightResponse(BaseModel):
+    model_config = ConfigDict(allow_inf_nan=False, extra="allow")
+    insight: str
+    analysis: FullAnalysisResponse
+
+
+class ChatResponse(BaseModel):
+    model_config = ConfigDict(allow_inf_nan=False, extra="allow")
+    reply: str
+
+
+class HealthResponse(BaseModel):
+    model_config = ConfigDict(allow_inf_nan=False, extra="allow")
+    status: str
+    service: str
+    version: str
+    model_year: int

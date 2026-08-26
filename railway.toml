@@ -1,0 +1,5 @@
+﻿# Railway deployment configuration
+# See SETUP.md for detailed deployment instructions
+
+[build]
+buildCommand = "echo 'Monorepo: deploy backend and frontend as separate services'"

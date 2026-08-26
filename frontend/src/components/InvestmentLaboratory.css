@@ -1,0 +1,759 @@
+/* Universal Investment Laboratory Journey Architecture */
+.investment-journey {
+  color: var(--text-primary);
+  display: grid;
+  gap: 24px;
+  max-width: 1180px;
+  margin: 0 auto;
+  scroll-margin-top: 170px;
+  width: 100%;
+}
+
+.investment-hero {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 32px;
+  padding: 28px 0 4px;
+}
+
+.investment-hero > div:first-child {
+  max-width: 760px;
+}
+
+.investment-eyebrow {
+  color: var(--maison-gold);
+  font-size: 0.82rem;
+  font-weight: 750;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.investment-hero h1 {
+  font-size: clamp(2rem, 4vw, 3.35rem);
+  line-height: 1.04;
+  margin: 12px 0 14px;
+  max-width: 780px;
+  color: var(--text-primary);
+}
+
+.investment-hero p {
+  color: var(--text-secondary);
+  font-size: 1.05rem;
+  line-height: 1.7;
+  margin: 0;
+  max-width: 720px;
+}
+
+.investment-readiness {
+  align-items: center;
+  background: var(--bg-card-subtle);
+  border: 1px solid var(--border-architectural);
+  border-radius: 14px;
+  display: flex;
+  flex: 0 0 auto;
+  gap: 12px;
+  padding: 14px 16px;
+}
+
+.investment-readiness span {
+  display: block;
+  font-size: 0.76rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.investment-readiness strong {
+  display: block;
+  font-size: 0.94rem;
+  margin-top: 3px;
+  color: var(--text-primary);
+}
+
+.investment-page {
+  animation: investment-page-in 0.42s cubic-bezier(0.16, 1, 0.3, 1);
+  display: grid;
+  gap: 24px;
+  min-height: 550px;
+}
+
+@keyframes investment-page-in {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.investment-page-heading {
+  align-items: center;
+  display: flex;
+  gap: 13px;
+}
+
+.investment-page-heading > span {
+  align-items: center;
+  background: var(--maison-obsidian);
+  border-radius: 12px;
+  color: var(--maison-gold);
+  display: flex;
+  height: 44px;
+  justify-content: center;
+  width: 44px;
+}
+
+.investment-page-heading small {
+  color: var(--maison-gold);
+  font-size: 0.76rem;
+  font-weight: 750;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.investment-page-heading h2 {
+  font-size: 1.45rem;
+  margin: 2px 0;
+  color: var(--text-primary);
+}
+
+.investment-page-heading p {
+  color: var(--text-secondary);
+  margin: 0;
+}
+
+/* Universal Footer Navigation */
+.investment-footer-nav {
+  align-items: center;
+  border-top: 1px solid var(--border-architectural);
+  display: flex;
+  justify-content: space-between;
+  padding-top: 20px;
+}
+
+.investment-footer-nav > span {
+  color: var(--text-secondary);
+  font-size: 0.84rem;
+}
+
+.investment-primary-button, .investment-secondary-button {
+  align-items: center;
+  border-radius: 11px;
+  cursor: pointer;
+  display: inline-flex;
+  font: inherit;
+  font-size: 0.88rem;
+  font-weight: 750;
+  gap: 8px;
+  justify-content: center;
+  padding: 11px 16px;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.investment-primary-button {
+  background: var(--maison-obsidian);
+  border: 1px solid var(--border-architectural);
+  color: #fff;
+}
+
+.investment-secondary-button {
+  background: var(--bg-card-subtle);
+  border: 1px solid var(--border-architectural);
+  color: var(--text-primary);
+}
+
+.investment-primary-button:hover, .investment-secondary-button:hover {
+  box-shadow: var(--shadow-elevated);
+  transform: translateY(-1px);
+}
+
+/* Cards and Controls */
+.guide-intro {
+  display: grid;
+  grid-template-columns: 44px 1fr;
+  gap: 14px;
+  align-items: center;
+  margin-bottom: 20px;
+  padding: 16px 20px;
+  background: var(--bg-card-subtle);
+  border: 1px solid var(--border-architectural);
+  border-radius: 14px;
+}
+
+.guide-intro > svg {
+  padding: 10px;
+  width: 44px;
+  height: 44px;
+  box-sizing: border-box;
+  border-radius: 10px;
+  background: var(--maison-obsidian);
+  color: var(--maison-gold);
+}
+
+.guide-intro h3 {
+  margin: 0 0 3px;
+  font-size: 1.05rem;
+  color: var(--text-primary);
+}
+
+.guide-intro p {
+  margin: 0;
+  font-size: 0.82rem;
+  line-height: 1.5;
+  color: var(--text-secondary);
+}
+
+.guide-goal-layout {
+  display: grid;
+  grid-template-columns: minmax(280px, 0.75fr) minmax(0, 1.25fr);
+  gap: 18px;
+  align-items: stretch;
+}
+
+.investment-lab__controls {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  padding: 18px;
+  background: var(--bg-card);
+  border: 1px solid var(--border-architectural);
+  border-radius: 14px;
+}
+
+.investment-lab__controls label {
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-secondary);
+  font-weight: 800;
+}
+
+.investment-lab__controls label > div {
+  display: flex;
+  align-items: center;
+  margin-top: 6px;
+  background: var(--bg-card-subtle);
+  border: 1px solid var(--border-architectural);
+  border-radius: 8px;
+  padding: 0 10px;
+}
+
+.investment-lab__controls input {
+  width: 100%;
+  min-width: 0;
+  padding: 10px 4px;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  color: var(--text-primary);
+  font-weight: 800;
+  font-size: 0.95rem;
+}
+
+.investment-lab__controls span {
+  font-size: 0.76rem;
+  color: var(--text-secondary);
+}
+
+.guide-funding-chart {
+  min-width: 0;
+  padding: 20px;
+  background: var(--bg-card);
+  border: 1px solid var(--border-architectural);
+  border-radius: 16px;
+  box-shadow: var(--shadow-sm);
+}
+
+.guide-funding-chart > div:last-child {
+  height: 270px;
+}
+
+.guide-specialist-diagnostic {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 12px;
+  margin-top: 16px;
+}
+
+.guide-specialist-diagnostic > div {
+  padding: 18px;
+  background: var(--bg-card);
+  border: 1px solid var(--border-architectural);
+  border-radius: 14px;
+}
+
+.guide-specialist-diagnostic span {
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-secondary);
+}
+
+.guide-specialist-diagnostic strong {
+  margin: 5px 0;
+  font-size: 1.35rem;
+  color: var(--text-primary);
+  display: block;
+}
+
+.guide-specialist-diagnostic small {
+  font-size: 0.72rem;
+  color: var(--text-muted);
+}
+
+.guide-choice-group {
+  margin-bottom: 18px;
+  border: none;
+  padding: 0;
+}
+
+.guide-choice-group legend {
+  margin-bottom: 10px;
+  font-size: 0.85rem;
+  font-weight: 800;
+  color: var(--text-primary);
+}
+
+.guide-choice-group > div {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 10px;
+}
+
+.guide-choice-group button {
+  min-height: 80px;
+  padding: 14px;
+  display: grid;
+  grid-template-columns: 22px 1fr;
+  gap: 4px 10px;
+  border-radius: 13px;
+  border: 1px solid var(--border-architectural);
+  background: var(--bg-card);
+  color: var(--text-primary);
+  text-align: left;
+  cursor: pointer;
+  transition: transform 0.2s ease, border-color 0.2s ease;
+}
+
+.guide-choice-group button:hover {
+  transform: translateY(-2px);
+  border-color: var(--maison-gold);
+}
+
+.guide-choice-group button.is-active {
+  border-color: var(--maison-gold);
+  background: var(--bg-card-subtle);
+  box-shadow: inset 0 -2px 0 var(--maison-gold);
+}
+
+.guide-choice-group button i {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  border: 1px solid var(--border-architectural);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--maison-gold);
+}
+
+.guide-choice-group strong {
+  font-size: 0.82rem;
+  color: var(--text-primary);
+}
+
+.guide-choice-group small {
+  font-size: 0.7rem;
+  color: var(--text-secondary);
+}
+
+.guide-strategy-tabs {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 10px;
+  margin-bottom: 18px;
+}
+
+.guide-strategy-tabs button {
+  padding: 14px;
+  border: 1px solid var(--border-architectural);
+  border-radius: 12px;
+  background: var(--bg-card);
+  color: var(--text-primary);
+  text-align: left;
+  cursor: pointer;
+  transition: all 0.22s var(--ease-luxury);
+}
+
+.guide-strategy-tabs button:hover {
+  transform: translateY(-2px);
+  border-color: var(--maison-gold);
+}
+
+.guide-strategy-tabs button.is-active {
+  background: var(--maison-obsidian);
+  color: #fff;
+  border-color: var(--maison-gold);
+  box-shadow: 0 4px 14px rgba(197, 160, 89, 0.2);
+}
+
+.guide-strategy-tabs button.is-active strong {
+  color: #fff;
+}
+
+.guide-strategy-tabs button.is-active span {
+  color: var(--maison-gold);
+}
+
+.guide-strategy-tabs button strong {
+  font-size: 0.84rem;
+  display: block;
+  margin-top: 4px;
+}
+
+.guide-strategy-tabs button span {
+  font-size: 0.65rem;
+  color: var(--text-secondary);
+}
+
+.guide-strategy-analysis {
+  display: grid;
+  grid-template-columns: minmax(0, 1.15fr) minmax(280px, 0.85fr);
+  gap: 18px;
+}
+
+.guide-frontier, .guide-specialist-view {
+  padding: 22px;
+  border-radius: 16px;
+  border: 1px solid var(--border-architectural);
+}
+
+.guide-frontier {
+  background: var(--bg-card);
+}
+
+.guide-frontier > div:nth-child(2) {
+  height: 350px;
+}
+
+.guide-specialist-view {
+  background: var(--maison-obsidian);
+  color: #fff;
+  display: flex;
+  flex-direction: column;
+}
+
+.guide-specialist-view > span {
+  color: var(--maison-gold);
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.guide-specialist-view > h3 {
+  font-size: 1.5rem;
+  margin: 6px 0 10px;
+  color: #fff;
+}
+
+.guide-specialist-view > p {
+  color: var(--text-muted);
+  font-size: 0.82rem;
+  line-height: 1.55;
+  margin-bottom: 20px;
+}
+
+.guide-specialist-view > div {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.guide-specialist-view section {
+  padding: 14px;
+  background: rgba(255, 255, 255, 0.07);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 10px;
+}
+
+.guide-specialist-view section small {
+  color: var(--text-muted);
+  font-size: 0.68rem;
+  display: block;
+}
+
+.guide-specialist-view section strong {
+  color: #fff;
+  font-size: 1.1rem;
+  margin-top: 4px;
+  display: block;
+}
+
+.guide-specialist-view footer {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  margin-top: auto;
+  padding-top: 18px;
+  border-top: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+.guide-specialist-view footer svg {
+  color: var(--maison-gold);
+}
+
+.guide-specialist-view footer p {
+  margin: 0;
+  font-size: 0.72rem;
+  color: var(--text-muted);
+}
+
+.investment-lab__tabs {
+  display: flex;
+  gap: 8px;
+  margin: 0 0 16px;
+  border-bottom: 1px solid var(--border-architectural);
+  padding-bottom: 8px;
+}
+
+.investment-lab__tabs button {
+  padding: 8px 16px;
+  border-radius: 8px;
+  border: 1px solid var(--border-architectural);
+  background: var(--bg-card);
+  color: var(--text-secondary);
+  font-size: 0.8rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.investment-lab__tabs button.is-active {
+  background: var(--maison-obsidian);
+  color: #fff;
+  border-color: var(--maison-gold);
+}
+
+.lab-chart-card, .lab-instruments {
+  background: var(--bg-card);
+  border: 1px solid var(--border-architectural);
+  border-radius: 16px;
+  padding: 20px;
+}
+
+.lab-chart-title span {
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--maison-gold);
+}
+
+.lab-chart-title h2 {
+  font-size: 1.1rem;
+  margin: 4px 0 14px;
+  color: var(--text-primary);
+}
+
+.lab-instrument {
+  display: grid;
+  grid-template-columns: 46px 1fr auto;
+  gap: 12px;
+  padding: 13px;
+  border: 1px solid var(--border-architectural);
+  border-radius: 12px;
+  background: var(--bg-card-subtle);
+  margin-bottom: 8px;
+  align-items: center;
+}
+
+.lab-instrument__ticker {
+  display: grid;
+  place-items: center;
+  background: var(--maison-obsidian);
+  color: var(--maison-gold);
+  border: 1px solid var(--maison-gold-border);
+  border-radius: 8px;
+  font-size: 0.72rem;
+  font-weight: 900;
+  height: 36px;
+}
+
+.lab-instrument strong {
+  font-size: 0.85rem;
+  color: var(--text-primary);
+  display: block;
+}
+
+.lab-instrument span {
+  font-size: 0.7rem;
+  color: var(--text-secondary);
+}
+
+.lab-instrument p {
+  font-size: 0.74rem;
+  color: var(--text-muted);
+  margin: 3px 0 0;
+}
+
+.lab-donut-wrapper {
+  height: 240px;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.lab-donut-center {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-content: center;
+  text-align: center;
+  pointer-events: none;
+}
+
+.lab-donut-center strong {
+  font-size: 1.3rem;
+  color: var(--text-primary);
+}
+
+.lab-donut-center span {
+  font-size: 0.65rem;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+}
+
+.lab-allocation-list {
+  list-style: none;
+  padding: 0;
+  margin: 12px 0 0;
+  display: grid;
+  gap: 8px;
+}
+
+.lab-allocation-list li {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  gap: 10px;
+  align-items: center;
+  font-size: 0.8rem;
+  color: var(--text-primary);
+}
+
+.lab-allocation-list i {
+  width: 10px;
+  height: 10px;
+  border-radius: 3px;
+}
+
+/* IPS Document */
+.ips-document {
+  background: var(--bg-card);
+  border: 1px solid var(--border-architectural);
+  border-radius: 18px;
+  overflow: hidden;
+  box-shadow: var(--shadow-elevated);
+}
+
+.ips-header {
+  display: flex;
+  justify-content: space-between;
+  gap: 20px;
+  align-items: flex-start;
+  padding: 26px;
+  background: var(--maison-obsidian);
+  color: #fff;
+  border-bottom: 1px solid var(--border-architectural);
+}
+
+.ips-header span {
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--maison-gold);
+}
+
+.ips-header h3 {
+  margin: 6px 0 2px;
+  font-size: 1.75rem;
+  color: #fff;
+}
+
+.ips-header p {
+  margin: 0;
+  font-size: 0.78rem;
+  color: var(--text-muted);
+}
+
+.ips-section-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  padding: 20px;
+}
+
+.ips-section-grid article {
+  padding: 16px;
+  border: 1px solid var(--border-architectural);
+  border-radius: 12px;
+  background: var(--bg-card-subtle);
+}
+
+.ips-section-grid article > span {
+  font-size: 0.68rem;
+  text-transform: uppercase;
+  color: var(--maison-gold);
+  font-weight: 750;
+}
+
+.ips-section-grid h4 {
+  margin: 6px 0 4px;
+  font-size: 0.95rem;
+  color: var(--text-primary);
+}
+
+.ips-section-grid p {
+  margin: 0;
+  font-size: 0.76rem;
+  color: var(--text-secondary);
+  line-height: 1.5;
+}
+
+.ips-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  margin-top: 16px;
+}
+
+.ips-actions button {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 18px;
+  border-radius: 10px;
+  border: 1px solid var(--border-architectural);
+  background: var(--bg-card);
+  color: var(--text-primary);
+  font-size: 0.84rem;
+  font-weight: 750;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.ips-actions button.ips-print {
+  background: var(--maison-obsidian);
+  color: #fff;
+  border-color: var(--maison-gold);
+}
+
+@media (max-width: 800px) {
+  .investment-hero {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .guide-goal-layout, .guide-strategy-analysis, .ips-section-grid {
+    grid-template-columns: 1fr;
+  }
+}
+@media(max-width:1050px){.tax-outcome-grid{grid-template-columns:1fr}.tax-policy-grid{grid-template-columns:1fr 1fr}.guide-repair-grid{grid-template-columns:1fr 1fr}}
+@media(max-width:700px){.guide-repair-grid,.tax-policy-grid,.ips-section-grid{grid-template-columns:1fr}.tax-verdict>div{grid-template-columns:1fr 1fr}.ips-header{flex-direction:column}.ips-status{min-width:0;width:100%;box-sizing:border-box}.ips-implementation>div{grid-template-columns:48px 1fr}.ips-implementation small{grid-column:2}.ips-signoff{grid-template-columns:1fr}.ips-signoff>p{grid-column:auto}}
+@media(max-width:480px){.guide-repair-panel{padding:16px}.tax-chart{padding:14px}.tax-chart>div:last-child{height:280px}.tax-verdict>div{grid-template-columns:1fr}.ips-header{padding:19px}.ips-section-grid{padding:12px}.ips-objective,.ips-gates,.ips-implementation{margin-left:12px;margin-right:12px}.ips-actions{flex-direction:column}.ips-actions button{justify-content:center}}
+@media print{body *{visibility:hidden!important}.ips-document,.ips-document *{visibility:visible!important}.ips-document{position:absolute;inset:0;width:100%;border:0;box-shadow:none}.ips-actions,.investment-lab__footnote{display:none!important}.ips-header,.tax-verdict,.guide-specialist-view{-webkit-print-color-adjust:exact;print-color-adjust:exact}.ips-section-grid{break-inside:avoid}.ips-implementation{break-inside:avoid}}
