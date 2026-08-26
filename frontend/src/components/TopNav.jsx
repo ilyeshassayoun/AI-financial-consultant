@@ -89,11 +89,11 @@ export default function TopNav({ currentStep, setStep, currentSubStep = 0, onSub
       <div style={{
         maxWidth: '1360px',
         margin: '0 auto',
-        padding: '12px 24px',
+        padding: '10px clamp(12px, 3vw, 24px)',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'space-between',
-        gap: '24px'
+        gap: 'clamp(8px, 2vw, 24px)'
       }}>
         
         {/* Brand Crest & Title */}
@@ -108,7 +108,8 @@ export default function TopNav({ currentStep, setStep, currentSubStep = 0, onSub
             userSelect: 'none',
             display: 'flex',
             alignItems: 'center',
-            gap: '12px'
+            gap: '10px',
+            flexShrink: 0
           }}
         >
           <div style={{
@@ -120,7 +121,8 @@ export default function TopNav({ currentStep, setStep, currentSubStep = 0, onSub
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            boxShadow: 'var(--shadow-xs)'
+            boxShadow: 'var(--shadow-xs)',
+            flexShrink: 0
           }}>
             <Landmark size={16} color="var(--maison-gold)" />
           </div>
@@ -129,7 +131,7 @@ export default function TopNav({ currentStep, setStep, currentSubStep = 0, onSub
               fontFamily: 'var(--font-serif)', 
               fontStyle: 'italic', 
               fontWeight: 700, 
-              fontSize: '1.25rem', 
+              fontSize: 'clamp(1.05rem, 2.5vw, 1.25rem)', 
               color: 'var(--text-primary)', 
               letterSpacing: '-0.02em',
               lineHeight: '1.1'
@@ -137,7 +139,7 @@ export default function TopNav({ currentStep, setStep, currentSubStep = 0, onSub
               Ilyes H.
             </div>
             <div style={{ 
-              fontSize: '0.6rem', 
+              fontSize: '0.58rem', 
               color: 'var(--maison-gold)', 
               letterSpacing: '0.12em', 
               fontWeight: 700, 
@@ -155,7 +157,7 @@ export default function TopNav({ currentStep, setStep, currentSubStep = 0, onSub
           style={{
             display: 'flex',
             alignItems: 'center',
-            gap: '24px'
+            gap: 'clamp(12px, 2vw, 24px)'
           }}
         >
           {steps.map((step) => {
@@ -181,7 +183,7 @@ export default function TopNav({ currentStep, setStep, currentSubStep = 0, onSub
                   alignItems: 'center',
                   gap: '4px',
                   whiteSpace: 'nowrap',
-                  minWidth: '90px'
+                  minWidth: '80px'
                 }}
               >
                 <span>{step.label}</span>
@@ -204,7 +206,7 @@ export default function TopNav({ currentStep, setStep, currentSubStep = 0, onSub
         </nav>
 
         {/* Right Status Indicator & Global Controls */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexShrink: 0 }}>
           <AuthNavControls />
           
           {/* GDPR Privacy Modal Trigger */}
@@ -217,10 +219,10 @@ export default function TopNav({ currentStep, setStep, currentSubStep = 0, onSub
                 background: 'var(--bg-card-subtle)',
                 border: '1px solid var(--border-architectural)',
                 color: 'var(--text-primary)',
-                padding: '6px 11px',
+                padding: '6px 10px',
                 borderRadius: '8px',
                 cursor: 'pointer',
-                fontSize: '0.75rem',
+                fontSize: '0.74rem',
                 fontWeight: 700,
                 display: 'flex',
                 alignItems: 'center',
@@ -229,7 +231,7 @@ export default function TopNav({ currentStep, setStep, currentSubStep = 0, onSub
               }}
             >
               <ShieldCheck size={13} color="var(--maison-gold)" />
-              <span>DSGVO</span>
+              <span className="hide-on-mobile">DSGVO</span>
             </button>
           )}
 
@@ -247,10 +249,10 @@ export default function TopNav({ currentStep, setStep, currentSubStep = 0, onSub
               background: 'var(--bg-card-subtle)',
               border: '1px solid var(--border-architectural)',
               color: 'var(--text-primary)',
-              padding: '6px 11px',
+              padding: '6px 10px',
               borderRadius: '8px',
               cursor: 'pointer',
-              fontSize: '0.75rem',
+              fontSize: '0.74rem',
               fontWeight: 700,
               display: 'flex',
               alignItems: 'center',
@@ -259,10 +261,10 @@ export default function TopNav({ currentStep, setStep, currentSubStep = 0, onSub
             }}
           >
             <Moon size={13} color="var(--maison-gold)" />
-            <span>Theme</span>
+            <span className="hide-on-mobile">Theme</span>
           </button>
 
-          <span style={{
+          <span className="hide-on-mobile" style={{
             fontSize: '0.72rem',
             fontWeight: 700,
             color: 'var(--text-secondary)',

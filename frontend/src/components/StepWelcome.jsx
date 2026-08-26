@@ -213,8 +213,8 @@ export default function StepWelcome({ nextStep }) {
           zIndex: 1, 
           width: '100%', 
           display: 'grid', 
-          gridTemplateColumns: 'repeat(auto-fit, minmax(360px, 1fr))', 
-          gap: '48px', 
+          gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 320px), 1fr))', 
+          gap: 'clamp(24px, 4vw, 48px)', 
           alignItems: 'center' 
         }}
       >
@@ -406,12 +406,12 @@ export default function StepWelcome({ nextStep }) {
       <FadeInUp delay={0.28}>
         <div style={{ 
           display: 'grid', 
-          gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', 
+          gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 200px), 1fr))', 
           gap: '16px',
           background: 'var(--bg-card)',
           border: '1px solid var(--border-architectural)',
           borderRadius: '18px',
-          padding: '24px 28px',
+          padding: 'clamp(16px, 3vw, 28px)',
           boxShadow: 'var(--shadow-sm)',
           position: 'relative',
           zIndex: 1
@@ -444,7 +444,7 @@ export default function StepWelcome({ nextStep }) {
             <span style={{ fontSize: '0.72rem', fontWeight: 800, color: 'var(--maison-gold)', letterSpacing: '0.08em', textTransform: 'uppercase' }}>
               FIDUCIARY GUARANTEE &amp; PRIVACY
             </span>
-            <h2 style={{ fontSize: '1.8rem', fontWeight: 800, color: 'var(--text-primary)', margin: '6px 0 8px 0', letterSpacing: '-0.02em' }}>
+            <h2 style={{ fontSize: 'clamp(1.4rem, 3vw, 1.8rem)', fontWeight: 800, color: 'var(--text-primary)', margin: '6px 0 8px 0', letterSpacing: '-0.02em' }}>
               Engineered for Sovereignty &amp; Transparency
             </h2>
             <p style={{ fontSize: '0.88rem', color: 'var(--text-secondary)', margin: 0, lineHeight: '1.55' }}>
@@ -452,7 +452,7 @@ export default function StepWelcome({ nextStep }) {
             </p>
           </div>
 
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: '16px' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 240px), 1fr))', gap: '16px' }}>
             {TRUST_FACTORS.map((t) => {
               const Icon = t.icon;
               return (
@@ -462,7 +462,7 @@ export default function StepWelcome({ nextStep }) {
                     background: 'var(--bg-card)',
                     border: '1px solid var(--border-architectural)',
                     borderRadius: '16px',
-                    padding: '22px',
+                    padding: '20px',
                     display: 'flex',
                     flexDirection: 'column',
                     gap: '10px',
@@ -502,12 +502,12 @@ export default function StepWelcome({ nextStep }) {
             <span style={{ fontSize: '0.72rem', fontWeight: 800, color: 'var(--maison-gold)', letterSpacing: '0.08em', textTransform: 'uppercase' }}>
               PROVEN STATUTORY VALUE
             </span>
-            <h2 style={{ fontSize: '1.8rem', fontWeight: 800, color: 'var(--text-primary)', margin: '6px 0 8px 0', letterSpacing: '-0.02em' }}>
+            <h2 style={{ fontSize: 'clamp(1.4rem, 3vw, 1.8rem)', fontWeight: 800, color: 'var(--text-primary)', margin: '6px 0 8px 0', letterSpacing: '-0.02em' }}>
               Reviewed by High-Income Professionals in Germany
             </h2>
           </div>
 
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '16px' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 280px), 1fr))', gap: '16px' }}>
             {CASE_STUDIES.map((c, i) => (
               <div 
                 key={i}

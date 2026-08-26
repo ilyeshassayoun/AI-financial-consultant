@@ -120,7 +120,7 @@ function App() {
         className="app-workspace"
         style={{
           flex: 1,
-          padding: currentStep === 'welcome' ? '0 32px' : '24px 32px 60px 32px',
+          padding: currentStep === 'welcome' ? '0 clamp(12px, 3vw, 32px)' : 'clamp(14px, 2.5vw, 24px) clamp(12px, 3vw, 32px) 60px clamp(12px, 3vw, 32px)',
           width: '100%',
           maxWidth: '1360px',
           margin: '0 auto',

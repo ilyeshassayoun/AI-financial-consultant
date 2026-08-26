@@ -469,9 +469,15 @@ input[type="number"]:focus, input[type="text"]:focus {
   }
 }
 
+@media (max-width: 640px) {
+  .hide-on-mobile {
+    display: none !important;
+  }
+}
+
 @media (max-width: 768px) {
   .wizard-card {
-    padding: 20px 16px;
+    padding: 16px 14px;
   }
 }
 
