@@ -78,10 +78,10 @@ export default function InteractiveCashFlow({ profile, updateProfile, analysis, 
 
   // Allocation Pie Circle Data
   const allocationPieData = [
-    { name: 'Fixed Needs', value: totalFixedNeeds, color: 'var(--maison-obsidian)' },
-    { name: 'Lifestyle', value: totalDiscretionary, color: 'var(--accent-ochre)' },
-    { name: 'Shields', value: totalProtection, color: 'var(--text-secondary)' },
-    { name: 'Free Surplus', value: Math.max(0, unallocatedSurplus), color: 'var(--maison-gold)' }
+    { name: 'Fixed Needs', value: totalFixedNeeds, color: '#1e293b' },
+    { name: 'Lifestyle', value: totalDiscretionary, color: '#38bdf8' },
+    { name: 'Shields', value: totalProtection, color: '#94a3b8' },
+    { name: 'Free Surplus', value: Math.max(0, unallocatedSurplus), color: '#c5a059' }
   ].filter(item => item.value > 0);
 
   // 30-Year Compounding Projection Series (Invested Principal vs Total Capital Growth)
@@ -547,12 +547,12 @@ export default function InteractiveCashFlow({ profile, updateProfile, analysis, 
               <AreaChart data={compoundSeries} margin={{ top: 6, right: 8, left: 0, bottom: 0 }}>
                 <defs>
                   <linearGradient id="growthGradGold" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="var(--maison-gold)" stopOpacity={0.65}/>
-                    <stop offset="95%" stopColor="var(--maison-gold)" stopOpacity={0.08}/>
+                    <stop offset="5%" stopColor="#c5a059" stopOpacity={0.65}/>
+                    <stop offset="95%" stopColor="#c5a059" stopOpacity={0.08}/>
                   </linearGradient>
                   <linearGradient id="investedGradSlate" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="var(--maison-obsidian)" stopOpacity={0.25}/>
-                    <stop offset="95%" stopColor="var(--maison-obsidian)" stopOpacity={0.02}/>
+                    <stop offset="5%" stopColor="#334155" stopOpacity={0.25}/>
+                    <stop offset="95%" stopColor="#334155" stopOpacity={0.02}/>
                   </linearGradient>
                 </defs>
                 <XAxis dataKey="year" stroke="var(--text-secondary)" fontSize={10} tickLine={false} />
@@ -568,7 +568,7 @@ export default function InteractiveCashFlow({ profile, updateProfile, analysis, 
                   type="monotone" 
                   dataKey="capital" 
                   name="capital"
-                  stroke="var(--maison-gold)" 
+                  stroke="#c5a059" 
                   strokeWidth={2.2} 
                   fill="url(#growthGradGold)" 
                   isAnimationActive={true} 
@@ -579,7 +579,7 @@ export default function InteractiveCashFlow({ profile, updateProfile, analysis, 
                   type="monotone" 
                   dataKey="invested" 
                   name="invested"
-                  stroke="var(--text-secondary)" 
+                  stroke="#94a3b8" 
                   strokeWidth={1.5} 
                   strokeDasharray="3 3" 
                   fill="url(#investedGradSlate)" 

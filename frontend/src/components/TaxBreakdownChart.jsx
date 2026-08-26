@@ -16,11 +16,11 @@ export default function TaxBreakdownChart({ taxData, income, taxClass }) {
   const netIncome = taxData.net_income || (grossIncome - incomeTax - soli - socialSecurity);
 
   const waterfallData = [
-    { name: 'Gross Salary', amount: Math.round(grossIncome), color: 'var(--maison-obsidian)', type: 'base' },
-    { name: 'Income Tax §32a', amount: Math.round(incomeTax), color: 'var(--accent-coral)', type: 'deduction' },
-    { name: 'Social Security', amount: Math.round(socialSecurity), color: 'var(--accent-ochre)', type: 'deduction' },
-    { name: 'Soli & Church', amount: Math.round(soli + churchTax), color: 'var(--accent-coral)', type: 'deduction' },
-    { name: 'Net Take-Home', amount: Math.round(netIncome), color: 'var(--accent-emerald)', type: 'net' }
+    { name: 'Gross Salary', amount: Math.round(grossIncome), color: '#1e293b', type: 'base' },
+    { name: 'Income Tax §32a', amount: Math.round(incomeTax), color: '#ef4444', type: 'deduction' },
+    { name: 'Social Security', amount: Math.round(socialSecurity), color: '#f59e0b', type: 'deduction' },
+    { name: 'Soli & Church', amount: Math.round(soli + churchTax), color: '#f87171', type: 'deduction' },
+    { name: 'Net Take-Home', amount: Math.round(netIncome), color: '#10b981', type: 'net' }
   ];
 
   return (

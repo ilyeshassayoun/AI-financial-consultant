@@ -22,11 +22,11 @@ export default function RetirementGapChart({ retirementData, onApplySavingsPatch
   const adjustedRatio = Math.min(100, Math.round((adjustedTotal / (target_retirement_income_monthly || 1)) * 100));
 
   const chartData = [
-    { name: 'Target Need', amount: Math.round(target_retirement_income_monthly), color: 'var(--text-primary)' },
-    { name: '1st: DRV State', amount: Math.round(state_pension_monthly), color: 'var(--maison-obsidian)' },
-    { name: '2nd: bAV Pillar', amount: Math.round(bav_pension_monthly), color: 'var(--text-secondary)' },
-    { name: '3rd: Private ETF', amount: Math.round(private_pension_monthly + extraYieldMonthly), color: 'var(--maison-gold)' },
-    { name: 'Rentenlücke Gap', amount: Math.round(adjustedGap), color: adjustedGap > 0 ? 'var(--accent-coral)' : 'var(--accent-emerald)' }
+    { name: 'Target Need', amount: Math.round(target_retirement_income_monthly), color: '#334155' },
+    { name: '1st: DRV State', amount: Math.round(state_pension_monthly), color: '#0f172a' },
+    { name: '2nd: bAV Pillar', amount: Math.round(bav_pension_monthly), color: '#64748b' },
+    { name: '3rd: Private ETF', amount: Math.round(private_pension_monthly + extraYieldMonthly), color: '#c5a059' },
+    { name: 'Rentenlücke Gap', amount: Math.round(adjustedGap), color: adjustedGap > 0 ? '#ef4444' : '#10b981' }
   ];
 
   return (

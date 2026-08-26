@@ -96,16 +96,16 @@ export default function MonteCarloChart({ investmentData, years }) {
           <AreaChart data={fan_chart_series} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
             <defs>
               <linearGradient id="p90Grad2" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="5%" stopColor="var(--maison-gold)" stopOpacity={0.5}/>
-                <stop offset="95%" stopColor="var(--maison-gold)" stopOpacity={0.05}/>
+                <stop offset="5%" stopColor="#c5a059" stopOpacity={0.5}/>
+                <stop offset="95%" stopColor="#c5a059" stopOpacity={0.05}/>
               </linearGradient>
               <linearGradient id="p50Grad2" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="5%" stopColor="var(--maison-obsidian)" stopOpacity={0.6}/>
-                <stop offset="95%" stopColor="var(--maison-obsidian)" stopOpacity={0.1}/>
+                <stop offset="5%" stopColor="#334155" stopOpacity={0.6}/>
+                <stop offset="95%" stopColor="#334155" stopOpacity={0.1}/>
               </linearGradient>
               <linearGradient id="p10Grad2" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="5%" stopColor="var(--accent-coral)" stopOpacity={0.3}/>
-                <stop offset="95%" stopColor="var(--accent-coral)" stopOpacity={0.02}/>
+                <stop offset="5%" stopColor="#ef4444" stopOpacity={0.3}/>
+                <stop offset="95%" stopColor="#ef4444" stopOpacity={0.02}/>
               </linearGradient>
             </defs>
             <XAxis dataKey="year" stroke="var(--text-secondary)" fontSize={11} />
