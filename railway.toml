@@ -1,5 +1,10 @@
-﻿# Railway deployment configuration
-# See SETUP.md for detailed deployment instructions
-
 [build]
-buildCommand = "echo 'Monorepo: deploy backend and frontend as separate services'"
+builder = "DOCKERFILE"
+dockerfilePath = "Dockerfile"
+
+[deploy]
+healthcheckPath = "/health"
+healthcheckTimeout = 120
+restartPolicyType = "ON_FAILURE"
+restartPolicyMaxRetries = 10
+

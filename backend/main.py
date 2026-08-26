@@ -1,5 +1,6 @@
 import hmac
 import math
+import os
 import structlog
 from contextlib import asynccontextmanager
 from typing import Optional, Any
@@ -7,7 +8,8 @@ from typing import Optional, Any
 from fastapi import Depends, FastAPI, Header, HTTPException, Request
 from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, FileResponse
+from fastapi.staticfiles import StaticFiles
 from slowapi import Limiter, _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
 from slowapi.util import get_remote_address
@@ -45,12 +47,16 @@ app = FastAPI(
 app.state.limiter = limiter
 app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)  # type: ignore
 
+# Safe CORS configuration
+origins = settings.cors_origins_list
+has_wildcard = "*" in origins or not origins
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=settings.cors_origins_list,
-    allow_credentials=True,
-    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-    allow_headers=["Content-Type", "Authorization", "X-API-Key"],
+    allow_origins=["*"] if has_wildcard else origins,
+    allow_credentials=not has_wildcard,
+    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS", "HEAD"],
+    allow_headers=["*"],
 )
 
 
@@ -76,6 +82,16 @@ def require_llm_access(x_api_key: Optional[str] = Header(default=None)) -> None:
         raise HTTPException(status_code=401, detail="Valid X-API-Key required for AI routes")
 
 
+@app.get("/health", tags=["health"])
+def root_health_check() -> dict[str, Any]:
+    return {
+        "status": "ok",
+        "service": "financial-advisory-api",
+        "version": app.version,
+        "model_year": 2026,
+    }
+
+
 app.include_router(health.router)
 app.include_router(tax.router)
 app.include_router(investment.router)
@@ -90,3 +106,28 @@ app.include_router(profiles_router.router)
 @limiter.limit(settings.RATE_LIMIT_ANALYZE)
 async def analyze_profile(request: Request, profile: ClientProfile) -> dict[str, Any]:
     return _run_full_analysis(profile)
+
+
+# Mount frontend static distribution if built
+_dist_candidates = [
+    os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "frontend", "dist")),
+    os.path.abspath(os.path.join(os.path.dirname(__file__), "static")),
+    "/app/frontend/dist",
+    "/app/static",
+]
+
+frontend_dist = next((c for c in _dist_candidates if os.path.isdir(c) and os.path.isfile(os.path.join(c, "index.html"))), None)
+
+if frontend_dist:
+    assets_dir = os.path.join(frontend_dist, "assets")
+    if os.path.isdir(assets_dir):
+        app.mount("/assets", StaticFiles(directory=assets_dir), name="assets")
+
+    @app.get("/{full_path:path}")
+    async def serve_spa_frontend(request: Request, full_path: str):
+        if full_path.startswith("api/") or full_path == "api" or full_path == "docs" or full_path == "openapi.json":
+            raise HTTPException(status_code=404, detail="Not Found")
+        file_path = os.path.join(frontend_dist, full_path)
+        if os.path.isfile(file_path):
+            return FileResponse(file_path)
+        return FileResponse(os.path.join(frontend_dist, "index.html"))
