@@ -1,7 +1,7 @@
 import React from 'react';
 import { 
   ArrowRight, Shield, Landmark, TrendingUp, Sparkles, CheckCircle2, 
-  Scale, PiggyBank, Bot, Lock, Award, ChevronRight, Star, ShieldCheck, 
+  Scale, PiggyBank, Bot, Lock, Award, ChevronRight, ShieldCheck, 
   BarChart3, Zap, Layers3
 } from 'lucide-react';
 import { FadeInUp } from './PageTransition';
@@ -69,27 +69,6 @@ const TRUST_FACTORS = [
     icon: ShieldCheck,
     title: 'GDPR Art. 17 Compliance',
     desc: 'One-click full cryptographic purge of all locally stored audit session profiles with zero trace retention.'
-  },
-];
-
-const CASE_STUDIES = [
-  {
-    quote: 'The tax bridge and Werbungskosten simulation showed me exactly where I was leaking capital across federal brackets.',
-    author: 'Principal Software Architect',
-    location: 'Munich, Bavaria',
-    focus: 'Tax Alpha & ETF Strategy'
-  },
-  {
-    quote: 'The Monte Carlo retirement lab completely changed my portfolio horizon. Seeing sequence-of-returns risk quantified is invaluable.',
-    author: 'Managing Director',
-    location: 'Frankfurt am Main',
-    focus: 'Rentenlücke & Asset Allocation'
-  },
-  {
-    quote: 'Finally a German wealth consultation platform with institutional rigor. Explains the exact statutory rationale behind every recommendation.',
-    author: 'Senior Medical Consultant',
-    location: 'Hamburg',
-    focus: 'PKV Decision & Liability Defense'
   },
 ];
 
@@ -495,61 +474,8 @@ export default function StepWelcome({ nextStep }) {
         </div>
       </FadeInUp>
 
-      {/* SECTION 4: CASE PROOFS & TESTIMONIALS */}
+      {/* SECTION 4: FINAL LAUNCH CALLOUT */}
       <FadeInUp delay={0.4}>
-        <div style={{ position: 'relative', zIndex: 1, display: 'flex', flexDirection: 'column', gap: '24px' }}>
-          <div style={{ textAlign: 'center', maxWidth: '680px', margin: '0 auto' }}>
-            <span style={{ fontSize: '0.72rem', fontWeight: 800, color: 'var(--maison-gold)', letterSpacing: '0.08em', textTransform: 'uppercase' }}>
-              PROVEN STATUTORY VALUE
-            </span>
-            <h2 style={{ fontSize: 'clamp(1.4rem, 3vw, 1.8rem)', fontWeight: 800, color: 'var(--text-primary)', margin: '6px 0 8px 0', letterSpacing: '-0.02em' }}>
-              Reviewed by High-Income Professionals in Germany
-            </h2>
-          </div>
-
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 280px), 1fr))', gap: '16px' }}>
-            {CASE_STUDIES.map((c, i) => (
-              <div 
-                key={i}
-                style={{
-                  background: 'var(--bg-card)',
-                  border: '1px solid var(--border-architectural)',
-                  borderRadius: '16px',
-                  padding: '24px',
-                  display: 'flex',
-                  flexDirection: 'column',
-                  justifyContent: 'space-between',
-                  gap: '16px',
-                  textAlign: 'left'
-                }}
-              >
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                  <div style={{ display: 'flex', gap: '3px', color: 'var(--maison-gold)' }}>
-                    {[...Array(5)].map((_, starIdx) => (
-                      <Star key={starIdx} size={14} fill="var(--maison-gold)" />
-                    ))}
-                  </div>
-                  <p style={{ margin: 0, fontSize: '0.86rem', color: 'var(--text-primary)', lineHeight: '1.55', fontStyle: 'italic' }}>
-                    "{c.quote}"
-                  </p>
-                </div>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', borderTop: '1px solid var(--border-architectural)', paddingTop: '12px' }}>
-                  <div>
-                    <strong style={{ fontSize: '0.84rem', color: 'var(--text-primary)', display: 'block' }}>{c.author}</strong>
-                    <span style={{ fontSize: '0.74rem', color: 'var(--text-secondary)' }}>{c.location}</span>
-                  </div>
-                  <span style={{ fontSize: '0.7rem', fontWeight: 700, color: 'var(--maison-gold)', background: 'rgba(197, 160, 89, 0.1)', padding: '3px 8px', borderRadius: '6px' }}>
-                    {c.focus}
-                  </span>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </FadeInUp>
-
-      {/* SECTION 5: FINAL LAUNCH CALLOUT */}
-      <FadeInUp delay={0.44}>
         <div style={{
           position: 'relative',
           zIndex: 1,
