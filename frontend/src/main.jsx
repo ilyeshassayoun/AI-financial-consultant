@@ -10,9 +10,9 @@ function AppRouter() {
   return (
     <BrowserRouter>
       <Routes>
-        <Route path="/" element={<LandingPage onGetStarted={() => { window.location.href = '/app'; }} />} />
-        <Route path="/app" element={<App />} />
-        <Route path="/auth/callback" element={<OAuthCallback onComplete={() => { window.location.href = '/app'; }} />} />
+        <Route path="/" element={<App />} />
+        <Route path="/app" element={<Navigate to="/" replace />} />
+        <Route path="/auth/callback" element={<OAuthCallback onComplete={() => { window.location.href = '/'; }} />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </BrowserRouter>
