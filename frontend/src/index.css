@@ -177,39 +177,73 @@ h1, h2, h3, h4, h5, h6 {
 .wizard-card {
   background: var(--bg-card);
   border: 1px solid var(--border-architectural);
+  border-top: 2.5px solid var(--maison-gold);
   border-radius: var(--border-radius-xl);
-  box-shadow: var(--shadow-elevated);
+  box-shadow: 0 4px 24px rgba(8, 15, 26, 0.04), 0 1px 3px rgba(8, 15, 26, 0.02);
   position: relative;
-  transition: box-shadow var(--transition-smooth), border-color var(--transition-smooth);
+  transition: box-shadow var(--transition-smooth), border-color var(--transition-smooth), transform var(--transition-smooth);
 }
 
 .wizard-card:hover {
-  box-shadow: var(--shadow-xl);
+  box-shadow: 0 12px 36px rgba(8, 15, 26, 0.08);
   border-color: var(--maison-gold-border);
+}
+
+/* JPMorgan Private Wealth Design System Utilities */
+.jpm-gold-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border-radius: 4px;
+  font-size: 0.68rem;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  background: rgba(197, 160, 89, 0.10);
+  border: 1px solid rgba(197, 160, 89, 0.35);
+  color: var(--maison-gold);
+}
+
+.jpm-stat-hero {
+  font-family: var(--font-heading);
+  font-size: clamp(2rem, 4vw, 3.2rem);
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  line-height: 1.05;
+  color: var(--text-primary);
+  font-variant-numeric: tabular-nums;
+}
+
+.jpm-divider {
+  width: 100%;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--border-architectural) 20%, var(--border-architectural) 80%, transparent);
+  margin: 16px 0;
 }
 
 /* Buttons */
 .btn-primary {
-  background-color: var(--maison-obsidian);
+  background: linear-gradient(135deg, var(--maison-obsidian) 0%, var(--maison-pine-deep) 100%);
   color: #ffffff;
   font-weight: 700;
   font-size: 0.88rem;
   border-radius: var(--border-radius-md);
   padding: 11px 24px;
-  border: 1px solid var(--maison-gold-border);
+  border: 1px solid var(--maison-gold);
   cursor: pointer;
   display: inline-flex;
   align-items: center;
   gap: 8px;
   transition: all var(--transition-smooth);
-  box-shadow: var(--shadow-sm);
+  box-shadow: 0 4px 16px rgba(197, 160, 89, 0.20);
 }
 
 .btn-primary:hover:not(:disabled) {
-  background-color: var(--maison-pine-deep);
-  border-color: var(--maison-gold);
+  background: linear-gradient(135deg, var(--maison-pine-deep) 0%, #17283f 100%);
+  border-color: #dfc27d;
   transform: translateY(-1.5px);
-  box-shadow: var(--shadow-gold);
+  box-shadow: 0 8px 24px rgba(197, 160, 89, 0.35);
 }
 
 .btn-primary:disabled {

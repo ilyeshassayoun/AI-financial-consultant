@@ -135,7 +135,7 @@
 
 .investment-primary-button, .investment-secondary-button {
   align-items: center;
-  border-radius: 11px;
+  border-radius: 10px;
   cursor: pointer;
   display: inline-flex;
   font: inherit;
@@ -143,24 +143,33 @@
   font-weight: 750;
   gap: 8px;
   justify-content: center;
-  padding: 11px 16px;
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  padding: 11px 20px;
+  transition: transform 0.2s var(--ease-luxury), box-shadow 0.2s var(--ease-luxury);
 }
 
 .investment-primary-button {
-  background: var(--maison-obsidian);
-  border: 1px solid var(--border-architectural);
+  background: linear-gradient(135deg, var(--maison-obsidian) 0%, var(--maison-pine-deep) 100%);
+  border: 1px solid var(--maison-gold);
   color: #fff;
+  box-shadow: 0 4px 16px rgba(197, 160, 89, 0.20);
 }
 
 .investment-secondary-button {
-  background: var(--bg-card-subtle);
+  background: var(--bg-card);
   border: 1px solid var(--border-architectural);
   color: var(--text-primary);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03);
 }
 
-.investment-primary-button:hover, .investment-secondary-button:hover {
-  box-shadow: var(--shadow-elevated);
+.investment-primary-button:hover {
+  background: linear-gradient(135deg, var(--maison-pine-deep) 0%, #17283f 100%);
+  box-shadow: 0 8px 24px rgba(197, 160, 89, 0.35);
+  transform: translateY(-1.5px);
+}
+
+.investment-secondary-button:hover {
+  background: var(--bg-card-subtle);
+  border-color: var(--maison-gold-border);
   transform: translateY(-1px);
 }
 
