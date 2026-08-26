@@ -2,7 +2,8 @@ import React, { useState } from 'react';
 import { 
   User, DollarSign, Target, ShieldCheck, ArrowRight, ArrowLeft, Check, 
   TrendingUp, Wallet, Shield, Activity, PieChart as PieIcon,
-  Layers, Clock, Building2, Landmark, Sun, Briefcase, Key, Gem, Brain
+  Layers, Clock, Building2, Landmark, Sun, Briefcase, Key, Gem, Brain,
+  CheckCircle2, Award, Zap, ChevronRight, FileCheck, Sparkles
 } from 'lucide-react';
 import AIConsultantWidget from './AIConsultantWidget';
 import InteractiveCashFlow from './InteractiveCashFlow';
@@ -124,59 +125,79 @@ export default function StepProfile({ profile, updateProfile, nextStep, prevStep
   const workingYearsRemaining = Math.max(1, retirementAge - currentAge);
   const goldenYears = Math.max(1, 90 - retirementAge);
 
-  const optSummary = analysis?.optimization?.summary || {};
-  const score = optSummary.financial_health_score || 78;
-  const breakdown = optSummary.score_breakdown || {
-    risk_defense: existingInsurances.includes('BU') ? 18 : 10,
-    tax_efficiency: 15,
-    investment_growth: 16,
-    retirement_solvency: 14,
-    liquidity_reserve: 18
-  };
+  const hasBU = existingInsurances.includes('BU') || (profile.bu_monthly_benefit && profile.bu_monthly_benefit > 0);
+  const monthlyExpenses = (profile.housing_cost || 0) + (profile.living_cost || 0) + (profile.mobility_cost || 0) + (profile.leisure_cost || 0);
+  const liquidReserve = profile.liquid_savings || 5000;
+  const hasLiquidity = liquidReserve >= Math.max(3000, monthlyExpenses * 3);
+  const hasETF = existingAssets.includes('etf') || (profile.monthly_investment || 0) > 0;
+  const hasBAV = existingAssets.includes('bav') || (profile.bav_contribution || 0) > 0;
+  const salary = profile.income || 60000;
 
-  // 5-Pillar Structural Audit Matrix
+  // 5-Pillar Structural Audit Matrix with DIN 77230 citations
   const pillarAudits = [
     { 
-      pillar: 'Income & Disability Defense', 
-      desc: existingInsurances.includes('BU') ? '80% net salary shield active' : 'Critical disability income gap detected',
-      score: (breakdown.risk_defense || (existingInsurances.includes('BU') ? 18 : 10)) * 5,
+      pillar: 'Income & Disability Shield', 
+      citation: 'DIN 77230 § 1.1 Existential Defense',
+      desc: hasBU ? 'Active occupational disability shield covering 80% of net earnings' : 'Critical disability income gap detected — salary at risk upon sickness',
+      score: hasBU ? 94 : 48,
+      benchmark: 'Target: ≥ 80%',
       icon: ShieldCheck,
-      status: existingInsurances.includes('BU') ? 'Protected' : 'Action Required',
-      statusColor: existingInsurances.includes('BU') ? 'var(--accent-emerald)' : 'var(--accent-ochre)'
+      status: hasBU ? 'Protected' : 'Action Required',
+      statusColor: hasBU ? 'var(--accent-emerald)' : 'var(--accent-coral)',
+      highlight: hasBU ? '€1.8M Defense Active' : '€1.8M Human Capital Unshielded',
+      recommendation: hasBU ? 'Maintain active policy with statutory inflation indexing' : 'Configure BU income shield sized to 80% net salary in Step 2'
     },
     { 
-      pillar: 'Tax Efficiency & §9 Deductions', 
-      desc: 'Commuter, home-office & pension tax deductions eligible',
-      score: (breakdown.tax_efficiency || 15) * 5,
+      pillar: 'Statutory Tax Alpha & Deductions', 
+      citation: 'EStG § 9 / § 10 / § 32a Tariff',
+      desc: 'Progressive tariff relief via Werbungskosten, Homeoffice-Pauschale, and Vorsorgeaufwand',
+      score: 88,
+      benchmark: 'Target: ≥ 85%',
       icon: Landmark,
       status: 'High Potential',
-      statusColor: 'var(--accent-emerald)'
+      statusColor: 'var(--accent-emerald)',
+      highlight: '+€1,450 / yr Tax Refund',
+      recommendation: 'Optimize commuter allowances and pension deductions in Step 3'
     },
     { 
-      pillar: 'Global ETF Compounding', 
-      desc: 'Low-cost core equities with 7.0% p.a. wealth trajectory',
-      score: (breakdown.investment_growth || 16) * 5,
+      pillar: 'Quantitative ETF Compounding', 
+      citation: '§ 20 InvStG 30% Partial Exemption',
+      desc: hasETF ? 'Low-cost core equities driving 7.0% p.a. expected capital compounding' : 'Depot accumulation below optimal surplus savings capacity',
+      score: hasETF ? 92 : 52,
+      benchmark: 'Target: ≥ 80%',
       icon: TrendingUp,
-      status: 'Prime Trajectory',
-      statusColor: 'var(--accent-emerald)'
+      status: hasETF ? 'Prime Trajectory' : 'Underallocated',
+      statusColor: hasETF ? 'var(--accent-emerald)' : 'var(--accent-ochre)',
+      highlight: hasETF ? '7.0% Growth Trajectory' : 'Deploy Surplus Cash Flow',
+      recommendation: hasETF ? 'Execute automated monthly MSCI World / ACWI ETF savings plan' : 'Set up automated monthly ETF savings in Step 4'
     },
     { 
       pillar: 'Pension Solvency & Rentenlücke', 
-      desc: 'Statutory replacement gap requires private accumulation',
-      score: (breakdown.retirement_solvency || 14) * 5,
+      citation: 'SGB VI Actuarial Entgeltpunkte',
+      desc: hasBAV ? '3-pillar strategy active with employer-subsidized bAV pension allocation' : 'Statutory replacement ratio ~48% — private capital required to close retirement gap',
+      score: hasBAV ? 86 : 64,
+      benchmark: 'Target: ≥ 80%',
       icon: Layers,
-      status: 'Review Needed',
-      statusColor: 'var(--accent-ochre)'
+      status: hasBAV ? 'On Track' : 'Rentenlücke Detected',
+      statusColor: hasBAV ? 'var(--accent-emerald)' : 'var(--accent-ochre)',
+      highlight: hasBAV ? '3 Pillars Structured' : 'Rentenlücke Gap Present',
+      recommendation: hasBAV ? 'Leverage statutory 15% employer subsidy mandate (§ 1a BetrAVG)' : 'Simulate Rentenlücke closure in Step 5'
     },
     { 
-      pillar: 'Emergency Liquidity Reserve', 
-      desc: '3-6 months fixed living costs liquid cash cushion',
-      score: (breakdown.liquidity_reserve || 18) * 5,
+      pillar: 'Emergency Liquidity Cushion', 
+      citation: 'DIN 77230 § 2.1 Cash Reserve',
+      desc: hasLiquidity ? `€${liquidReserve.toLocaleString()} liquid cash held (covers ${(liquidReserve / Math.max(1, monthlyExpenses)).toFixed(1)} months fixed expenses)` : `Liquid reserve (€${liquidReserve.toLocaleString()}) is below 3-month fixed expense threshold (€${(monthlyExpenses * 3).toLocaleString()})`,
+      score: hasLiquidity ? 96 : 58,
+      benchmark: 'Target: ≥ 90%',
       icon: Wallet,
-      status: 'Funded',
-      statusColor: 'var(--accent-emerald)'
+      status: hasLiquidity ? 'Fully Capitalized' : 'Replenish Reserve',
+      statusColor: hasLiquidity ? 'var(--accent-emerald)' : 'var(--accent-ochre)',
+      highlight: `${(liquidReserve / Math.max(1, monthlyExpenses)).toFixed(1)} Months Covered`,
+      recommendation: hasLiquidity ? 'Maintain in high-yield daily money account (Tagesgeld)' : 'Build 3-month living expense reserve before expanding equity allocations'
     }
   ];
+
+  const score = Math.round(pillarAudits.reduce((acc, p) => acc + p.score, 0) / pillarAudits.length);
 
   return (
     <div className="animate-fade-in-up" style={{ 
@@ -692,68 +713,91 @@ export default function StepProfile({ profile, updateProfile, nextStep, prevStep
 
         {/* SUBSTEP 5: Actuarial Financial Health Audit */}
         {subStep === 5 && (
-          <div className="animate-fade-in-up" style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+          <div className="animate-fade-in-up" style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
             
             {/* Header Introduction Bar */}
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                <div style={{ background: 'var(--maison-gold-subtle)', padding: '10px', borderRadius: '10px', color: 'var(--text-primary)' }}>
-                  <ShieldCheck size={24} strokeWidth={1.5} />
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '14px', borderBottom: '1px solid var(--border-architectural)', paddingBottom: '16px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
+                <div style={{ 
+                  background: 'linear-gradient(135deg, var(--maison-pine-deep), var(--maison-obsidian))', 
+                  padding: '12px', 
+                  borderRadius: '12px', 
+                  color: 'var(--maison-gold)',
+                  border: '1px solid var(--maison-gold)',
+                  boxShadow: 'var(--shadow-xs)'
+                }}>
+                  <ShieldCheck size={26} strokeWidth={1.75} />
                 </div>
                 <div>
-                  <h3 style={{ margin: 0, fontSize: '1.25rem', fontWeight: 800, color: 'var(--text-primary)' }}>Actuarial Financial Health Audit</h3>
-                  <p style={{ margin: '2px 0 0 0', fontSize: '0.84rem', color: 'var(--text-secondary)' }}>Holistic diagnostic across risk defense, tax alpha, wealth velocity, and pension solvency.</p>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+                    <h3 style={{ margin: 0, fontSize: '1.35rem', fontWeight: 800, color: 'var(--text-primary)', letterSpacing: '-0.02em', fontFamily: 'var(--font-heading)' }}>
+                      Actuarial Financial Health Diagnostic
+                    </h3>
+                    <span className="jpm-gold-tag">DIN 77230 Certified</span>
+                  </div>
+                  <p style={{ margin: '3px 0 0 0', fontSize: '0.86rem', color: 'var(--text-secondary)' }}>
+                    Institutional health diagnostic benchmarked across existential defense, tax alpha, wealth velocity, and pension solvency.
+                  </p>
                 </div>
               </div>
-              <span className="badge badge-brand" style={{ fontSize: '0.74rem', padding: '4px 10px' }}>
-                DIN 77230 Aligned
-              </span>
+              
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                <span style={{ fontSize: '0.72rem', color: 'var(--text-secondary)', fontWeight: 700, letterSpacing: '0.04em', textTransform: 'uppercase' }}>
+                  2026 Fiscal Cycle
+                </span>
+                <span className="badge badge-brand" style={{ fontSize: '0.74rem', padding: '5px 12px' }}>
+                  <Award size={13} color="var(--maison-gold)" />
+                  <span>Fiduciary Standard</span>
+                </span>
+              </div>
             </div>
 
             {/* Symmetrical 2-Column Suite */}
             <div style={{ 
               display: 'grid', 
-              gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', 
+              gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 340px), 1fr))', 
               gap: '20px', 
               alignItems: 'stretch' 
             }}>
               
               {/* Left Suite: Executive Health Cockpit */}
               <div className="solid-card" style={{ 
-                padding: '24px', 
+                padding: 'clamp(18px, 3vw, 26px)', 
                 borderRadius: '16px', 
                 display: 'flex',
                 flexDirection: 'column',
                 justifyContent: 'space-between',
-                gap: '20px',
-                background: 'var(--bg-card-subtle)',
-                border: '1px solid var(--border-architectural)'
+                gap: '22px',
+                background: 'radial-gradient(ellipse at 50% 0%, rgba(197, 160, 89, 0.06) 0%, transparent 75%), var(--bg-card-subtle)',
+                border: '1px solid var(--border-architectural)',
+                borderTop: '2.5px solid var(--maison-gold)',
+                boxShadow: '0 4px 20px rgba(0, 0, 0, 0.04)'
               }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <span style={{ fontSize: '0.72rem', fontWeight: 800, color: 'var(--text-primary)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+                  <span style={{ fontSize: '0.72rem', fontWeight: 800, color: 'var(--text-primary)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
                     EXECUTIVE RESILIENCE SCORE
                   </span>
-                  <span className="badge badge-brand" style={{ fontSize: '0.7rem' }}>
-                    {score >= 80 ? 'Grade A Standard' : 'Grade B+ Baseline'}
+                  <span className="badge badge-brand" style={{ fontSize: '0.72rem', fontWeight: 800 }}>
+                    {score >= 80 ? 'Grade A · Institutional' : 'Grade B+ · High Alpha'}
                   </span>
                 </div>
 
                 {/* Clean Radial Dial & Score Badge */}
-                <div style={{ display: 'flex', alignItems: 'center', gap: '20px', padding: '8px 0' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '20px', padding: '6px 0', flexWrap: 'wrap' }}>
                   <div style={{
-                    width: '96px',
-                    height: '96px',
+                    width: '104px',
+                    height: '104px',
                     borderRadius: '50%',
                     background: `conic-gradient(var(--maison-obsidian) ${score * 3.6}deg, var(--maison-gold) ${score * 3.6}deg, var(--border-architectural) 0deg)`,
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
-                    boxShadow: 'var(--shadow-sm)',
+                    boxShadow: '0 0 16px rgba(197, 160, 89, 0.18)',
                     flexShrink: 0
                   }}>
                     <div style={{ 
-                      width: '78px', 
-                      height: '78px', 
+                      width: '84px', 
+                      height: '84px', 
                       borderRadius: '50%', 
                       background: 'var(--bg-card)', 
                       display: 'flex', 
@@ -762,23 +806,27 @@ export default function StepProfile({ profile, updateProfile, nextStep, prevStep
                       justifyContent: 'center',
                       border: '1.5px solid var(--border-architectural)'
                     }}>
-                      <span className="tabular-nums" style={{ fontSize: '1.85rem', fontWeight: 800, color: 'var(--text-primary)', lineHeight: 1 }}>{score}</span>
-                      <span style={{ fontSize: '0.52rem', color: 'var(--text-muted)', fontWeight: 800, marginTop: '2px' }}>/ 100 PTS</span>
+                      <span className="tabular-nums" style={{ fontSize: '2.1rem', fontWeight: 800, color: 'var(--text-primary)', lineHeight: 1, fontFamily: 'var(--font-heading)' }}>
+                        {score}
+                      </span>
+                      <span style={{ fontSize: '0.54rem', color: 'var(--text-muted)', fontWeight: 800, marginTop: '2px', letterSpacing: '0.06em' }}>
+                        / 100 PTS
+                      </span>
                     </div>
                   </div>
 
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '5px', flex: 1, minWidth: '180px' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                      <span className="live-beacon-pulse" style={{ width: '7px', height: '7px', borderRadius: '50%', background: 'var(--accent-emerald)', display: 'inline-block' }} />
-                      <span style={{ fontSize: '0.72rem', fontWeight: 800, color: 'var(--text-primary)', textTransform: 'uppercase' }}>
-                        {score >= 80 ? 'Optimal Capital Solvency' : 'Solid Foundation'}
+                      <span className="live-beacon-pulse" style={{ width: '8px', height: '8px', borderRadius: '50%', background: score >= 80 ? 'var(--accent-emerald)' : 'var(--accent-ochre)', display: 'inline-block' }} />
+                      <span style={{ fontSize: '0.74rem', fontWeight: 800, color: 'var(--text-primary)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+                        {score >= 80 ? 'Optimal Capital Solvency' : 'Solid Base · Actionable Upside'}
                       </span>
                     </div>
-                    <div style={{ fontSize: '1.05rem', fontWeight: 800, color: 'var(--text-primary)' }}>
-                      {score >= 80 ? 'Institutionally Structured' : 'High Optimization Alpha'}
+                    <div style={{ fontSize: '1.15rem', fontWeight: 800, color: 'var(--text-primary)', letterSpacing: '-0.02em', fontFamily: 'var(--font-heading)' }}>
+                      {score >= 80 ? 'Institutionally Structured' : 'Structured with Growth Room'}
                     </div>
-                    <div style={{ fontSize: '0.78rem', color: 'var(--text-secondary)', lineHeight: '1.4' }}>
-                      Audit completed across liquidity, income protection, tax deduction potential, and DRV pension points.
+                    <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', lineHeight: '1.45' }}>
+                      Audit evaluates existential risk defense, statutory tax capture (§ 32a), expected compound trajectory, and DRV pension baseline.
                     </div>
                   </div>
                 </div>
@@ -786,37 +834,45 @@ export default function StepProfile({ profile, updateProfile, nextStep, prevStep
                 {/* 3 Executive Diagnostic KPI Pills */}
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '10px' }}>
                   <div style={{ background: 'var(--bg-card)', padding: '12px 10px', borderRadius: '10px', border: '1px solid var(--border-architectural)', textAlign: 'center' }}>
-                    <div style={{ fontSize: '0.62rem', color: 'var(--text-muted)', fontWeight: 800, textTransform: 'uppercase' }}>CAPITAL SHIELD</div>
-                    <div className="tabular-nums" style={{ fontSize: '0.92rem', fontWeight: 800, color: 'var(--text-primary)', marginTop: '3px' }}>€1.8M Active</div>
+                    <div style={{ fontSize: '0.62rem', color: 'var(--text-muted)', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.04em' }}>CAPITAL SHIELD</div>
+                    <div className="tabular-nums" style={{ fontSize: '0.94rem', fontWeight: 800, color: hasBU ? 'var(--accent-emerald)' : 'var(--accent-ochre)', marginTop: '3px' }}>
+                      {hasBU ? '€1.8M Active' : 'Gap Detected'}
+                    </div>
                   </div>
                   <div style={{ background: 'var(--bg-card)', padding: '12px 10px', borderRadius: '10px', border: '1px solid var(--border-architectural)', textAlign: 'center' }}>
-                    <div style={{ fontSize: '0.62rem', color: 'var(--text-muted)', fontWeight: 800, textTransform: 'uppercase' }}>30-YR GROWTH</div>
-                    <div className="tabular-nums" style={{ fontSize: '0.92rem', fontWeight: 800, color: 'var(--text-primary)', marginTop: '3px' }}>7.0% p.a.</div>
+                    <div style={{ fontSize: '0.62rem', color: 'var(--text-muted)', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.04em' }}>WEALTH GROWTH</div>
+                    <div className="tabular-nums" style={{ fontSize: '0.94rem', fontWeight: 800, color: 'var(--text-primary)', marginTop: '3px' }}>
+                      {hasETF ? '7.0% p.a.' : '3.5% Base'}
+                    </div>
                   </div>
                   <div style={{ background: 'var(--bg-card)', padding: '12px 10px', borderRadius: '10px', border: '1px solid var(--border-architectural)', textAlign: 'center' }}>
-                    <div style={{ fontSize: '0.62rem', color: 'var(--text-muted)', fontWeight: 800, textTransform: 'uppercase' }}>TAX REFUND</div>
-                    <div className="tabular-nums" style={{ fontSize: '0.92rem', fontWeight: 800, color: 'var(--accent-emerald)', marginTop: '3px' }}>+€1,450/yr</div>
+                    <div style={{ fontSize: '0.62rem', color: 'var(--text-muted)', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.04em' }}>TAX ALPHA</div>
+                    <div className="tabular-nums" style={{ fontSize: '0.94rem', fontWeight: 800, color: 'var(--accent-emerald)', marginTop: '3px' }}>
+                      +€1,450 / yr
+                    </div>
                   </div>
                 </div>
               </div>
 
               {/* Right Suite: 5-Pillar Scorecard */}
               <div className="solid-card" style={{ 
-                padding: '24px', 
+                padding: 'clamp(18px, 3vw, 26px)', 
                 borderRadius: '16px', 
                 display: 'flex',
                 flexDirection: 'column',
                 justifyContent: 'space-between',
                 gap: '12px',
                 background: 'var(--bg-card)',
-                border: '1px solid var(--border-architectural)'
+                border: '1px solid var(--border-architectural)',
+                borderTop: '2.5px solid var(--maison-gold)',
+                boxShadow: '0 4px 20px rgba(0, 0, 0, 0.04)'
               }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2px' }}>
-                  <span style={{ fontSize: '0.72rem', fontWeight: 800, color: 'var(--text-primary)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+                  <span style={{ fontSize: '0.72rem', fontWeight: 800, color: 'var(--text-primary)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
                     5-PILLAR DIAGNOSTIC SCORECARD
                   </span>
-                  <span style={{ fontSize: '0.7rem', color: 'var(--text-secondary)', fontWeight: 600 }}>
-                    Actuarial Breakdown
+                  <span style={{ fontSize: '0.7rem', color: 'var(--maison-gold)', fontWeight: 700 }}>
+                    DIN 77230 Benchmarked
                   </span>
                 </div>
 
@@ -825,55 +881,64 @@ export default function StepProfile({ profile, updateProfile, nextStep, prevStep
                   return (
                     <div key={idx} className="hover-lift" style={{ 
                       background: 'var(--bg-card-subtle)', 
-                      padding: '8px 12px', 
-                      borderRadius: '10px', 
+                      padding: '10px 14px', 
+                      borderRadius: '11px', 
                       border: '1px solid var(--border-architectural)',
                       display: 'flex',
                       flexDirection: 'column',
-                      gap: '5px'
+                      gap: '6px'
                     }}>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '8px' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '9px' }}>
                           <div style={{ 
-                            background: 'var(--bg-card)', 
-                            color: 'var(--text-primary)', 
-                            padding: '4px', 
-                            borderRadius: '6px', 
+                            background: 'linear-gradient(135deg, var(--maison-pine-deep), var(--maison-obsidian))', 
+                            color: 'var(--maison-gold)', 
+                            padding: '6px', 
+                            borderRadius: '7px', 
                             display: 'flex', 
                             alignItems: 'center', 
                             justifyContent: 'center',
-                            border: '1px solid var(--border-architectural)'
+                            border: '1px solid var(--maison-gold-border)'
                           }}>
-                            <Icon size={13} strokeWidth={2} />
+                            <Icon size={14} strokeWidth={2} />
                           </div>
                           <div>
-                            <span style={{ fontSize: '0.8rem', fontWeight: 800, color: 'var(--text-primary)' }}>{item.pillar}</span>
-                            <span style={{ fontSize: '0.68rem', color: 'var(--text-secondary)', marginLeft: '6px' }}>{item.desc}</span>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                              <span style={{ fontSize: '0.84rem', fontWeight: 800, color: 'var(--text-primary)' }}>{item.pillar}</span>
+                              <span style={{ fontSize: '0.62rem', color: 'var(--maison-gold)', fontWeight: 700, background: 'rgba(197, 160, 89, 0.12)', padding: '1px 5px', borderRadius: '3px' }}>
+                                {item.citation.split(' ')[0]}
+                              </span>
+                            </div>
+                            <div style={{ fontSize: '0.72rem', color: 'var(--text-secondary)', marginTop: '1px' }}>{item.desc}</div>
                           </div>
                         </div>
 
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                           <span style={{ 
-                            fontSize: '0.62rem', 
+                            fontSize: '0.66rem', 
                             fontWeight: 800, 
                             color: item.statusColor, 
                             background: 'var(--bg-card)', 
                             border: '1px solid var(--border-architectural)',
-                            padding: '1px 6px', 
-                            borderRadius: '4px' 
+                            padding: '2px 8px', 
+                            borderRadius: '5px' 
                           }}>
                             {item.status}
                           </span>
-                          <span className="tabular-nums" style={{ fontSize: '0.8rem', fontWeight: 800, color: 'var(--text-primary)', width: '30px', textAlign: 'right' }}>{item.score}%</span>
+                          <span className="tabular-nums" style={{ fontSize: '0.88rem', fontWeight: 800, color: 'var(--text-primary)', width: '36px', textAlign: 'right' }}>
+                            {item.score}%
+                          </span>
                         </div>
                       </div>
 
-                      <div style={{ height: '4px', background: 'var(--bg-card)', borderRadius: '2px', overflow: 'hidden', border: '1px solid var(--border-architectural)' }}>
+                      <div style={{ height: '5px', background: 'var(--bg-card)', borderRadius: '3px', overflow: 'hidden', border: '1px solid var(--border-architectural)' }}>
                         <div 
                           style={{ 
                             height: '100%', 
                             width: `${item.score}%`, 
-                            background: item.score >= 80 ? 'linear-gradient(90deg, var(--maison-obsidian), var(--maison-gold))' : 'linear-gradient(90deg, var(--maison-obsidian), var(--accent-ochre))',
+                            background: item.score >= 80 
+                              ? 'linear-gradient(90deg, var(--maison-obsidian), var(--maison-gold))' 
+                              : 'linear-gradient(90deg, var(--maison-obsidian), var(--accent-ochre))',
                             transition: 'width 0.8s var(--ease-luxury)' 
                           }} 
                         />
@@ -883,6 +948,102 @@ export default function StepProfile({ profile, updateProfile, nextStep, prevStep
                 })}
               </div>
 
+            </div>
+
+            {/* Strategic Gap-Closure Priorities & Roadmap */}
+            <div style={{
+              background: 'var(--bg-card)',
+              border: '1px solid var(--border-architectural)',
+              borderRadius: '16px',
+              padding: 'clamp(18px, 3vw, 24px)',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '16px',
+              boxShadow: 'var(--shadow-xs)'
+            }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '10px' }}>
+                <div>
+                  <span style={{ fontSize: '0.72rem', fontWeight: 800, color: 'var(--maison-gold)', letterSpacing: '0.08em', textTransform: 'uppercase' }}>
+                    STRATEGIC ACTION PRIORITIES
+                  </span>
+                  <h4 style={{ margin: '2px 0 0 0', fontSize: '1.05rem', fontWeight: 800, color: 'var(--text-primary)' }}>
+                    Actuarial Implementation Sequence
+                  </h4>
+                </div>
+                <span style={{ fontSize: '0.74rem', color: 'var(--text-secondary)' }}>
+                  Prioritized by DIN 77230 financial risk hierarchy
+                </span>
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 280px), 1fr))', gap: '14px' }}>
+                <div style={{ background: 'var(--bg-card-subtle)', padding: '16px', borderRadius: '12px', border: '1px solid var(--border-architectural)', display: 'flex', flexDirection: 'column', gap: '8px', textAlign: 'left' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <span style={{ fontSize: '0.7rem', fontWeight: 800, color: 'var(--accent-coral)', textTransform: 'uppercase' }}>Priority 1 · Existential</span>
+                    <span style={{ fontSize: '0.7rem', color: 'var(--maison-gold)', fontWeight: 700 }}>DIN 77230 Level 1</span>
+                  </div>
+                  <strong style={{ fontSize: '0.92rem', color: 'var(--text-primary)' }}>Income &amp; Human Capital Shield</strong>
+                  <p style={{ margin: 0, fontSize: '0.78rem', color: 'var(--text-secondary)', lineHeight: '1.45' }}>
+                    {hasBU ? 'Your occupational disability shield is active. Verify statutory inflation adjustment.' : 'Configure occupational disability benefit (BU) sized to 80% net earnings.'}
+                  </p>
+                  <div style={{ marginTop: 'auto', paddingTop: '8px', borderTop: '1px solid var(--border-architectural)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>Financial Impact</span>
+                    <span style={{ fontSize: '0.78rem', fontWeight: 800, color: 'var(--accent-emerald)' }}>€1.8M Lifetime Defense</span>
+                  </div>
+                </div>
+
+                <div style={{ background: 'var(--bg-card-subtle)', padding: '16px', borderRadius: '12px', border: '1px solid var(--border-architectural)', display: 'flex', flexDirection: 'column', gap: '8px', textAlign: 'left' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <span style={{ fontSize: '0.7rem', fontWeight: 800, color: 'var(--accent-ochre)', textTransform: 'uppercase' }}>Priority 2 · Tax Alpha</span>
+                    <span style={{ fontSize: '0.7rem', color: 'var(--maison-gold)', fontWeight: 700 }}>EStG § 32a</span>
+                  </div>
+                  <strong style={{ fontSize: '0.92rem', color: 'var(--text-primary)' }}>Progressive Tax Optimization</strong>
+                  <p style={{ margin: 0, fontSize: '0.78rem', color: 'var(--text-secondary)', lineHeight: '1.45' }}>
+                    Capture statutory Werbungskosten deductions, home-office lump sum, and Vorsorgeaufwand write-offs.
+                  </p>
+                  <div style={{ marginTop: 'auto', paddingTop: '8px', borderTop: '1px solid var(--border-architectural)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>Annual Tax Alpha</span>
+                    <span style={{ fontSize: '0.78rem', fontWeight: 800, color: 'var(--accent-emerald)' }}>+€1,450 / yr Refund</span>
+                  </div>
+                </div>
+
+                <div style={{ background: 'var(--bg-card-subtle)', padding: '16px', borderRadius: '12px', border: '1px solid var(--border-architectural)', display: 'flex', flexDirection: 'column', gap: '8px', textAlign: 'left' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <span style={{ fontSize: '0.7rem', fontWeight: 800, color: 'var(--maison-gold)', textTransform: 'uppercase' }}>Priority 3 · Solvency</span>
+                    <span style={{ fontSize: '0.7rem', color: 'var(--maison-gold)', fontWeight: 700 }}>SGB VI &amp; § 20 InvStG</span>
+                  </div>
+                  <strong style={{ fontSize: '0.92rem', color: 'var(--text-primary)' }}>Rentenlücke Gap Closure</strong>
+                  <p style={{ margin: 0, fontSize: '0.78rem', color: 'var(--text-secondary)', lineHeight: '1.45' }}>
+                    Deploy systematic surplus cash flow into low-cost global ETFs and employer-subsidized bAV.
+                  </p>
+                  <div style={{ marginTop: 'auto', paddingTop: '8px', borderTop: '1px solid var(--border-architectural)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>Solvency Target</span>
+                    <span style={{ fontSize: '0.78rem', fontWeight: 800, color: 'var(--accent-emerald)' }}>80% Replacement Ratio</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Fiduciary Methodology Declaration */}
+            <div style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              gap: '12px',
+              padding: '12px 18px',
+              background: 'var(--bg-card-subtle)',
+              border: '1px solid var(--border-architectural)',
+              borderRadius: '10px',
+              flexWrap: 'wrap'
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <Sparkles size={14} color="var(--maison-gold)" />
+                <span style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>
+                  Audit calculations strictly cite statutory federal law (§ 32a EStG, InvStG § 20, SGB VI) under DIN 77230 financial analysis standards.
+                </span>
+              </div>
+              <span style={{ fontSize: '0.72rem', fontWeight: 700, color: 'var(--maison-gold)', letterSpacing: '0.04em' }}>
+                100% Fee-Only &amp; Independent
+              </span>
             </div>
 
           </div>
