@@ -122,6 +122,56 @@ export default function StepInsurance({ profile, updateProfile, nextStep, prevSt
           </div>
         </div>
 
+        {/* Sub-Step Indicator Bar */}
+        <div style={{
+          display: 'flex',
+          gap: '6px',
+          overflowX: 'auto',
+          paddingBottom: '12px',
+          marginBottom: '18px',
+          borderBottom: '1px solid var(--border-architectural)',
+          scrollbarWidth: 'none'
+        }}>
+          {pages.map((p, idx) => (
+            <button
+              key={idx}
+              type="button"
+              onClick={() => move(idx)}
+              style={{
+                background: page === idx ? 'var(--maison-obsidian)' : 'var(--bg-card-subtle)',
+                color: page === idx ? '#ffffff' : 'var(--text-secondary)',
+                border: page === idx ? '1px solid var(--maison-gold)' : '1px solid var(--border-architectural)',
+                padding: '6px 12px',
+                borderRadius: '8px',
+                fontSize: '0.74rem',
+                fontWeight: page === idx ? 800 : 600,
+                cursor: 'pointer',
+                whiteSpace: 'nowrap',
+                transition: 'all 0.2s var(--ease-luxury)',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '6px'
+              }}
+            >
+              <span style={{
+                width: '16px',
+                height: '16px',
+                borderRadius: '50%',
+                background: page === idx ? 'var(--maison-gold)' : 'var(--border-architectural)',
+                color: page === idx ? '#060b14' : 'var(--text-secondary)',
+                display: 'inline-flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                fontSize: '0.62rem',
+                fontWeight: 800
+              }}>
+                {idx + 1}
+              </span>
+              {p[0]}
+            </button>
+          ))}
+        </div>
+
         {page === 0 && <>
           <div className="insurance-metrics-grid">
             <Metric label="Human capital at risk" value={money(lab.summary.human_capital_present_value)} note="Present value, not gross salary × years" />
