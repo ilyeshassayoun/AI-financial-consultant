@@ -35,33 +35,71 @@ class ErrorBoundary extends Component {
         return this.props.fallback;
       }
       return (
-        <div className={`${styles.cardBase} ${styles.animateFadeInUp}`} style={{
+        <div
+          role="alert"
+          aria-live="assertive"
+          className={`${styles.cardBase} ${styles.animateFadeInUp}`}
+          style={{
           display: 'flex',
           flexDirection: 'column',
           alignItems: 'center',
           justifyContent: 'center',
-          minHeight: '300px',
-          padding: '40px',
+          width: 'min(680px, calc(100% - 32px))',
+          minHeight: '320px',
+          padding: 'clamp(28px, 6vw, 52px)',
           textAlign: 'center',
-          margin: '20px'
+          margin: 'clamp(24px, 8vh, 72px) auto',
+          color: 'var(--text-primary, #12233f)',
+          background: 'var(--bg-card, #ffffff)',
+          border: '1px solid var(--border-architectural, #d8dee8)',
+          borderTop: '3px solid var(--maison-gold, #c5a059)',
+          borderRadius: '18px',
+          boxShadow: '0 18px 50px rgba(18, 35, 63, 0.12)',
+          boxSizing: 'border-box'
         }}>
           <div style={{
-            fontSize: '48px',
-            marginBottom: '16px'
-          }}>⚠️</div>
+            display: 'grid',
+            placeItems: 'center',
+            width: '64px',
+            height: '64px',
+            marginBottom: '20px',
+            borderRadius: '50%',
+            background: 'rgba(197, 160, 89, 0.14)',
+            border: '1px solid rgba(197, 160, 89, 0.4)',
+            fontSize: '30px'
+          }} aria-hidden="true">⚠️</div>
           <h2 className={`${styles.textPrimary} ${styles.fontBold}`} style={{
-            marginBottom: '8px',
-            fontSize: '20px'
+            margin: '0 0 10px',
+            color: 'var(--text-primary, #12233f)',
+            fontSize: 'clamp(1.35rem, 4vw, 1.75rem)',
+            lineHeight: 1.2
           }}>Something went wrong</h2>
           <p className={styles.textSecondary} style={{
-            marginBottom: '24px',
-            fontSize: '14px'
+            maxWidth: '480px',
+            margin: '0 0 26px',
+            color: 'var(--text-secondary, #526176)',
+            fontSize: '1rem',
+            lineHeight: 1.6
           }}>
-            This section could not load. Try again or open another section.
+            This section could not load. Your saved inputs are safe. Try the section again, or use the navigation to continue elsewhere.
           </p>
           <button
+            type="button"
             onClick={this.resetError.bind(this)}
             className={styles.btnPrimary}
+            style={{
+              minWidth: '148px',
+              minHeight: '46px',
+              padding: '12px 24px',
+              border: '1px solid var(--maison-gold, #c5a059)',
+              borderRadius: '10px',
+              background: 'var(--maison-obsidian, #10223d)',
+              color: '#ffffff',
+              boxShadow: '0 8px 22px rgba(16, 34, 61, 0.2)',
+              font: 'inherit',
+              fontWeight: 750,
+              cursor: 'pointer'
+            }}
           >
             Try Again
           </button>
