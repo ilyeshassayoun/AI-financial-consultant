@@ -1,4 +1,8 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
+import { render, screen } from '@testing-library/react';
+import StepTax from './StepTax';
+
+Element.prototype.scrollIntoView = vi.fn();
 
 describe('StepTax utility functions', () => {
   const money = value => new Intl.NumberFormat('de-DE', {
@@ -66,5 +70,33 @@ describe('StepTax utility functions', () => {
       expect(pages[0][0]).toBe('Readiness');
       expect(pages[5][0]).toBe('Tax memo');
     });
+  });
+
+  it('marks the tax-flow view switch as a pressed segmented control', () => {
+    render(<StepTax
+      profile={{ income: 60000 }}
+      updateProfile={vi.fn()}
+      subStep={1}
+      setSubStep={vi.fn()}
+      analysisStatus="success"
+      analysis={{ tax_lab: { headline: {}, bridge: [], social_security: {} } }}
+    />);
+
+    expect(screen.getByRole('group', { name: 'Tax flow visualization' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Statutory Flow' })).toHaveAttribute('aria-pressed', 'true');
+    expect(screen.getByRole('button', { name: 'Sankey Stream' })).toHaveAttribute('aria-pressed', 'false');
+  });
+
+  it('describes when spouse income is included in the estimate', () => {
+    render(<StepTax
+      profile={{ spouse_income: 40000, joint_assessment: true, is_married: true }}
+      updateProfile={vi.fn()}
+      subStep={3}
+      setSubStep={vi.fn()}
+      analysisStatus="success"
+      analysis={{ tax_lab: { headline: {}, social_security: { components: [] } } }}
+    />);
+
+    expect(screen.getByText('Included in the household estimate when married and joint assessment are enabled.')).toBeInTheDocument();
   });
 });

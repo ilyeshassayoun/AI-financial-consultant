@@ -154,39 +154,21 @@ export default function StepTax({
 
         {page === 1 && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-            <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
-              <div style={{ display: 'inline-flex', background: 'var(--bg-card-subtle)', padding: '4px', borderRadius: '10px', border: '1px solid var(--border-architectural)', gap: '4px' }}>
+            <div className="tax-view-switch-wrap">
+              <div className="tax-view-switch" role="group" aria-label="Tax flow visualization">
                 <button
                   type="button"
                   onClick={() => setPage1View('waterfall')}
-                  style={{
-                    padding: '8px 16px',
-                    minHeight: '36px',
-                    borderRadius: '8px',
-                    border: 'none',
-                    background: page1View === 'waterfall' ? 'var(--maison-obsidian)' : 'transparent',
-                    color: page1View === 'waterfall' ? '#ffffff' : 'var(--text-secondary)',
-                    fontSize: '0.8rem',
-                    fontWeight: 700,
-                    cursor: 'pointer'
-                  }}
+                  className={page1View === 'waterfall' ? 'is-active' : ''}
+                  aria-pressed={page1View === 'waterfall'}
                 >
                   Statutory Flow
                 </button>
                 <button
                   type="button"
                   onClick={() => setPage1View('sankey')}
-                  style={{
-                    padding: '8px 16px',
-                    minHeight: '36px',
-                    borderRadius: '8px',
-                    border: 'none',
-                    background: page1View === 'sankey' ? 'var(--maison-obsidian)' : 'transparent',
-                    color: page1View === 'sankey' ? '#ffffff' : 'var(--text-secondary)',
-                    fontSize: '0.8rem',
-                    fontWeight: 700,
-                    cursor: 'pointer'
-                  }}
+                  className={page1View === 'sankey' ? 'is-active' : ''}
+                  aria-pressed={page1View === 'sankey'}
                 >
                   Sankey Stream
                 </button>
@@ -229,7 +211,7 @@ export default function StepTax({
 
         {page === 3 && <div className="tax-two-column">
           <article className="tax-panel"><h2>Employee social insurance</h2><div className="tax-contribution-list">{(lab.social_security?.components || []).map(item => <div key={item.label}><span>{item.label}</span><strong>{money(item.amount)}</strong></div>)}</div><div className="tax-total"><span>Total employee share</span><strong>{money(lab.social_security?.total)}</strong></div><p className="tax-note">Care employee rate: {percent(lab.social_security?.care_employee_rate)} · {lab.social_security?.children_under_25_assumed ?? 0} children under 25 assumed · {lab.social_security?.saxony ? 'Saxony shift applied' : 'outside Saxony'}</p></article>
-          <article className="tax-panel tax-panel--focus"><h2>Household facts</h2><div className="tax-form-stack"><Field label="Children under 25" hint="Age-limited care-insurance reductions depend on this count."><input type="number" min="0" max="20" value={profile?.children_under_25 ?? profile?.num_children ?? 0} onChange={event => updateProfile({ children_under_25: Number(event.target.value) })} /></Field><label className="tax-switch"><input type="checkbox" checked={Boolean(profile?.is_saxony)} onChange={event => updateProfile({ is_saxony: event.target.checked })} /><span><strong>Employment in Saxony</strong><small>Changes the employee/employer care contribution split.</small></span></label><label className="tax-switch"><input type="checkbox" checked={profile?.joint_assessment !== false} onChange={event => updateProfile({ joint_assessment: event.target.checked })} /><span><strong>Joint assessment intended</strong><small>Requires eligibility and combined spouse taxable income.</small></span></label><Field label="Spouse gross income" hint="Captured for readiness; the current estimate does not yet combine it."><input type="number" min="0" value={profile?.spouse_income ?? 0} onChange={event => updateProfile({ spouse_income: Number(event.target.value) })} /><span>€</span></Field></div></article>
+          <article className="tax-panel tax-panel--focus"><h2>Household facts</h2><div className="tax-form-stack"><Field label="Children under 25" hint="Age-limited care-insurance reductions depend on this count."><input type="number" min="0" max="20" value={profile?.children_under_25 ?? profile?.num_children ?? 0} onChange={event => updateProfile({ children_under_25: Number(event.target.value) })} /></Field><label className="tax-switch"><input type="checkbox" checked={Boolean(profile?.is_saxony)} onChange={event => updateProfile({ is_saxony: event.target.checked })} /><span><strong>Employment in Saxony</strong><small>Changes the employee/employer care contribution split.</small></span></label><label className="tax-switch"><input type="checkbox" checked={profile?.joint_assessment !== false} onChange={event => updateProfile({ joint_assessment: event.target.checked })} /><span><strong>Joint assessment intended</strong><small>Requires eligibility and combined spouse taxable income.</small></span></label><Field label="Spouse gross income" hint="Included in the household estimate when married and joint assessment are enabled."><input type="number" min="0" value={profile?.spouse_income ?? 0} onChange={event => updateProfile({ spouse_income: Number(event.target.value) })} /><span>€</span></Field></div></article>
         </div>}
 
         {page === 4 && <div className="tax-two-column">

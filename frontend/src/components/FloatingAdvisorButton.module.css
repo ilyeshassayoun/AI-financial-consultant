@@ -59,6 +59,21 @@
   box-shadow: 0 0 6px var(--accent-emerald, #059669);
 }
 
+@media (min-width: 641px) and (max-width: 1100px) {
+  .floatingButton {
+    width: 46px;
+    height: 46px;
+    padding: 0;
+    justify-content: center;
+    border-radius: 50%;
+  }
+
+  .label,
+  .sparkleIcon {
+    display: none;
+  }
+}
+
 @media (max-width: 640px) {
   .floatingButton { display: none; }
 }
