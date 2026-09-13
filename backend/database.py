@@ -18,13 +18,20 @@ def get_engine():
         database_url = settings.DATABASE_URL
         if database_url.startswith("postgresql://"):
             database_url = database_url.replace("postgresql://", "postgresql+asyncpg://", 1)
-        _engine = create_async_engine(
-            database_url,
-            echo=settings.DEBUG,
-            pool_size=5,
-            max_overflow=10,
-            pool_pre_ping=True,
-        )
+        
+        # SQLite doesn't support max_overflow and pool_size parameters
+        is_sqlite = "sqlite" in database_url.lower()
+        
+        engine_kwargs = {
+            "echo": settings.DEBUG,
+            "pool_pre_ping": True,
+        }
+        
+        if not is_sqlite:
+            engine_kwargs["pool_size"] = 5
+            engine_kwargs["max_overflow"] = 10
+        
+        _engine = create_async_engine(database_url, **engine_kwargs)
     return _engine
 
 
