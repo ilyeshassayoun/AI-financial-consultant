@@ -17,6 +17,7 @@ def run_full_analysis(profile: ClientProfile) -> dict[str, Any]:
     # 1. Tax Analysis (full German progressive EStG tax engine)
     tax_info = calculate_german_tax(
         gross_income=profile.income,
+        spouse_income=profile.spouse_income,
         tax_class=profile.tax_class,
         is_married=profile.is_married,
         church_tax=profile.church_tax,

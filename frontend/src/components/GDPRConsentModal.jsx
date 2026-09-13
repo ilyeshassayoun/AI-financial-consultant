@@ -1,13 +1,10 @@
-import React, { useState } from 'react';
+import React, { useRef, useState } from 'react';
 import { ShieldCheck, Lock, Download, Trash2, X } from 'lucide-react';
+import FocusTrap from './FocusTrap';
 
 export default function GDPRConsentModal({ isOpen, onClose, profile, onResetData }) {
-  const [consentState, setConsentState] = useState({
-    functional: true,
-    aiAdvisory: true,
-    localAnalytics: false
-  });
   const [downloadSuccess, setDownloadSuccess] = useState(false);
+  const dialogRef = useRef(null);
 
   if (!isOpen) return null;
 
@@ -26,7 +23,6 @@ export default function GDPRConsentModal({ isOpen, onClose, profile, onResetData
   const handleEraseData = () => {
     if (window.confirm("Are you sure you want to permanently erase all locally stored audit data under GDPR Art. 17? This cannot be undone.")) {
       if (onResetData) onResetData();
-      localStorage.clear();
       onClose();
     }
   };
@@ -48,7 +44,9 @@ export default function GDPRConsentModal({ isOpen, onClose, profile, onResetData
         padding: '20px'
       }}
     >
+      <FocusTrap isActive={isOpen} containerRef={dialogRef} onEscape={onClose} />
       <div 
+        ref={dialogRef}
         className="solid-card animate-fade-in-up"
         style={{
           width: '100%',
@@ -72,7 +70,7 @@ export default function GDPRConsentModal({ isOpen, onClose, profile, onResetData
                 Data Privacy &amp; GDPR Controls (DSGVO)
               </h3>
               <p style={{ margin: '2px 0 0 0', fontSize: '0.8rem', color: 'var(--text-secondary)' }}>
-                Compliant with EU Regulation 2016/679 and German BDSG standards.
+                Review, export, or erase the financial data stored by this browser.
               </p>
             </div>
           </div>
@@ -90,39 +88,17 @@ export default function GDPRConsentModal({ isOpen, onClose, profile, onResetData
         <div style={{ background: 'var(--bg-card-subtle)', padding: '14px 16px', borderRadius: '12px', border: '1px solid var(--border-architectural)' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '6px' }}>
             <Lock size={15} color="var(--accent-emerald)" />
-            <span style={{ fontSize: '0.82rem', fontWeight: 700, color: 'var(--text-primary)' }}>Client Data Sovereignity</span>
+            <span style={{ fontSize: '0.82rem', fontWeight: 700, color: 'var(--text-primary)' }}>How your data is processed</span>
           </div>
           <p style={{ margin: 0, fontSize: '0.78rem', color: 'var(--text-secondary)', lineHeight: 1.45 }}>
-            All financial parameters (income, pensions, tax class) remain in your browser session or secure memory during processing. No personal telemetry is sold or shared with commercial credit bureaus.
+            Your profile is stored in this browser for continuity and sent to the configured analysis API when calculations are requested. This interface does not claim that processing occurs only on your device.
           </p>
         </div>
 
-        {/* Granular Consent Checkboxes */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-          <label style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: '0.84rem', color: 'var(--text-primary)', cursor: 'pointer' }}>
-            <span><strong>Strictly Necessary Calculations</strong> (EStG &amp; SGB Engines)</span>
-            <input type="checkbox" checked={consentState.functional} disabled style={{ width: '18px', height: '18px' }} />
-          </label>
-
-          <label style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: '0.84rem', color: 'var(--text-primary)', cursor: 'pointer' }}>
-            <span><strong>Actuarial AI Advisory</strong> (Statutory LLM Explanations)</span>
-            <input 
-              type="checkbox" 
-              checked={consentState.aiAdvisory} 
-              onChange={(e) => setConsentState(prev => ({ ...prev, aiAdvisory: e.target.checked }))}
-              style={{ width: '18px', height: '18px' }} 
-            />
-          </label>
-
-          <label style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: '0.84rem', color: 'var(--text-primary)', cursor: 'pointer' }}>
-            <span><strong>Anonymous Model Improvement</strong></span>
-            <input 
-              type="checkbox" 
-              checked={consentState.localAnalytics} 
-              onChange={(e) => setConsentState(prev => ({ ...prev, localAnalytics: e.target.checked }))}
-              style={{ width: '18px', height: '18px' }} 
-            />
-          </label>
+        <div style={{ display: 'grid', gap: '10px', fontSize: '0.84rem', color: 'var(--text-secondary)', lineHeight: 1.5 }}>
+          <p style={{ margin: 0 }}><strong style={{ color: 'var(--text-primary)' }}>Analysis requests:</strong> the current profile is transmitted to the API to calculate tax, insurance, investment, and retirement results.</p>
+          <p style={{ margin: 0 }}><strong style={{ color: 'var(--text-primary)' }}>AI concierge:</strong> chat context is sent only when you use the advisory assistant.</p>
+          <p style={{ margin: 0 }}><strong style={{ color: 'var(--text-primary)' }}>Local controls:</strong> export downloads a readable JSON copy; erase removes the saved profile and signed-in session from this browser.</p>
         </div>
 
         {/* Rights of the Data Subject (GDPR Art. 15, 17, 20) */}
@@ -160,14 +136,14 @@ export default function GDPRConsentModal({ isOpen, onClose, profile, onResetData
           </button>
         </div>
 
-        {/* Save & Confirm Button */}
+        {/* Close Button */}
         <button
           type="button"
           onClick={onClose}
           className="btn-brand"
           style={{ width: '100%', padding: '12px', fontSize: '0.85rem', fontWeight: 800, borderRadius: '10px' }}
         >
-          Confirm &amp; Apply Privacy Preferences
+          Done
         </button>
 
       </div>

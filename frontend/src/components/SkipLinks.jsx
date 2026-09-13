@@ -7,12 +7,12 @@ import styles from '../styles/shared.module.css';
  */
 export function SkipLinks() {
   return (
-    <nav className={`${styles.skipLinks} sr-only focus-within:not-sr-only fixed top-0 left-0 z-[1300] p-2`} aria-label="Skip links">
-      <ul className="flex flex-col gap-2" role="list">
+    <nav className={styles.skipLinks} aria-label="Skip links">
+      <ul role="list">
         <li>
           <a
             href="#main-content"
-            className={`${styles.skipLink} inline-flex items-center gap-2 px-4 py-2 bg-[var(--color-brand-primary)] text-white font-semibold rounded-md shadow-lg focus:ring-4 focus:ring-[var(--color-gold-300)]`}
+            className={styles.skipLink}
           >
             Skip to main content
           </a>
@@ -20,7 +20,7 @@ export function SkipLinks() {
         <li>
           <a
             href="#main-navigation"
-            className={`${styles.skipLink} inline-flex items-center gap-2 px-4 py-2 bg-[var(--color-brand-primary)] text-white font-semibold rounded-md shadow-lg focus:ring-4 focus:ring-[var(--color-gold-300)]`}
+            className={styles.skipLink}
           >
             Skip to navigation
           </a>
@@ -28,7 +28,7 @@ export function SkipLinks() {
         <li>
           <a
             href="#ai-assistant"
-            className={`${styles.skipLink} inline-flex items-center gap-2 px-4 py-2 bg-[var(--color-brand-primary)] text-white font-semibold rounded-md shadow-lg focus:ring-4 focus:ring-[var(--color-gold-300)]`}
+            className={styles.skipLink}
           >
             Skip to AI assistant
           </a>

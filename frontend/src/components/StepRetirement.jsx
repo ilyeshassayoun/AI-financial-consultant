@@ -34,7 +34,7 @@ function Scope({ lab }) {
   return <details className="ret-scope"><summary><Info size={17} /> Assumptions, limitations and official sources</summary><div><ul>{lab.limitations.map(item => <li key={item}>{item}</li>)}</ul><div>{lab.sources.map(source => <a key={source.url} href={source.url} target="_blank" rel="noreferrer">{source.label}</a>)}</div></div></details>;
 }
 
-export default function StepRetirement({ profile, updateProfile, nextStep, prevStep, analysis, subStep: controlledPage, setSubStep: setControlledPage }) {
+export default function StepRetirement({ profile, updateProfile, nextStep: _nextStep, prevStep, analysis, subStep: controlledPage, setSubStep: setControlledPage }) {
   const topRef = useRef(null);
   const page = Math.max(0, Math.min(pages.length - 1, Number(controlledPage || 0)));
   const setPage = setControlledPage || (() => {});

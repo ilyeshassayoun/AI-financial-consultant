@@ -1,7 +1,7 @@
 import React, { useCallback } from 'react';
 import { 
-  Shield, TrendingUp, PiggyBank, Bot, ChevronRight, CheckCircle2, 
-  Sparkles, Lock, ArrowUpRight, Scale, BarChart3, Landmark, Star, Award
+  TrendingUp, PiggyBank, Bot, ChevronRight, CheckCircle2,
+  Sparkles, Lock, ArrowUpRight, Scale, Landmark, Star, Award
 } from 'lucide-react';
 
 const features = [

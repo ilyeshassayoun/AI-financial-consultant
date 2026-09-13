@@ -11,6 +11,7 @@ router = APIRouter(prefix="/api", tags=["insurance"])
 def step_insurance(profile: ClientProfile) -> typing.Any:
     tax_info = calculate_german_tax(
         gross_income=profile.income,
+        spouse_income=profile.spouse_income,
         tax_class=profile.tax_class,
         is_married=profile.is_married,
         church_tax=profile.church_tax,

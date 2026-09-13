@@ -58,7 +58,7 @@ def test_tax_aware_terminal_value_is_explainable_and_below_gross():
 
 def test_married_allowance_does_not_reduce_after_tax_value():
     single = build_investment_lab({**BASE, "is_married": False})
-    married = build_investment_lab({**BASE, "is_married": True})
+    married = build_investment_lab({**BASE, "is_married": True, "joint_assessment": True})
     assert married["tax_analysis"]["saver_allowance"] == 2000
     assert married["tax_analysis"]["after_tax_terminal"] >= single["tax_analysis"]["after_tax_terminal"]
 

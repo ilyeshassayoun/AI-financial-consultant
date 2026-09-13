@@ -5,6 +5,7 @@ export async function fetchFullAnalysis(profile, signal) {
   try {
     const response = await fetch(`${API_BASE}/api/analyze`, {
       method: 'POST',
+      credentials: 'include',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(profile),
       signal
@@ -23,6 +24,7 @@ export async function fetchConsultantInsight(profile, step, signal) {
   try {
     const response = await fetch(`${API_BASE}/api/consultant/insight`, {
       method: 'POST',
+      credentials: 'include',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ profile, step }),
       signal
@@ -41,6 +43,7 @@ export async function fetchChatReply(profile, messages, signal) {
   try {
     const response = await fetch(`${API_BASE}/api/chat`, {
       method: 'POST',
+      credentials: 'include',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ profile, messages }),
       signal
@@ -59,6 +62,7 @@ export async function streamChatReply(profile, messages, onChunk, signal) {
   try {
     const response = await fetch(`${API_BASE}/api/chat/stream`, {
       method: 'POST',
+      credentials: 'include',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ profile, messages }),
       signal
@@ -108,4 +112,3 @@ export async function streamChatReply(profile, messages, onChunk, signal) {
     }
   }
 }
-

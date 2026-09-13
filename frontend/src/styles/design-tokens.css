@@ -216,9 +216,24 @@
   }
 }
 
-/* Dark Mode (High-End Wall Street Midnight Obsidian) */
+/* Explicit dark mode follows the in-app theme control. */
+[data-theme="dark"] {
+  --color-bg-primary: var(--color-obsidian-950);
+  --color-bg-secondary: var(--color-obsidian-900);
+  --color-bg-tertiary: var(--color-obsidian-850);
+  --color-bg-elevated: var(--color-obsidian-850);
+  --color-text-primary: #f8fafc;
+  --color-text-secondary: var(--color-obsidian-200);
+  --color-text-tertiary: var(--color-obsidian-300);
+  --color-border-subtle: #1e293b;
+  --color-border-default: #334155;
+  --color-border-gold: #45381e;
+  --color-bg-overlay: rgba(4, 8, 14, 0.82);
+}
+
+/* Use the operating-system preference only until a user chooses a theme. */
 @media (prefers-color-scheme: dark) {
-  :root {
+  :root:not([data-theme]) {
     --color-bg-primary: var(--color-obsidian-950);
     --color-bg-secondary: var(--color-obsidian-900);
     --color-bg-tertiary: var(--color-obsidian-850);

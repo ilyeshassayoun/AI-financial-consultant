@@ -1,37 +1,25 @@
-from typing import Any, Optional
-from fastapi import APIRouter, Depends, HTTPException, Header, status
-from pydantic import BaseModel
+from typing import Optional
+from fastapi import APIRouter, Depends, HTTPException, status
+from pydantic import BaseModel, Field
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from database import get_db
-from models.user import User
 from models.profile_snapshot import ProfileSnapshot
-from core.security import verify_token
+from models.user import User
+from dependencies import get_current_user
+from schemas import ClientProfile
 
 router = APIRouter(prefix="/api/profiles", tags=["profiles"])
 
 
 class ProfileSaveRequest(BaseModel):
-    name: str = "My Profile"
-    profile: dict[str, Any]
+    name: str = Field(default="My Profile", min_length=1, max_length=200)
+    profile: ClientProfile
 
 
 class ProfileUpdateRequest(BaseModel):
-    name: Optional[str] = None
-    profile: Optional[dict[str, Any]] = None
-
-
-async def get_current_user(authorization: Optional[str] = Header(default=None), db: AsyncSession = Depends(get_db)) -> User:
-    if not authorization or not authorization.startswith("Bearer "):
-        raise HTTPException(status_code=401, detail="Authorization required")
-    payload = verify_token(authorization[7:], expected_type="access")
-    if not payload:
-        raise HTTPException(status_code=401, detail="Invalid or expired token")
-    result = await db.execute(select(User).where(User.id == int(payload["sub"]), User.is_active == True))
-    user = result.scalar_one_or_none()
-    if not user:
-        raise HTTPException(status_code=401, detail="User not found")
-    return user
+    name: Optional[str] = Field(default=None, min_length=1, max_length=200)
+    profile: Optional[ClientProfile] = None
 
 
 @router.get("/")
@@ -51,7 +39,7 @@ async def get_profile(profile_id: int, user: User = Depends(get_current_user), d
 
 @router.post("/", status_code=status.HTTP_201_CREATED)
 async def save_profile(request: ProfileSaveRequest, user: User = Depends(get_current_user), db: AsyncSession = Depends(get_db)):
-    snap = ProfileSnapshot(user_id=user.id, name=request.name, profile_json=request.profile)
+    snap = ProfileSnapshot(user_id=user.id, name=request.name, profile_json=request.profile.model_dump())
     db.add(snap)
     await db.flush()
     return {"id": snap.id, "name": snap.name, "message": "Profile saved"}
@@ -66,7 +54,7 @@ async def update_profile(profile_id: int, request: ProfileUpdateRequest, user: U
     if request.name is not None:
         snap.name = request.name
     if request.profile is not None:
-        snap.profile_json = request.profile
+        snap.profile_json = request.profile.model_dump()
     return {"id": snap.id, "name": snap.name, "message": "Profile updated"}
 
 

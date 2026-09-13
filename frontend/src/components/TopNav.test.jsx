@@ -1,53 +1,7 @@
 import { describe, it, expect } from 'vitest';
+import { SECTION_SUBSTEPS, steps } from './TopNav.constants';
 
 describe('TopNav constants', () => {
-  const SECTION_SUBSTEPS = {
-    profile: [
-      'Goals',
-      'Timeline',
-      'Cash Flow Details',
-      'AI Cash Flow Verdict',
-      'Holdings',
-      'Health Audit'
-    ],
-    insurance: [
-      'Risk Map',
-      'Income Protection',
-      'Healthcare Decision',
-      'Property & Liability',
-      'Stress Testing',
-      'Protection Policy'
-    ],
-    tax: [
-      'Readiness',
-      'Liability Bridge',
-      'Deduction Scenarios',
-      'Household & Vorsorge',
-      'Investment Tax',
-      'Tax Memo'
-    ],
-    invest: [
-      'Quantitative Investment Lab'
-    ],
-    pension: [
-      'Retirement Mandate',
-      'Three Pillars',
-      'DRV Record',
-      'Retirement Timing',
-      'Withdrawal Lab',
-      'Funding Policy'
-    ]
-  };
-
-  const steps = [
-    { id: 'welcome', label: 'Portal' },
-    { id: 'profile', label: 'Mandate & Cashflow' },
-    { id: 'insurance', label: 'Risk Shield' },
-    { id: 'tax', label: 'Tax Optimization' },
-    { id: 'invest', label: 'Asset Allocation' },
-    { id: 'pension', label: 'Solvency' },
-  ];
-
   const stepProgress = {
     welcome: 0,
     profile: 33,
@@ -62,7 +16,7 @@ describe('TopNav constants', () => {
       expect(SECTION_SUBSTEPS.profile).toHaveLength(6);
       expect(SECTION_SUBSTEPS.insurance).toHaveLength(6);
       expect(SECTION_SUBSTEPS.tax).toHaveLength(6);
-      expect(SECTION_SUBSTEPS.invest).toHaveLength(1);
+      expect(SECTION_SUBSTEPS.invest).toHaveLength(7);
       expect(SECTION_SUBSTEPS.pension).toHaveLength(6);
       expect(SECTION_SUBSTEPS.welcome).toBeUndefined();
     });

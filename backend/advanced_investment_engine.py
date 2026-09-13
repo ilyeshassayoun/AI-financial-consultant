@@ -85,22 +85,33 @@ def _pct(values: List[float], percentile: float) -> float:
 
 
 def _simulate_strategy(strategy_id: str, initial: float, monthly: float, years: int,
-                       inflation: float, target: float, seed: int, paths: int = 600) -> Dict[str, Any]:
+                       inflation: float, target: float, seed: int, paths: int = 600,
+                       annual_fee: float = 0.0) -> Dict[str, Any]:
     strategy = STRATEGIES[strategy_id]
-    mu, sigma, income_yield = _portfolio_moments(strategy["weights"])
+    gross_mu, sigma, income_yield = _portfolio_moments(strategy["weights"])
+    # The profile fee is the all-in annual cost assumption, not an extra TER.
+    # Convert arithmetic expected return to log drift before applying shocks.
+    mu = (1 + gross_mu) * (1 - annual_fee) - 1
+    log_drift = math.log1p(gross_mu) - .5 * sigma * sigma + math.log1p(-annual_fee)
     terminal, real_terminal, drawdowns = [], [], []
+    downside_squared = 0.0
+    risk_free = .02
     snapshots: List[List[float]] = [[] for _ in range(years + 1)]
     rng = random.Random(seed)
     annual_contribution = monthly * 12
     for _ in range(paths):
-        value, peak, max_drawdown = initial, max(initial, 1), 0.0
+        value = initial
+        unit_value, peak, max_drawdown = 1.0, 1.0, 0.0
         snapshots[0].append(value)
         for year in range(1, years + 1):
             shock = rng.gauss(0, 1)
-            annual_return = math.exp(mu - .5 * sigma * sigma + sigma * shock) - 1
+            annual_return = math.exp(log_drift + sigma * shock) - 1
             value = max(0, (value + annual_contribution / 2) * (1 + annual_return) + annual_contribution / 2)
-            peak = max(peak, value)
-            max_drawdown = max(max_drawdown, 1 - value / peak)
+            # Unitized performance excludes deposits from market drawdowns.
+            unit_value *= 1 + annual_return
+            peak = max(peak, unit_value)
+            max_drawdown = max(max_drawdown, 1 - unit_value / peak)
+            downside_squared += min(0.0, annual_return - risk_free) ** 2
             snapshots[year].append(value)
         terminal.append(value)
         real_terminal.append(value / ((1 + inflation) ** years))
@@ -108,9 +119,8 @@ def _simulate_strategy(strategy_id: str, initial: float, monthly: float, years: 
     p05, p10, p50, p90, p95 = [_pct(terminal, p) for p in (.05, .10, .50, .90, .95)]
     loss_threshold = initial + annual_contribution * years
     downside = sorted(terminal)[:max(1, int(paths * .05))]
-    risk_free = .02
     sharpe = (mu - risk_free) / sigma if sigma else 0
-    downside_vol = sigma * .68
+    downside_vol = math.sqrt(downside_squared / (paths * years))
     sortino = (mu - risk_free) / downside_vol if downside_vol else 0
     timeline = []
     for year in range(years + 1):
@@ -119,6 +129,7 @@ def _simulate_strategy(strategy_id: str, initial: float, monthly: float, years: 
     return {
         "id": strategy_id, "name": strategy["name"], "subtitle": strategy["subtitle"], "why": strategy["why"],
         "expected_return": round(mu, 4), "expected_volatility": round(sigma, 4), "income_yield": round(income_yield, 4),
+        "gross_expected_return": round(gross_mu, 4), "annual_fee_rate": annual_fee,
         "sharpe_ratio": round(sharpe, 2), "sortino_ratio": round(sortino, 2),
         "p05": round(p05), "p10": round(p10), "p50": round(p50), "p90": round(p90), "p95": round(p95),
         "real_p50": round(_pct(real_terminal, .50)), "expected_shortfall_95": round(sum(downside) / len(downside)),
@@ -130,13 +141,30 @@ def _simulate_strategy(strategy_id: str, initial: float, monthly: float, years: 
     }
 
 
-def _irr(cashflows: List[float]) -> float:
-    """Bisection IRR for irregular-sign annual cash flows."""
-    low, high = -.95, 2.0
+def _irr(cashflows: List[float]) -> float | None:
+    """Annual IRR only for a conventional, bracketed cash-flow sequence.
+
+    All-negative flows have no IRR; multiple sign changes may have multiple
+    roots. Neither case should be turned into a plausible-looking percentage.
+    """
+    nonzero = [flow for flow in cashflows if flow != 0]
+    if not nonzero or nonzero[0] >= 0 or nonzero[-1] <= 0:
+        return None
+    changes = sum((a > 0) != (b > 0) for a, b in zip(nonzero, nonzero[1:]))
+    if changes != 1:
+        return None
+
+    def npv(rate: float) -> float:
+        return sum(flow / ((1 + rate) ** period) for period, flow in enumerate(cashflows))
+
+    low, high = -.9999, 2.0
+    while npv(high) > 0 and high < 1024:
+        high *= 2
+    if npv(low) <= 0 or npv(high) >= 0:
+        return None
     for _ in range(100):
         rate = (low + high) / 2
-        npv = sum(flow / ((1 + rate) ** period) for period, flow in enumerate(cashflows))
-        if npv > 0:
+        if npv(rate) > 0:
             low = rate
         else:
             high = rate
@@ -188,7 +216,8 @@ def _tax_analysis(strategy: Dict[str, Any], profile: Dict[str, Any], initial: fl
     gross_gain = max(0.0, gross_terminal - contributions)
     weights = STRATEGIES[strategy["id"]]["weights"]
     taxable_share = sum(weight * TAXABLE_GAIN_SHARE[key] for key, weight in weights.items())
-    allowance = 2000.0 if profile.get("is_married", False) else 1000.0
+    jointly_assessed = profile.get("is_married", False) and profile.get("joint_assessment", False)
+    allowance = 2000.0 if jointly_assessed else 1000.0
     capital_tax_rate = .27995 if profile.get("church_tax", False) else .26375
     taxable_gain = max(0.0, gross_gain * taxable_share - allowance)
     estimated_tax = taxable_gain * capital_tax_rate
@@ -264,6 +293,18 @@ def _investment_policy(profile: Dict[str, Any], selected: Dict[str, Any], optimi
     debt_rate = float(profile.get("unsecured_debt_rate", 0) or 0)
     debt = float(profile.get("unsecured_debt", 0) or 0)
     flags = []
+    if profile.get("investment_liquidity") == "short" or int(profile.get("investment_years", 20)) <= 3:
+        flags.append({"level": "gate", "title": "Short-term capital requirement",
+                      "detail": "No growth-portfolio match is suitable for automatic implementation when capital is needed within three years."})
+    loss_tolerance = profile.get("investment_loss_tolerance") or profile.get("risk_profile", "medium")
+    if loss_tolerance == "low" or profile.get("investment_priority") == "stability":
+        flags.append({"level": "gate", "title": "Capital-preservation review required",
+                      "detail": "These growth portfolios cannot guarantee capital stability or a 10% loss limit."})
+    max_vol = {"low": .06, "medium": .12, "high": 1.0}.get(loss_tolerance, .12)
+    if selected.get("expected_volatility", 0) > max_vol:
+        flags.append({"level": "gate", "title": "Strategy volatility exceeds stated risk tolerance",
+                      "detail": f"The selected strategy has {selected.get('expected_volatility', 0) * 100:.1f}% modeled volatility, "
+                                 f"which exceeds the {max_vol * 100:.0f}% ceiling implied by the stated loss tolerance."})
     if reserve_months < 3:
         flags.append({"level": "gate", "title": "Liquidity reserve below policy minimum", "detail": f"{reserve_months:.1f} months funded versus a 3-month minimum."})
     if debt > 0 and debt_rate > .06:
@@ -282,42 +323,90 @@ def _investment_policy(profile: Dict[str, Any], selected: Dict[str, Any], optimi
 
 
 def _real_estate_case(profile: Dict[str, Any], years: int) -> Dict[str, Any]:
-    price = max(100000.0, float(profile.get("property_price", 350000) or 350000))
+    price = max(0.0, float(profile.get("property_price", 350000) or 0))
     down_payment = min(price, max(0.0, float(profile.get("property_down_payment", 70000) or 0)))
     rate = max(0.0, float(profile.get("mortgage_rate", .04) or 0))
     amortization_rate = max(0.0, float(profile.get("mortgage_amortization", .02) or 0))
     gross_yield = max(0.0, float(profile.get("gross_rental_yield", .035) or 0))
-    appreciation = max(-.05, float(profile.get("property_appreciation", .02) or 0))
+    appreciation = max(-.20, float(profile.get("property_appreciation", .02) or 0))
     loan = price - down_payment
     transaction_cost = price * .10
     annual_rent = price * gross_yield
-    annual_operating = price * .012 + annual_rent * .05
+    fixed_operating = price * .012
+    net_rent = annual_rent * .95  # 5% variable operating allowance
     monthly_payment = loan * (rate + amortization_rate) / 12
     balance = loan
     monthly_rate = rate / 12
-    for _ in range(years * 12):
-        interest = balance * monthly_rate
-        principal = max(0.0, monthly_payment - interest)
-        balance = max(0.0, balance - principal)
-    annual_debt_service = monthly_payment * 12
-    annual_cash_flow = annual_rent - annual_operating - annual_debt_service
+    schedule = []
+    annual_flows = []
+    total_debt_service = 0.0
+    for year in range(1, years + 1):
+        debt_service = 0.0
+        for _ in range(12):
+            interest = balance * monthly_rate
+            payment = min(monthly_payment, balance + interest)
+            balance = max(0.0, balance + interest - payment)
+            debt_service += payment
+        cash_flow = net_rent - fixed_operating - debt_service
+        annual_flows.append(cash_flow)
+        total_debt_service += debt_service
+        schedule.append({"year": year, "debt_service": round(debt_service),
+                         "net_cash_flow": round(cash_flow), "remaining_loan": round(balance)})
+    annual_debt_service = schedule[0]["debt_service"]
+    annual_cash_flow = annual_flows[0]
     future_value = price * ((1 + appreciation) ** years)
     remaining_loan = balance
     principal_paydown = loan - remaining_loan
-    equity_exit = max(0, future_value * .965 - remaining_loan)
+    equity_exit = future_value * .965 - remaining_loan
     invested_equity = down_payment + transaction_cost
-    equity_multiple = equity_exit / invested_equity if invested_equity else 0
-    irr = _irr([-invested_equity] + [annual_cash_flow] * (years - 1) + [annual_cash_flow + equity_exit])
-    return {"price": round(price), "down_payment": round(down_payment), "loan": round(loan), "transaction_cost": round(transaction_cost), "monthly_mortgage_payment": round(monthly_payment), "annual_net_cash_flow": round(annual_cash_flow), "annual_debt_service": round(annual_debt_service), "principal_paydown": round(principal_paydown), "remaining_loan": round(remaining_loan), "exit_equity": round(equity_exit), "equity_multiple": round(equity_multiple, 2), "levered_irr": round(irr, 4), "break_even_occupancy": round(min(1, (annual_operating + annual_debt_service) / annual_rent), 3) if annual_rent else 1, "warning": "Illustrative leveraged property case; excludes personal tax, major renovation, acquisition financing fees and local rent regulation."}
+    cashflows = [-invested_equity] + annual_flows
+    cashflows[-1] += equity_exit
+    contributed = -sum(min(0, flow) for flow in cashflows)
+    distributions = sum(max(0, flow) for flow in cashflows)
+    equity_multiple = distributions / contributed if contributed else None
+    irr = _irr(cashflows)
+    occupancy = (fixed_operating + annual_debt_service) / net_rent if net_rent else None
+    if occupancy is None:
+        occupancy_status = "no_rental_income"
+        occupancy_detail = "No rental income is modeled, so a break-even occupancy rate cannot be calculated."
+    elif occupancy <= 1:
+        occupancy_status = "feasible"
+        occupancy_detail = f"Break-even at {occupancy * 100:.1f}% occupancy — the modeled rent covers debt service and fixed costs."
+    else:
+        occupancy_status = "infeasible"
+        occupancy_detail = (f"Break-even requires {occupancy * 100:.1f}% occupancy, which exceeds 100%. "
+                           "Full occupancy cannot cover the modeled debt service and operating costs in year one.")
+    return {
+        "price": round(price), "down_payment": round(down_payment), "loan": round(loan),
+        "transaction_cost": round(transaction_cost), "horizon_years": years,
+        "monthly_mortgage_payment": round(monthly_payment),
+        "annual_net_cash_flow": round(annual_cash_flow), "annual_debt_service": annual_debt_service,
+        "total_debt_service": round(total_debt_service), "cash_flow_schedule": schedule,
+        "principal_paydown": round(principal_paydown), "remaining_loan": round(remaining_loan),
+        "exit_equity": round(equity_exit),
+        "equity_multiple": round(equity_multiple, 2) if equity_multiple is not None else None,
+        "levered_irr": round(irr, 4) if irr is not None else None,
+        "irr_status": "calculated" if irr is not None else "not_uniquely_defined",
+        "break_even_occupancy": round(occupancy, 3) if occupancy is not None else None,
+        "occupancy_feasible": occupancy is not None and occupancy <= 1,
+        "occupancy_status": occupancy_status,
+        "occupancy_detail": occupancy_detail,
+        "warning": "Illustrative property case with flat rents, 1.2% fixed operating costs, 5% variable operating costs and 3.5% exit costs. Cash flow and occupancy show year one; payments stop at payoff. Negative exit equity is shown where applicable. Excludes personal tax, major renovation, acquisition financing fees and local rent regulation.",
+    }
 
 
 def build_investment_lab(profile: Dict[str, Any]) -> Dict[str, Any]:
     initial = float(profile.get("initial_amount", 5000) or 0)
     monthly = float(profile.get("monthly_investment", 500) or 0)
-    years = max(5, int(profile.get("investment_years", 20) or 20))
-    inflation = float(profile.get("expected_inflation", .02) or .02)
-    target = float(profile.get("target_wealth", 250000) or 250000)
-    strategies = [_simulate_strategy(key, initial, monthly, years, inflation, target, 9173) for key in STRATEGIES]
+    years = max(1, min(60, int(profile.get("investment_years", 20) or 20)))
+    inflation_value = profile.get("expected_inflation")
+    inflation = .02 if inflation_value is None else float(inflation_value)
+    fee_value = profile.get("management_fee")
+    annual_fee = .0018 if fee_value is None else float(fee_value)
+    if not math.isfinite(annual_fee) or not 0 <= annual_fee <= .10:
+        raise ValueError("management_fee must be a finite rate between 0 and 0.10")
+    target = float(profile.get("target_wealth", 250000) or 0)
+    strategies = [_simulate_strategy(key, initial, monthly, years, inflation, target, 9173, annual_fee=annual_fee) for key in STRATEGIES]
     for strategy in strategies:
         strategy["tax"] = _tax_analysis(strategy, profile, initial, monthly, years)
         strategy["after_tax_terminal"] = strategy["tax"]["after_tax_terminal"]
@@ -334,4 +423,17 @@ def build_investment_lab(profile: Dict[str, Any]) -> Dict[str, Any]:
         "all_weather": {"gfc": -.14, "covid": -.11, "rate_shock": -.13, "stagflation": -.07},
         "real_asset_income": {"gfc": -.28, "covid": -.22, "rate_shock": -.19, "stagflation": -.09},
     }
-    return {"selected_strategy": selected_id, "strategies": strategies, "selected": selected, "target_wealth": round(target), "goal_optimizer": optimizer, "tax_analysis": selected["tax"], "investment_policy": policy, "real_estate": _real_estate_case(profile, min(years, 20)), "stress_matrix": [{"id": item["id"], "name": item["name"], **stresses[item["id"]]} for item in strategies], "methodology": {"simulations_per_strategy": 600, "seed": 9173, "return_model": "Correlated-regime approximation with lognormal annual returns and mid-year cash-flow timing", "tax_model": "Illustrative German private-investor horizon-liquidation estimate using 2026 statutory baseline assumptions", "basis": "Forward-looking nominal capital-market assumptions; results are distributions, not predictions."}}
+    return {"selected_strategy": selected_id, "strategies": strategies, "selected": selected,
+            "target_wealth": round(target), "goal_optimizer": optimizer,
+            "tax_analysis": selected["tax"], "investment_policy": policy,
+            "real_estate": _real_estate_case(profile, years),
+            "stress_matrix": [{"id": item["id"], "name": item["name"], **stresses[item["id"]]} for item in strategies],
+            "methodology": {
+                "simulations_per_strategy": 600, "seed": 9173,
+                "return_model": "Lognormal annual returns using fixed portfolio covariance assumptions and mid-year cash-flow timing",
+                "fee_model": "Profile management_fee is the all-in annual portfolio cost, deducted multiplicatively. Listed instrument TERs are examples, not additional charges.",
+                "annual_fee_rate": annual_fee,
+                "risk_model": "Drawdown uses a unitized index excluding deposits, sampled annually (not intra-year). Sortino uses simulated downside deviation below a 2% annual target; Sharpe uses model moments.",
+                "tax_model": "Illustrative German private-investor horizon-liquidation estimate using 2026 statutory baseline assumptions",
+                "basis": "Forward-looking nominal capital-market assumptions; results are distributions, not predictions.",
+            }}

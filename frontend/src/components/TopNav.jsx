@@ -1,62 +1,13 @@
 import React, { useState } from 'react';
-import { Menu, X, ChevronRight, Landmark, ShieldCheck, Moon, Sun } from 'lucide-react';
+import { Menu, X, ChevronRight, Landmark, ShieldCheck, Moon, Sun, Bot, RefreshCw } from 'lucide-react';
 import AuthNavControls from './AuthNavControls';
+import { SECTION_SUBSTEPS, steps } from './TopNav.constants';
 
-const SECTION_SUBSTEPS = {
-  profile: [
-    'Goals',
-    'Timeline',
-    'Cash Flow Details',
-    'AI Cash Flow Verdict',
-    'Holdings',
-    'Health Audit'
-  ],
-  insurance: [
-    'Risk Map',
-    'Income Protection',
-    'Healthcare Decision',
-    'Property & Liability',
-    'Stress Testing',
-    'Protection Policy'
-  ],
-  tax: [
-    'Readiness',
-    'Liability Bridge',
-    'Deduction Scenarios',
-    'Household & Vorsorge',
-    'Investment Tax',
-    'Tax Memo'
-  ],
-  invest: [
-    'Goal Optimizer',
-    'Risk Capacity',
-    'Strategy Match',
-    'Outcome Testing',
-    'Tax Alpha',
-    'Implementation',
-    'Policy Mandate'
-  ],
-  pension: [
-    'Retirement Mandate',
-    'Three Pillars',
-    'DRV Record',
-    'Retirement Timing',
-    'Withdrawal Lab',
-    'Funding Policy'
-  ]
-};
-
-const steps = [
-  { id: 'welcome', label: 'Portal' },
-  { id: 'profile', label: 'Mandate & Cashflow' },
-  { id: 'insurance', label: 'Risk Shield' },
-  { id: 'tax', label: 'Tax Optimization' },
-  { id: 'invest', label: 'Asset Allocation' },
-  { id: 'pension', label: 'Solvency' },
-];
-
-export default function TopNav({ currentStep, setStep, currentSubStep = 0, onSubStepChange, onOpenGDPR }) {
+export default function TopNav({ currentStep, setStep, currentSubStep = 0, onOpenGDPR, onOpenAdvisor, onRefreshAnalysis, analysisStatus }) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  // App restores the DOM attribute in an effect, so read persisted state here as well.
+  // Otherwise a saved dark preference renders as dark while this toggle still says "dark".
+  const [isDark, setIsDark] = useState(() => localStorage.getItem('theme') === 'dark');
   const subTabs = SECTION_SUBSTEPS[currentStep] || [];
   
   const stepIndex = Math.max(0, steps.findIndex(s => s.id === currentStep));
@@ -153,7 +104,7 @@ export default function TopNav({ currentStep, setStep, currentSubStep = 0, onSub
         {/* Center Minimalist Step Navigation (Airy & Clean) */}
         <nav 
           className="desktop-nav"
-          role="tablist"
+          aria-label="Financial planning sections"
           style={{
             display: 'flex',
             alignItems: 'center',
@@ -165,8 +116,7 @@ export default function TopNav({ currentStep, setStep, currentSubStep = 0, onSub
             return (
               <button
                 key={step.id}
-                role="tab"
-                aria-selected={isActive}
+                aria-current={isActive ? 'page' : undefined}
                 onClick={() => handleNavClick(step.id)}
                 style={{
                   background: 'transparent',
@@ -206,7 +156,7 @@ export default function TopNav({ currentStep, setStep, currentSubStep = 0, onSub
         </nav>
 
         {/* Right Status Indicator & Global Controls */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexShrink: 0 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', minWidth: 0 }}>
           <AuthNavControls />
           
           {/* GDPR Privacy Modal Trigger */}
@@ -238,12 +188,13 @@ export default function TopNav({ currentStep, setStep, currentSubStep = 0, onSub
           {/* Theme Toggle (Dark/Light) */}
           <button
             type="button"
-            aria-label="Toggle Obsidian Dark / Light Theme"
+            aria-label={`Switch to ${isDark ? 'light' : 'dark'} theme`}
+            aria-pressed={isDark}
             onClick={() => {
-              const current = document.documentElement.getAttribute('data-theme');
-              const next = current === 'dark' ? 'light' : 'dark';
+              const next = isDark ? 'light' : 'dark';
               document.documentElement.setAttribute('data-theme', next);
               localStorage.setItem('theme', next);
+              setIsDark(next === 'dark');
             }}
             style={{
               background: 'var(--bg-card-subtle)',
@@ -260,11 +211,29 @@ export default function TopNav({ currentStep, setStep, currentSubStep = 0, onSub
               transition: 'all 0.2s ease'
             }}
           >
-            <Moon size={13} color="var(--maison-gold)" />
+            {isDark ? <Sun size={13} color="var(--maison-gold)" /> : <Moon size={13} color="var(--maison-gold)" />}
             <span className="hide-on-mobile">Theme</span>
           </button>
 
-          <span className="hide-on-mobile" style={{
+          {onRefreshAnalysis && (
+            <button
+              type="button"
+              aria-label="Recalculate financial analysis"
+              onClick={onRefreshAnalysis}
+              disabled={analysisStatus === 'loading'}
+              style={{
+                background: analysisStatus === 'stale' ? 'var(--maison-gold-subtle)' : 'var(--bg-card-subtle)',
+                border: '1px solid var(--border-architectural)', color: 'var(--text-primary)',
+                padding: '6px 10px', borderRadius: '8px', cursor: analysisStatus === 'loading' ? 'wait' : 'pointer',
+                fontSize: '0.74rem', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '5px', opacity: analysisStatus === 'loading' ? 0.65 : 1,
+              }}
+            >
+              <RefreshCw size={13} color="var(--maison-gold)" />
+              <span className="hide-on-mobile">{analysisStatus === 'loading' ? 'Updating' : 'Refresh'}</span>
+            </button>
+          )}
+
+          <span className="hide-on-mobile nav-progress" style={{
             fontSize: '0.72rem',
             fontWeight: 700,
             color: 'var(--text-secondary)',
@@ -351,6 +320,37 @@ export default function TopNav({ currentStep, setStep, currentSubStep = 0, onSub
               </button>
             );
           })}
+          {onOpenAdvisor && (
+            <button
+              type="button"
+              onClick={() => { onOpenAdvisor(); setMobileMenuOpen(false); }}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                gap: '10px',
+                marginTop: '8px',
+                padding: '12px 14px',
+                borderRadius: '10px',
+                border: '1px solid var(--maison-gold-border)',
+                background: 'var(--maison-gold-subtle)',
+                color: 'var(--text-primary)',
+                fontWeight: 800,
+                fontSize: '0.84rem',
+                cursor: 'pointer',
+                textAlign: 'left'
+              }}
+            >
+              <span style={{ display: 'inline-flex', alignItems: 'center', gap: '8px' }}><Bot size={16} color="var(--maison-gold)" /> Open AI Concierge</span>
+              <ChevronRight size={14} color="var(--maison-gold)" />
+            </button>
+          )}
+          {onRefreshAnalysis && (
+            <button type="button" onClick={() => { onRefreshAnalysis(); setMobileMenuOpen(false); }} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '10px', padding: '12px 14px', borderRadius: '10px', border: '1px solid var(--border-architectural)', background: 'var(--bg-card-subtle)', color: 'var(--text-primary)', fontWeight: 800, fontSize: '0.84rem', cursor: 'pointer' }}>
+              <span style={{ display: 'inline-flex', alignItems: 'center', gap: '8px' }}><RefreshCw size={16} color="var(--maison-gold)" /> Refresh financial analysis</span>
+              <ChevronRight size={14} color="var(--maison-gold)" />
+            </button>
+          )}
         </div>
       )}
 

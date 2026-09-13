@@ -45,6 +45,14 @@ export const useProfileStore = create(
       setField: (key, value) => set((state) => { state.profile[key] = value; }),
       updateProfile: (data) => set((state) => { Object.assign(state.profile, data); }),
       resetProfile: () => set((state) => { state.profile = { ...defaultProfile }; }),
+      resetAll: () => set((state) => {
+        state.profile = { ...defaultProfile };
+        state.analysis = null;
+        state.currentStep = 'welcome';
+        state.subStepMap = { profile: 0, insurance: 0, tax: 0, invest: 0, pension: 0 };
+        state.isAdvisorDrawerOpen = false;
+        state.initialChatMessage = '';
+      }),
       getProfile: () => defaultProfile,
       setAnalysis: (data) => set({ analysis: data }),
       setCurrentStep: (step) => set({ currentStep: step }),
@@ -67,4 +75,4 @@ export const useRetirement = () => useProfileStore((s) => ({ retirement_age: s.p
 export const useInsurance = () => useProfileStore((s) => ({ existing_insurances: s.profile.existing_insurances, bu_monthly_benefit: s.profile.bu_monthly_benefit, occupation_risk: s.profile.occupation_risk, employment_stability: s.profile.employment_stability, smoker: s.profile.smoker, living_space_sqm: s.profile.living_space_sqm, mortgage_balance: s.profile.mortgage_balance, youngest_dependent_age: s.profile.youngest_dependent_age, setInsurance: s.setInsurance }));
 export const useDebt = () => useProfileStore((s) => ({ liquid_savings: s.profile.liquid_savings, unsecured_debt: s.profile.unsecured_debt, unsecured_debt_rate: s.profile.unsecured_debt_rate, monthly_debt_payment: s.profile.monthly_debt_payment, debt_payoff_years: s.profile.debt_payoff_years, bu_monthly_benefit: s.profile.bu_monthly_benefit, setDebt: s.setDebt }));
 export const useGoals = () => useProfileStore((s) => ({ goals: s.profile.goals, setGoals: s.setGoals }));
-export const useFullProfile = () => useProfileStore((s) => ({ profile: s.profile, analysis: s.analysis, currentStep: s.currentStep, subStepMap: s.subStepMap, isAdvisorDrawerOpen: s.isAdvisorDrawerOpen, initialChatMessage: s.initialChatMessage, updateProfile: s.updateProfile, resetProfile: s.resetProfile, setAnalysis: s.setAnalysis, setCurrentStep: s.setCurrentStep, setSubStepMap: s.setSubStepMap, setIsAdvisorDrawerOpen: s.setIsAdvisorDrawerOpen, setInitialChatMessage: s.setInitialChatMessage }));
+export const useFullProfile = () => useProfileStore((s) => ({ profile: s.profile, analysis: s.analysis, currentStep: s.currentStep, subStepMap: s.subStepMap, isAdvisorDrawerOpen: s.isAdvisorDrawerOpen, initialChatMessage: s.initialChatMessage, updateProfile: s.updateProfile, resetProfile: s.resetProfile, resetAll: s.resetAll, setAnalysis: s.setAnalysis, setCurrentStep: s.setCurrentStep, setSubStepMap: s.setSubStepMap, setIsAdvisorDrawerOpen: s.setIsAdvisorDrawerOpen, setInitialChatMessage: s.setInitialChatMessage }));

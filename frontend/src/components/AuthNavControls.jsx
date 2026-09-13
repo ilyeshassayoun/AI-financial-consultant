@@ -1,25 +1,24 @@
 import React, { useState } from 'react';
-import { LogIn, LogOut, BookmarkCheck, UserCircle, CheckCircle2, Cloud } from 'lucide-react';
+import { LogIn, LogOut, BookmarkCheck, UserCircle, CheckCircle2 } from 'lucide-react';
 import { useAuthStore } from '../stores/authStore';
 import AuthModal from './AuthModal';
-import { saveProfile } from '../services/authService';
+import { logoutSession, saveProfile } from '../services/authService';
 import { useProfileStore } from '../stores/profileStore';
 
 export default function AuthNavControls() {
   const user = useAuthStore((s) => s.user);
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
   const logout = useAuthStore((s) => s.logout);
-  const accessToken = useAuthStore((s) => s.accessToken);
   const profile = useProfileStore((s) => s.profile);
   const [showAuth, setShowAuth] = useState(false);
   const [saving, setSaving] = useState(false);
   const [saveMsg, setSaveMsg] = useState('');
 
   const handleSave = async () => {
-    if (!isAuthenticated || !accessToken) return;
+    if (!isAuthenticated) return;
     setSaving(true);
     try {
-      await saveProfile(profile, `Audit Profile · ${new Date().toLocaleDateString('de-DE')}`, accessToken);
+      await saveProfile(profile, `Audit Profile · ${new Date().toLocaleDateString('de-DE')}`);
       setSaveMsg('Saved');
     } catch {
       setSaveMsg('Error');
@@ -29,8 +28,16 @@ export default function AuthNavControls() {
     }
   };
 
+  const handleLogout = async () => {
+    try {
+      await logoutSession();
+    } finally {
+      logout();
+    }
+  };
+
   return (
-    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+    <div className="auth-nav-controls" style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
       {isAuthenticated ? (
         <>
           {/* Save Snapshot Button */}
@@ -102,7 +109,7 @@ export default function AuthNavControls() {
           {/* Logout Action */}
           <button 
             type="button"
-            onClick={logout} 
+            onClick={handleLogout}
             title="Sign out of client session"
             aria-label="Sign out"
             style={{ 
@@ -126,6 +133,7 @@ export default function AuthNavControls() {
       ) : (
         <button 
           type="button"
+          aria-label="Sign in to client portal"
           onClick={() => setShowAuth(true)} 
           style={{ 
             display: 'inline-flex',
@@ -152,7 +160,7 @@ export default function AuthNavControls() {
           }}
         >
           <LogIn size={13} color="var(--maison-gold, #c5a059)" />
-          <span>Client Sign In</span>
+          <span className="auth-signin-label">Client Sign In</span>
         </button>
       )}
       <AuthModal isOpen={showAuth} onClose={() => setShowAuth(false)} />

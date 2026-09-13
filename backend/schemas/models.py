@@ -27,6 +27,9 @@ class ClientProfile(BaseModel):
     has_property: bool = False
     has_car: bool = False
     risk_profile: Literal["low", "medium", "high"] = "medium"
+    investment_priority: Optional[Literal["growth", "balanced", "income", "stability"]] = None
+    investment_liquidity: Optional[Literal["short", "medium", "long"]] = None
+    investment_loss_tolerance: Optional[Literal["low", "medium", "high"]] = None
     initial_amount: float = Field(default=5000.0, ge=0, le=1_000_000_000)
     monthly_investment: float = Field(default=500.0, ge=0, le=10_000_000)
     investment_years: int = Field(default=20, ge=1, le=60)

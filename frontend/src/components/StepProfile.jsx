@@ -3,11 +3,10 @@ import {
   User, DollarSign, Target, ShieldCheck, ArrowRight, ArrowLeft, Check, 
   TrendingUp, Wallet, Shield, Activity, PieChart as PieIcon,
   Layers, Clock, Building2, Landmark, Sun, Briefcase, Key, Gem, Brain,
-  CheckCircle2, Award, Zap, ChevronRight, FileCheck, Sparkles
+  Sparkles
 } from 'lucide-react';
 import AIConsultantWidget from './AIConsultantWidget';
 import InteractiveCashFlow from './InteractiveCashFlow';
-import ExpertAdvisoryPlan from './ExpertAdvisoryPlan';
 
 export default function StepProfile({ profile, updateProfile, nextStep, prevStep, analysis, subStep: propSubStep, setSubStep: propSetSubStep, onApplyPatch, onOpenChat }) {
   const [localSubStep, setLocalSubStep] = useState(0);
@@ -77,7 +76,8 @@ export default function StepProfile({ profile, updateProfile, nextStep, prevStep
     }
   ];
 
-  const clientGoals = profile.goals || ['freedom', 'etf_wealth'];
+  const safeProfile = profile || {};
+  const clientGoals = Array.isArray(safeProfile.goals) ? safeProfile.goals : ['freedom', 'etf_wealth'];
 
   const toggleGoal = (id) => {
     const updated = clientGoals.includes(id) 
@@ -103,8 +103,8 @@ export default function StepProfile({ profile, updateProfile, nextStep, prevStep
     { id: 'active_funds', label: 'Bank Mutual Funds', desc: 'Active funds (1.8%+ fees)', icon: PieIcon }
   ];
 
-  const existingInsurances = profile.existing_insurances || [];
-  const existingAssets = profile.existing_assets || [];
+  const existingInsurances = Array.isArray(safeProfile.existing_insurances) ? safeProfile.existing_insurances : ['Liability'];
+  const existingAssets = Array.isArray(safeProfile.existing_assets) ? safeProfile.existing_assets : ['etf'];
 
   const toggleInsuranceHolding = (id) => {
     const updated = existingInsurances.includes(id) 
@@ -120,18 +120,19 @@ export default function StepProfile({ profile, updateProfile, nextStep, prevStep
     updateProfile({ existing_assets: updated });
   };
 
-  const currentAge = profile.age || 30;
-  const retirementAge = profile.retirement_age || 67;
+  const currentAge = Number(safeProfile.age) || 30;
+  const retirementAge = Number(safeProfile.retirement_age) || 67;
   const workingYearsRemaining = Math.max(1, retirementAge - currentAge);
   const goldenYears = Math.max(1, 90 - retirementAge);
 
-  const hasBU = existingInsurances.includes('BU') || (profile.bu_monthly_benefit && profile.bu_monthly_benefit > 0);
-  const monthlyExpenses = (profile.housing_cost || 0) + (profile.living_cost || 0) + (profile.mobility_cost || 0) + (profile.leisure_cost || 0);
-  const liquidReserve = profile.liquid_savings || 5000;
+  const hasBU = existingInsurances.includes('BU') || Boolean(safeProfile.bu_monthly_benefit && safeProfile.bu_monthly_benefit > 0);
+  const monthlyExpenses = (Number(safeProfile.housing_cost) || 0) + (Number(safeProfile.living_cost) || 0) + (Number(safeProfile.mobility_cost) || 0) + (Number(safeProfile.leisure_cost) || 0) || 2180;
+  const liquidReserve = safeProfile.liquid_savings !== undefined && safeProfile.liquid_savings !== null ? Number(safeProfile.liquid_savings) : 5000;
   const hasLiquidity = liquidReserve >= Math.max(3000, monthlyExpenses * 3);
-  const hasETF = existingAssets.includes('etf') || (profile.monthly_investment || 0) > 0;
-  const hasBAV = existingAssets.includes('bav') || (profile.bav_contribution || 0) > 0;
-  const salary = profile.income || 60000;
+  const hasETF = existingAssets.includes('etf') || Boolean((Number(safeProfile.monthly_investment) || 0) > 0);
+  const hasBAV = existingAssets.includes('bav') || Boolean((Number(safeProfile.bav_contribution) || 0) > 0);
+  const salary = Number(safeProfile.income) || 60000;
+  const monthlyInvestment = safeProfile.monthly_investment !== undefined && safeProfile.monthly_investment !== null ? Number(safeProfile.monthly_investment) : 500;
 
   // 5-Pillar Structural Audit Matrix with DIN 77230 citations
   const pillarAudits = [
@@ -224,7 +225,7 @@ export default function StepProfile({ profile, updateProfile, nextStep, prevStep
       <div className="wizard-card" style={{ padding: '24px 28px' }}>
 
         {/* Sub-Step Indicator Bar */}
-        <div style={{
+        <div className="profile-stepper" style={{
           display: 'flex',
           gap: '6px',
           overflowX: 'auto',
@@ -263,7 +264,7 @@ export default function StepProfile({ profile, updateProfile, nextStep, prevStep
                 display: 'inline-flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                fontSize: '0.62rem',
+                fontSize: '0.7rem',
                 fontWeight: 800
               }}>
                 {idx + 1}
@@ -292,7 +293,7 @@ export default function StepProfile({ profile, updateProfile, nextStep, prevStep
             </div>
 
             {/* Symmetrical Auto-Fit Goals Grid */}
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '14px' }}>
+            <div className="profile-goals-grid" style={{ display: 'grid', gap: '14px' }}>
               {availableGoals.map((g) => {
                 const Icon = g.icon;
                 const isSelected = clientGoals.includes(g.id);
@@ -301,7 +302,7 @@ export default function StepProfile({ profile, updateProfile, nextStep, prevStep
                     key={g.id}
                     type="button"
                     onClick={() => toggleGoal(g.id)}
-                    className="hover-lift"
+                    className="hover-lift profile-goal-card"
                     style={{
                       padding: '18px 20px',
                       borderRadius: '14px',
@@ -331,7 +332,7 @@ export default function StepProfile({ profile, updateProfile, nextStep, prevStep
                         <Icon size={18} strokeWidth={1.75} />
                       </div>
                       <span style={{ 
-                        fontSize: '0.68rem', 
+                        fontSize: '0.76rem',
                         fontWeight: 800, 
                         padding: '3px 8px', 
                         borderRadius: '5px',
@@ -344,7 +345,7 @@ export default function StepProfile({ profile, updateProfile, nextStep, prevStep
 
                     <div>
                       <div style={{ fontWeight: 800, fontSize: '0.94rem', color: 'var(--text-primary)' }}>{g.label}</div>
-                      <div style={{ fontSize: '0.78rem', color: 'var(--text-secondary)', marginTop: '2px', lineHeight: '1.4' }}>{g.desc}</div>
+                      <div style={{ fontSize: '0.82rem', color: 'var(--text-secondary)', marginTop: '4px', lineHeight: '1.5' }}>{g.desc}</div>
                     </div>
                   </button>
                 );

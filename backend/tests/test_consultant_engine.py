@@ -5,6 +5,7 @@ import pytest
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
 
 from main import app, _run_full_analysis, ClientProfile
+from dependencies import require_llm_access
 from llm_service import generate_step_ai_consultation, generate_financial_advice, ChatMessage
 from fastapi.testclient import TestClient
 
@@ -80,12 +81,16 @@ def test_api_consultant_insight_endpoint():
         },
         "step": "tax"
     }
-    response = client.post("/api/consultant/insight", json=payload)
-    assert response.status_code == 200
-    data = response.json()
-    assert "insight" in data
-    assert "title" in data["insight"]
-    assert "verdict" in data["insight"]
+    app.dependency_overrides[require_llm_access] = lambda: object()
+    try:
+        response = client.post("/api/consultant/insight", json=payload)
+        assert response.status_code == 200
+        data = response.json()
+        assert "insight" in data
+        assert "title" in data["insight"]
+        assert "verdict" in data["insight"]
+    finally:
+        app.dependency_overrides.pop(require_llm_access, None)
 
 def test_chat_generation_fallback():
     import asyncio

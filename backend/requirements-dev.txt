@@ -1,6 +1,7 @@
+# Install the runtime application stack before test-only tools. This keeps a
+# fresh developer virtual environment able to import FastAPI application tests.
+-r requirements.txt
+
 # Development dependencies
 pytest==8.3.3
 pytest-asyncio==0.23.7
-httpx==0.28.1
-slowapi==0.1.10
-pydantic-settings==2.15.0

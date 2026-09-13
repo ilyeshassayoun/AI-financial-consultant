@@ -107,7 +107,7 @@ export function Tooltip({ children, content, position = 'top', delay = 200, disa
           ref={tooltipRef}
           id={tooltipId}
           role="tooltip"
-          className={`${styles.tooltip} fixed z-[1300] px-3 py-2 text-xs font-medium text-white bg-[var(--color-forest-800)] rounded-sm shadow-xl pointer-events-none animateFadeIn`}
+          className={styles.tooltip}
           style={{
             maxWidth: '280px',
             whiteSpace: 'normal',

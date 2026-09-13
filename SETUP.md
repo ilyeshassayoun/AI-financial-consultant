@@ -12,6 +12,9 @@
 cp .env.example backend/.env
 ```
 
+For Docker Compose, copy the template to the repository root as `.env` instead;
+Compose reads its substitution variables there.
+
 Edit `backend/.env` and set at minimum:
 - `GROQ_API_KEY` -- get free at https://console.groq.com
 - `JWT_SECRET_KEY` -- run: `python -c "import secrets; print(secrets.token_hex(32))"`
@@ -54,46 +57,63 @@ Frontend: http://localhost:5173 | API Docs: http://localhost:8000/docs
 
 ---
 
-## Railway Deployment (Free Tier)
+## Railway Deployment
 
 ### Prerequisites
-- Railway account at https://railway.app (free)
+- Railway account at https://railway.com with an available deployment allowance
 - GitHub repository with this code pushed
 
 ### Steps
 
 1. Push code to GitHub
 
-2. Go to https://railway.app/new and click Deploy from GitHub repo
+2. Go to https://railway.app/new and choose **Deploy from GitHub repo**. Select this
+   repository. Railway uses the root `Dockerfile`, which builds the frontend and
+   serves it from the FastAPI application as one web service. Do not set a root
+   directory or override the start command.
 
-3. Add PostgreSQL:
-   - In your project, click + Add Service > PostgreSQL
-   - Railway auto-generates DATABASE_URL
+3. Add PostgreSQL from **+ New > Database > PostgreSQL**.
 
-4. Configure Backend service:
-   - Root Directory: `backend`
-   - Start Command: `uvicorn main:app --host 0.0.0.0 --port $PORT`
-   - Environment variables:
+4. In the web service's **Variables** tab, add:
      ```
-     DATABASE_URL=<from Railway PostgreSQL>
-     GROQ_API_KEY=<your key>
+     DATABASE_URL=${{Postgres.DATABASE_URL}}
      JWT_SECRET_KEY=<generated 64-char hex>
-     GOOGLE_CLIENT_ID=<your id>
-     GOOGLE_CLIENT_SECRET=<your secret>
-     GOOGLE_REDIRECT_URI=https://<backend-domain>/api/auth/google/callback
-     FRONTEND_URL=https://<frontend-domain>
-     CORS_ORIGINS=https://<frontend-domain>
+     APP_ENV=production
+     COOKIE_SECURE=true
      ```
+   Use Railway's reference-variable picker for `DATABASE_URL`; its service name
+   may differ from `Postgres`. Generate the JWT secret with
+   `python -c "import secrets; print(secrets.token_hex(32))"`. Never commit it.
+   Add `GROQ_API_KEY` if you want Groq-backed AI responses. Enter production
+   variables directly in Railway; the example `.env` contains local defaults.
 
-5. Configure Frontend service:
-   - Root Directory: `frontend`
-   - Build Command: `npm ci && npm run build`
-   - Start Command: `npx serve -s dist -l $PORT`
-   - Environment variable: `VITE_API_URL=https://<backend-domain>`
+5. Deploy, then open **Settings > Networking** for the web service and generate
+   a public domain. Confirm `https://<your-domain>/health` returns `200`.
 
-6. Generate domains for each service via Railway''s Settings tab
+6. Add the public URL to the web service variables, then redeploy:
+   ```
+   FRONTEND_URL=https://<your-domain>
+   CORS_ORIGINS=https://<your-domain>
+   ```
+   The frontend and API share this domain, so no `VITE_API_URL` is needed.
 
-7. Update Google OAuth redirect URI to use your Railway backend domain
+7. If Google sign-in is enabled, also add `GOOGLE_CLIENT_ID`,
+   `GOOGLE_CLIENT_SECRET`, and
+   `GOOGLE_REDIRECT_URI=https://<your-domain>/api/auth/google/callback`. Add the
+   same callback URL in Google Cloud Console.
+
+### Release verification
+
+Before publishing, install `backend/requirements-dev.txt` and run the backend
+tests, plus `npm run lint`, `npm run test`, and `npm run build` in `frontend`.
+Review and commit the intended changes before deploying from GitHub; local
+uncommitted changes are not included in GitHub deployments.
+
+After deployment, check `/health`, refresh a nested frontend route, register a
+test account, sign in, save and reload a profile, and request an analysis.
+`/health` confirms the API process is running; it does not verify PostgreSQL.
+Check deployment logs for database initialization errors if authentication or
+profile persistence fails.
 
 ---
 
@@ -101,7 +121,7 @@ Frontend: http://localhost:5173 | API Docs: http://localhost:8000/docs
 
 | Variable | Required | Description |
 |----------|----------|-------------|
-| `GROQ_API_KEY` | Yes | Groq API key for LLM chat |
+| `GROQ_API_KEY` | No | Enables the Groq-backed AI response; the app has a local fallback |
 | `DATABASE_URL` | Yes | PostgreSQL connection string |
 | `JWT_SECRET_KEY` | Yes | Secret for JWT signing (min 32 chars) |
 | `GOOGLE_CLIENT_ID` | No | Google OAuth client ID |
@@ -109,4 +129,5 @@ Frontend: http://localhost:5173 | API Docs: http://localhost:8000/docs
 | `GOOGLE_REDIRECT_URI` | No | OAuth callback URL |
 | `FRONTEND_URL` | No | Frontend URL for OAuth redirects |
 | `CORS_ORIGINS` | No | Comma-separated allowed origins |
-| `LLM_ACCESS_KEY` | No | Optional API key gate for LLM routes |
+| `APP_ENV` | No | Set to `production` outside Docker; the production Dockerfile already sets it |
+| `COOKIE_SECURE` | No | Set to `true` outside Docker; the production Dockerfile already sets it |

@@ -46,6 +46,7 @@ describe('apiService', () => {
         'http://localhost:8000/api/analyze',
         expect.objectContaining({
           method: 'POST',
+          credentials: 'include',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(mockProfile),
         })
@@ -110,6 +111,7 @@ describe('apiService', () => {
         'http://localhost:8000/api/consultant/insight',
         expect.objectContaining({
           method: 'POST',
+          credentials: 'include',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ profile: mockProfile, step: 'profile' }),
         })
@@ -142,6 +144,22 @@ describe('apiService', () => {
       expect(result).toBeNull();
       expect(consoleSpy).toHaveBeenCalled();
       consoleSpy.mockRestore();
+    });
+  });
+
+  describe('fetchChatReply', () => {
+    it('uses the supported non-streaming fallback endpoint with the browser session', async () => {
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({ reply: 'A secure fallback response.' }),
+      });
+
+      const { fetchChatReply } = await import('../services/apiService');
+      await expect(fetchChatReply(mockProfile, [{ role: 'user', content: 'Help' }])).resolves.toEqual({ reply: 'A secure fallback response.' });
+      expect(mockFetch).toHaveBeenCalledWith(
+        'http://localhost:8000/api/chat',
+        expect.objectContaining({ method: 'POST', credentials: 'include' })
+      );
     });
   });
 });

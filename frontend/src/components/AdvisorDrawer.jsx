@@ -87,7 +87,7 @@ export default function AdvisorDrawer({ isOpen, onClose, profile, currentStep = 
         signal
       );
       if (!accumulatedContent && !signal.aborted) {
-        setMessages([...updatedMessages, { role: 'assistant', content: 'AI Advisory consultation updated.' }]);
+        setMessages([...updatedMessages, { role: 'assistant', content: 'The advisory service did not return a response. Please retry in a moment.' }]);
       }
     } catch (err) {
       if (err.name !== 'AbortError' && !signal.aborted) {

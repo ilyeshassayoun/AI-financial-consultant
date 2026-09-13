@@ -36,21 +36,51 @@ const BROKER_CONFIGS = [
   }
 ];
 
-export default function BrokerDepotSimulator({ monthlyContribution }) {
+export default function BrokerDepotSimulator({ monthlyContribution, initialAmount, selectedStrategy }) {
   const [selectedBroker, setSelectedBroker] = useState('scalable');
-  const [isSyncing, setIsSyncing] = useState(false);
   const [syncComplete, setSyncComplete] = useState(false);
 
   const broker = BROKER_CONFIGS.find(b => b.id === selectedBroker) || BROKER_CONFIGS[0];
-  const annualSavings = (monthlyContribution || 500) * 12;
+  const annualSavings = (monthlyContribution ?? 500) * 12;
 
-  const handleSimulateSync = () => {
-    setIsSyncing(true);
-    setTimeout(() => {
-      setIsSyncing(false);
-      setSyncComplete(true);
-      setTimeout(() => setSyncComplete(false), 4000);
-    }, 1200);
+  const handleDownloadBlueprint = () => {
+    const blueprint = {
+      type: 'Educational broker setup checklist',
+      generated_at: new Date().toISOString(),
+      broker: { id: broker.id, name: broker.name },
+      monthly_contribution_eur: monthlyContribution ?? 500,
+      initial_amount_eur: initialAmount ?? 0,
+      annual_contribution_eur: annualSavings,
+      strategy: selectedStrategy ? {
+        name: selectedStrategy.name,
+        id: selectedStrategy.id,
+        expected_return: selectedStrategy.expected_return,
+        expected_volatility: selectedStrategy.expected_volatility,
+        allocation: (selectedStrategy.allocation || []).map(a => ({
+          asset: a.name, weight: a.weight
+        })),
+        instruments: (selectedStrategy.instruments || []).map(i => ({
+          ticker: i.ticker, isin: i.isin, name: i.name, ter: i.ter, role: i.role
+        })),
+      } : null,
+      checklist: [
+        'Verify current broker terms, fees, eligibility and deposit protection.',
+        'Resolve the investment policy suitability gates.',
+        'Confirm instrument ISINs and target weights independently.',
+        'Review the applicable saver allowance and existing exemption orders.',
+        'Set up a savings plan yourself only after completing those checks.',
+      ],
+      disclaimer: 'Planning document only. No brokerage account, order, SEPA mandate or tax certificate has been created or submitted.',
+    };
+    const url = URL.createObjectURL(new Blob([JSON.stringify(blueprint, null, 2)], { type: 'application/json' }));
+    const anchor = document.createElement('a');
+    anchor.href = url;
+    anchor.download = 'investment-setup-checklist.json';
+    document.body.appendChild(anchor);
+    anchor.click();
+    anchor.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+    setSyncComplete(true);
   };
 
   return (
@@ -119,7 +149,7 @@ export default function BrokerDepotSimulator({ monthlyContribution }) {
         <div>
           <span style={{ fontSize: '0.7rem', fontWeight: 700, color: 'var(--text-secondary)' }}>MONTHLY DIRECT DEBIT (SEPA)</span>
           <div className="tabular-nums" style={{ fontSize: '1.25rem', fontWeight: 800, color: 'var(--text-primary)' }}>
-            €{(monthlyContribution || 500).toLocaleString()} <small style={{ fontSize: '0.75rem', fontWeight: 600, color: 'var(--text-secondary)' }}>/ month</small>
+            €{(monthlyContribution ?? 500).toLocaleString()} <small style={{ fontSize: '0.75rem', fontWeight: 600, color: 'var(--text-secondary)' }}>/ month</small>
           </div>
           <span style={{ fontSize: '0.72rem', color: 'var(--text-secondary)' }}>Executes 1st of each month</span>
         </div>
@@ -145,21 +175,20 @@ export default function BrokerDepotSimulator({ monthlyContribution }) {
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '10px' }}>
         <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>
           {syncComplete ? (
-            <span style={{ color: 'var(--accent-emerald)', fontWeight: 700 }}>✓ Direct SEPA mandate profile generated for {broker.name}.</span>
+            <span style={{ color: 'var(--accent-emerald)', fontWeight: 700 }}>✓ Checklist download prepared for {broker.name}. No account, order or mandate was created.</span>
           ) : (
-            <span>Ready to simulate digital order routing and tax reporting certificate generation.</span>
+            <span>Download an educational setup checklist; verify current broker terms before acting.</span>
           )}
         </div>
 
         <button
           type="button"
-          onClick={handleSimulateSync}
-          disabled={isSyncing}
+          onClick={handleDownloadBlueprint}
           className="btn-brand"
           style={{ fontSize: '0.78rem', padding: '8px 18px', display: 'flex', alignItems: 'center', gap: '6px' }}
         >
           <Zap size={14} />
-          {isSyncing ? 'Simulating Deposit...' : `Generate ${broker.name} Setup Blueprint`}
+          Download {broker.name} Setup Checklist
         </button>
       </div>
 

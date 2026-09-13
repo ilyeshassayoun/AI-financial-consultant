@@ -34,6 +34,7 @@ def _calculate(profile: Dict[str, Any], **overrides: Any) -> Dict[str, Any]:
         children_under_25 = values.get("num_children", 0)
     return calculate_german_tax(
         gross_income=_number(values.get("income")),
+        spouse_income=_number(values.get("spouse_income")),
         tax_class=int(values.get("tax_class", 1)),
         is_married=bool(values.get("is_married")),
         church_tax=bool(values.get("church_tax")),

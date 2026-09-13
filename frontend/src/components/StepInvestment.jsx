@@ -1,6 +1,6 @@
 import InvestmentLaboratory from './InvestmentLaboratory';
 
-export default function StepInvestment({ profile, updateProfile, nextStep, prevStep, analysis, subStep, setSubStep }) {
+export default function StepInvestment({ profile, updateProfile, nextStep, prevStep, analysis, subStep, setSubStep, analysisStatus, analysisError, onRetryAnalysis }) {
   return (
     <div className="investment-route animate-fade-in-up">
       <InvestmentLaboratory 
@@ -11,6 +11,9 @@ export default function StepInvestment({ profile, updateProfile, nextStep, prevS
         setSubStep={setSubStep}
         nextStep={nextStep}
         prevStep={prevStep}
+        analysisStatus={analysisStatus}
+        analysisError={analysisError}
+        onRetryAnalysis={onRetryAnalysis}
       />
     </div>
   );

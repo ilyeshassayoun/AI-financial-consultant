@@ -3,10 +3,9 @@ import { createRoot } from 'react-dom/client';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import './index.css';
 import App from './App.jsx';
-import LandingPage from './pages/LandingPage.jsx';
 import OAuthCallback from './pages/OAuthCallback.jsx';
 
-function AppRouter() {
+export function AppRouter() {
   return (
     <BrowserRouter>
       <Routes>

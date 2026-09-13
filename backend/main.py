@@ -10,9 +10,8 @@ from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse, FileResponse
 from fastapi.staticfiles import StaticFiles
-from slowapi import Limiter, _rate_limit_exceeded_handler
+from slowapi import _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
-from slowapi.util import get_remote_address
 
 from analysis import run_full_analysis as _run_full_analysis
 from routers import tax, investment, insurance, retirement, chat, health
@@ -21,19 +20,20 @@ from routers import profiles as profiles_router
 from schemas import ClientProfile
 from config import settings
 from database import init_db
+from rate_limit import limiter
 
 logger = structlog.get_logger(__name__)
-limiter = Limiter(key_func=get_remote_address)
-
-
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+    settings.validate_deployment()
+    app.state.db_available = False
     if settings.DATABASE_URL:
         try:
             await init_db()
+            app.state.db_available = True
             logger.info("Database initialized")
         except Exception as exc:
-            logger.warning("DB init failed — running without persistence", error=str(exc))
+            logger.warning("DB init failed — running without persistence", error=str(exc), error_type=type(exc).__name__)
     yield
 
 

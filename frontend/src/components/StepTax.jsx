@@ -1,11 +1,11 @@
 import { useState, useEffect, useRef } from 'react';
 import {
-  ArrowLeft, ArrowRight, BadgeEuro, BriefcaseBusiness, Check, CircleAlert,
+  ArrowLeft, ArrowRight, BadgeEuro, BriefcaseBusiness, CircleAlert,
   FileCheck2, Info, Landmark, LineChart, Printer, ReceiptText, Scale,
   ShieldCheck, Users
 } from 'lucide-react';
 import {
-  Bar, BarChart, CartesianGrid, Cell, ResponsiveContainer, Tooltip, XAxis, YAxis
+  Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis
 } from 'recharts';
 import SankeyTaxFlow from './SankeyTaxFlow';
 import './StepTax.css';
@@ -19,7 +19,6 @@ const pages = [
   ['Tax memo', 'Turn findings into an evidence plan', ReceiptText]
 ];
 
-const palette = ['#c5a868', '#d46868', '#e8995a', '#5c8c67', '#799180'];
 const money = value => new Intl.NumberFormat('de-DE', {
   style: 'currency', currency: 'EUR', maximumFractionDigits: 0
 }).format(Number(value || 0));

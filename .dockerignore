@@ -1,0 +1,26 @@
+# Keep credentials and local artifacts out of the root production build.
+**/.env
+**/.env.*
+**/*.pem
+**/*.key
+**/.git
+**/node_modules
+**/venv
+**/.venv
+**/__pycache__
+**/*.py[cod]
+**/.pytest_cache
+**/.mypy_cache
+**/.ruff_cache
+**/dist
+**/dev-dist
+**/build
+**/playwright-report
+**/test-results
+**/coverage
+**/*.log
+**/*.db
+**/*.sqlite
+**/*.sqlite3
+**/.idea
+**/.vscode

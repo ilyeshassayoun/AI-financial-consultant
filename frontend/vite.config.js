@@ -40,41 +40,6 @@ export default defineConfig({
     },
   },
   build: {
-    rollupOptions: {
-      output: {
-        manualChunks: (id) => {
-          if (id.includes('node_modules')) {
-            if (id.includes('react') || id.includes('react-dom')) {
-              return 'vendor-react';
-            }
-            if (id.includes('recharts')) {
-              return 'vendor-charts';
-            }
-            if (id.includes('lucide-react')) {
-              return 'vendor-ui';
-            }
-            if (id.includes('zustand')) {
-              return 'vendor-state';
-            }
-            return 'vendor';
-          }
-          if (id.includes('/components/')) {
-            if (id.includes('StepWelcome')) return 'step-welcome';
-            if (id.includes('StepProfile')) return 'step-profile';
-            if (id.includes('StepInsurance')) return 'step-insurance';
-            if (id.includes('StepTax')) return 'step-tax';
-            if (id.includes('StepInvestment')) return 'step-investment';
-            if (id.includes('StepRetirement')) return 'step-retirement';
-            if (id.includes('TaxBreakdownChart') || id.includes('RetirementGapChart') || 
-                id.includes('MonteCarloChart') || id.includes('HumanCapitalMeter') || 
-                id.includes('InteractiveCashFlow')) {
-              return 'components-charts';
-            }
-            return 'components-ui';
-          }
-        },
-      },
-    },
     chunkSizeWarningLimit: 1000,
   },
 })

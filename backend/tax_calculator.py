@@ -24,6 +24,7 @@ def calculate_german_tax(
     gross_income: float,
     tax_class: int = 1,
     is_married: bool = False,
+    spouse_income: float = 0.0,
     church_tax: bool = False,
     church_tax_rate: float = 0.09,
     num_children: int = 0,
@@ -47,7 +48,9 @@ def calculate_german_tax(
     Sonderausgaben (§ 10 EStG), Günstigerprüfung for Riester & Kindergeld, and direct tax credits.
     """
     details: Dict[str, Any] = {}
-    gross_income = max(0.0, float(gross_income))
+    primary_income = max(0.0, float(gross_income))
+    spouse_income = max(0.0, float(spouse_income)) if is_married and joint_assessment else 0.0
+    gross_income = primary_income + spouse_income
     
     # 1. Itemized Werbungskosten (§ 9 EStG)
     commute_days = min(max(0, commute_days), 230)
@@ -69,18 +72,13 @@ def calculate_german_tax(
     details['werbungskosten_exceeds_pauschale'] = calculated_werbungskosten > werbungskosten_pauschale
     details['werbungskosten_delta'] = round(max(0.0, calculated_werbungskosten - werbungskosten_pauschale), 2)
     
-    # 2. Statutory Social Security Contributions (2026 schedules)
+    # 2. Statutory Social Security Contributions (2026 schedules). For a joint
+    # assessment the contribution ceilings apply per employee, not per household.
     BBG_KV_PV = 69750.0
     BBG_RV_AV = 101400.0
     
     # Statutory Rates (Employee Share)
     # 14.6% base plus 2.9% official average supplementary rate, shared equally.
-    kv_gross = min(gross_income, BBG_KV_PV)
-    if has_private_health and private_health_cost > 0:
-        kv_employee = private_health_cost * 12.0 * 0.5  # Employer covers half up to max
-    else:
-        kv_employee = kv_gross * 0.0875
-        
     # Pflegeversicherung (outside Saxony): 1.8% employee base share, plus
     # 0.6 percentage points for childless members aged 23+, or a 0.25 point
     # reduction for each second-to-fifth child under 25. Saxony shifts 0.5
@@ -92,15 +90,21 @@ def calculate_german_tax(
         pv_rate = max(0.008, 0.018 - min(4, max(0, eligible_children - 1)) * 0.0025)
     if is_saxony:
         pv_rate += 0.005
-    pv_employee = kv_gross * pv_rate
-    
-    # Rentenversicherung: 18.6% / 2 = 9.3%
-    rv_gross = min(gross_income, BBG_RV_AV)
-    rv_employee = rv_gross * 0.093
-    
-    # Arbeitslosenversicherung: 2.6% / 2 = 1.3%
-    av_employee = rv_gross * 0.013
-    
+    def employee_social_security(income: float, private_health: bool = False, annual_private_cost: float = 0.0) -> Dict[str, float]:
+        kv_gross = min(income, BBG_KV_PV)
+        health = annual_private_cost * 12.0 * 0.5 if private_health and annual_private_cost > 0 else kv_gross * 0.0875
+        care = kv_gross * pv_rate
+        rv_base = min(income, BBG_RV_AV)
+        pension = rv_base * 0.093
+        unemployment = rv_base * 0.013
+        return {"health": health, "care": care, "pension": pension, "unemployment": unemployment}
+
+    primary_social = employee_social_security(primary_income, has_private_health, private_health_cost)
+    spouse_social = employee_social_security(spouse_income) if spouse_income else {"health": 0.0, "care": 0.0, "pension": 0.0, "unemployment": 0.0}
+    kv_employee = primary_social["health"] + spouse_social["health"]
+    pv_employee = primary_social["care"] + spouse_social["care"]
+    rv_employee = primary_social["pension"] + spouse_social["pension"]
+    av_employee = primary_social["unemployment"] + spouse_social["unemployment"]
     total_social_security = kv_employee + pv_employee + rv_employee + av_employee
     
     details['social_security'] = {
@@ -112,13 +116,17 @@ def calculate_german_tax(
         'care_employee_rate': round(pv_rate, 4),
         'children_under_25_assumed': eligible_children,
         'saxony': is_saxony,
+        'household_estimate': bool(spouse_income),
     }
     
     # 3. Sonderausgaben & Vorsorgeaufwendungen (§ 10 EStG)
     # Basic Health & Care is 100% tax deductible
     vorsorge_basis_health = kv_employee + pv_employee
     # Statutory pension contributions are treated as deductible retirement expenses (2026 cap €29,344).
-    vorsorge_pension = min(rv_employee * 2.0, 29344.0) * 0.5 # Employee share
+    vorsorge_pension = (
+        min(primary_social["pension"] * 2.0, 29344.0) * 0.5
+        + min(spouse_social["pension"] * 2.0, 29344.0) * 0.5
+    )
     total_vorsorge = vorsorge_basis_health + vorsorge_pension
     
     # Tax Class Adjustments
@@ -142,6 +150,7 @@ def calculate_german_tax(
 
     details['assessment_basis'] = {
         'mode': 'joint_estimate' if (is_married and joint_assessment) else 'individual_estimate',
+        'spouse_income_included': round(spouse_income, 2),
         'withholding_tax_class': tax_class,
         'warning': 'Steuerklasse affects payroll withholding, not final assessed annual income tax. Joint splitting requires the conditions of §§ 26, 26b EStG and combined spouse income.',
     }

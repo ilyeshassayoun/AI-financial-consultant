@@ -1,5 +1,5 @@
 import React from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
 
 const pageVariants = {
   initial: { opacity: 0, x: 30, scale: 0.99, filter: 'blur(4px)' },
@@ -37,17 +37,19 @@ const staggerItem = {
 };
 
 export function PageTransition({ children, transitionKey }) {
+  const reduceMotion = useReducedMotion();
+
   return (
-    <AnimatePresence mode="wait">
+    <AnimatePresence mode="wait" initial={!reduceMotion}>
       <motion.div
         key={transitionKey}
-        initial="initial"
-        animate="enter"
-        exit="exit"
+        initial={reduceMotion ? false : 'initial'}
+        animate={reduceMotion ? { opacity: 1 } : 'enter'}
+        exit={reduceMotion ? { opacity: 1 } : 'exit'}
         variants={pageVariants}
         style={{ width: '100%' }}
       >
-        <motion.div variants={staggerContainer} initial="hidden" animate="show">
+        <motion.div variants={staggerContainer} initial={reduceMotion ? false : 'hidden'} animate={reduceMotion ? undefined : 'show'}>
           {typeof children === 'function' ? children(staggerItem) : children}
         </motion.div>
       </motion.div>
@@ -56,11 +58,13 @@ export function PageTransition({ children, transitionKey }) {
 }
 
 export function StaggeredChildren({ children, delay = 0 }) {
+  const reduceMotion = useReducedMotion();
+
   return (
     <motion.div
       variants={staggerContainer}
-      initial="hidden"
-      animate="show"
+      initial={reduceMotion ? false : 'hidden'}
+      animate={reduceMotion ? undefined : 'show'}
       style={{ transitionDelay: delay }}
     >
       {React.Children.map(children, (child, index) =>
@@ -76,11 +80,13 @@ export function StaggeredChildren({ children, delay = 0 }) {
 }
 
 export function FadeInUp({ children, delay = 0, className = '' }) {
+  const reduceMotion = useReducedMotion();
+
   return (
     <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.45, ease: [0.16, 1, 0.3, 1], delay }}
+      initial={reduceMotion ? false : { opacity: 0, y: 20 }}
+      animate={reduceMotion ? undefined : { opacity: 1, y: 0 }}
+      transition={reduceMotion ? undefined : { duration: 0.45, ease: [0.16, 1, 0.3, 1], delay }}
       className={className}
     >
       {children}
@@ -89,11 +95,13 @@ export function FadeInUp({ children, delay = 0, className = '' }) {
 }
 
 export function SlideInRight({ children, delay = 0 }) {
+  const reduceMotion = useReducedMotion();
+
   return (
     <motion.div
-      initial={{ opacity: 0, x: 30 }}
-      animate={{ opacity: 1, x: 0 }}
-      transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1], delay }}
+      initial={reduceMotion ? false : { opacity: 0, x: 30 }}
+      animate={reduceMotion ? undefined : { opacity: 1, x: 0 }}
+      transition={reduceMotion ? undefined : { duration: 0.4, ease: [0.16, 1, 0.3, 1], delay }}
     >
       {children}
     </motion.div>
@@ -101,11 +109,13 @@ export function SlideInRight({ children, delay = 0 }) {
 }
 
 export function ScaleIn({ children, delay = 0 }) {
+  const reduceMotion = useReducedMotion();
+
   return (
     <motion.div
-      initial={{ opacity: 0, scale: 0.95 }}
-      animate={{ opacity: 1, scale: 1 }}
-      transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1], delay }}
+      initial={reduceMotion ? false : { opacity: 0, scale: 0.95 }}
+      animate={reduceMotion ? undefined : { opacity: 1, scale: 1 }}
+      transition={reduceMotion ? undefined : { duration: 0.35, ease: [0.16, 1, 0.3, 1], delay }}
     >
       {children}
     </motion.div>

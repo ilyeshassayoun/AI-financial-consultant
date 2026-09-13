@@ -59,7 +59,6 @@ def test_rejects_non_finite_income_and_extreme_retirement_age():
     assert client.post("/api/analyze", json={"retirement_age": 10_000}).status_code == 422
 
 
-def test_paid_ai_routes_require_configured_access_key(monkeypatch):
-    monkeypatch.setenv("LLM_ACCESS_KEY", "test-secret")
+def test_paid_ai_routes_require_authenticated_session():
     response = client.post("/api/consultant/insight", json={"profile": {}, "step": "tax"})
     assert response.status_code == 401

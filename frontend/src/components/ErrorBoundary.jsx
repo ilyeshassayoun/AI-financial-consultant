@@ -19,6 +19,12 @@ class ErrorBoundary extends Component {
     console.error('ErrorBoundary caught an error:', error, errorInfo);
   }
 
+  componentDidUpdate(previousProps) {
+    if (this.state.hasError && previousProps.resetKey !== this.props.resetKey) {
+      this.resetError();
+    }
+  }
+
   render() {
     if (this.state.hasError) {
       if (this.props.fallback) {
@@ -51,7 +57,7 @@ class ErrorBoundary extends Component {
             marginBottom: '24px',
             fontSize: '14px'
           }}>
-            We're sorry, but an unexpected error occurred. Our team has been notified.
+            This section could not load. Try again or open another section.
           </p>
           <button
             onClick={this.resetError.bind(this)}
@@ -59,7 +65,7 @@ class ErrorBoundary extends Component {
           >
             Try Again
           </button>
-          {process.env.NODE_ENV === 'development' && this.state.error && (
+          {import.meta.env.DEV && this.state.error && (
             <details style={{ marginTop: '24px', textAlign: 'left', width: '100%', maxWidth: '600px' }}>
               <summary className={styles.textSecondary} style={{ cursor: 'pointer' }}>
                 Error Details (Development)

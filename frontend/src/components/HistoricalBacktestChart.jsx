@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { ResponsiveContainer, LineChart, Line, XAxis, YAxis, Tooltip, CartesianGrid, Legend } from 'recharts';
 import { History } from 'lucide-react';
 
-const HISTORICAL_SERIES = [
+const ILLUSTRATIVE_SERIES = [
   { year: '2000', msciWorld: 100, stoxx600: 100, bonds: 100, gold: 100, balanced: 100, event: 'Dot-Com Peak' },
   { year: '2001', msciWorld: 84, stoxx600: 83, bonds: 106, gold: 101, balanced: 92 },
   { year: '2002', msciWorld: 68, stoxx600: 56, bonds: 114, gold: 125, balanced: 82, event: 'Dot-Com Trough' },
@@ -51,19 +51,19 @@ export default function HistoricalBacktestChart() {
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
             <History size={20} color="var(--maison-gold)" />
             <h3 style={{ margin: 0, fontSize: '1.15rem', color: 'var(--text-primary)', fontWeight: 800 }}>
-              26-Year Empirical Backtesting &amp; Regime Resilience (2000–2026)
+              Illustrative Market-Regime Scenarios
             </h3>
           </div>
           <p style={{ margin: '2px 0 0 0', fontSize: '0.8rem', color: 'var(--text-secondary)' }}>
-            Growth of €100 indexed capital through Dot-Com, 2008 GFC, COVID-19, and the 2022 Interest Rate Shock.
+            Synthetic educational examples—not observed market data or a historical backtest. These curves are not calculated from your selected strategy. No historical performance statistics are claimed.
           </p>
         </div>
 
         <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
           {[
             ['all', 'All Asset Classes'],
-            ['msciWorld', 'MSCI World Equity'],
-            ['balanced', '70/30 Balanced Core'],
+            ['msciWorld', 'Global equity illustration'],
+            ['balanced', 'Balanced illustration'],
             ['bonds', 'EU Sovereign Bonds'],
             ['gold', 'Physical Gold']
           ].map(([id, label]) => (
@@ -90,7 +90,7 @@ export default function HistoricalBacktestChart() {
 
       <div style={{ height: '280px', width: '100%' }}>
         <ResponsiveContainer width="100%" height="100%">
-          <LineChart data={HISTORICAL_SERIES} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
+          <LineChart data={ILLUSTRATIVE_SERIES} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
             <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--border-architectural)" />
             <XAxis dataKey="year" stroke="var(--text-secondary)" fontSize={11} />
             <YAxis stroke="var(--text-secondary)" tickFormatter={(v) => `€${v}`} fontSize={11} />
@@ -108,10 +108,10 @@ export default function HistoricalBacktestChart() {
             />
             <Legend />
             {(selectedAsset === 'all' || selectedAsset === 'msciWorld') && (
-              <Line type="monotone" dataKey="msciWorld" name="MSCI World" stroke="#38bdf8" strokeWidth={2.5} dot={false} />
+              <Line type="monotone" dataKey="msciWorld" name="Global equity illustration" stroke="#38bdf8" strokeWidth={2.5} dot={false} />
             )}
             {(selectedAsset === 'all' || selectedAsset === 'balanced') && (
-              <Line type="monotone" dataKey="balanced" name="70/30 Balanced" stroke="#c5a059" strokeWidth={2.5} dot={false} />
+              <Line type="monotone" dataKey="balanced" name="Balanced illustration" stroke="#c5a059" strokeWidth={2.5} dot={false} />
             )}
             {(selectedAsset === 'all' || selectedAsset === 'bonds') && (
               <Line type="monotone" dataKey="bonds" name="EU Gov Bonds" stroke="#34d399" strokeWidth={1.8} strokeDasharray="4 4" dot={false} />
@@ -123,27 +123,6 @@ export default function HistoricalBacktestChart() {
         </ResponsiveContainer>
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '10px' }}>
-        <div style={{ background: 'var(--bg-card-subtle)', padding: '12px 14px', borderRadius: '10px', border: '1px solid var(--border-architectural)' }}>
-          <span style={{ fontSize: '0.68rem', fontWeight: 700, color: 'var(--text-secondary)' }}>2000–2026 MSCI CAGR</span>
-          <div className="tabular-nums" style={{ fontSize: '1.2rem', fontWeight: 800, color: 'var(--text-primary)' }}>+7.3% p.a.</div>
-        </div>
-
-        <div style={{ background: 'var(--bg-card-subtle)', padding: '12px 14px', borderRadius: '10px', border: '1px solid var(--border-architectural)' }}>
-          <span style={{ fontSize: '0.68rem', fontWeight: 700, color: 'var(--text-secondary)' }}>2008 MAX DRAWDOWN</span>
-          <div className="tabular-nums" style={{ fontSize: '1.2rem', fontWeight: 800, color: 'var(--accent-coral)' }}>-40.0%</div>
-        </div>
-
-        <div style={{ background: 'var(--bg-card-subtle)', padding: '12px 14px', borderRadius: '10px', border: '1px solid var(--border-architectural)' }}>
-          <span style={{ fontSize: '0.68rem', fontWeight: 700, color: 'var(--text-secondary)' }}>70/30 RECOVERY TIME</span>
-          <div className="tabular-nums" style={{ fontSize: '1.2rem', fontWeight: 800, color: 'var(--text-primary)' }}>2.4 Years</div>
-        </div>
-
-        <div style={{ background: 'var(--bg-card-subtle)', padding: '12px 14px', borderRadius: '10px', border: '1px solid var(--border-architectural)' }}>
-          <span style={{ fontSize: '0.68rem', fontWeight: 700, color: 'var(--text-secondary)' }}>DIVERSIFICATION ALPHA</span>
-          <div className="tabular-nums" style={{ fontSize: '1.2rem', fontWeight: 800, color: 'var(--accent-emerald)' }}>+1.8% Sharpe</div>
-        </div>
-      </div>
     </div>
   );
 }

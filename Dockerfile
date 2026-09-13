@@ -10,6 +10,7 @@ RUN npm run build
 # Stage 2: Production Python Backend with bundled Frontend
 FROM python:3.12-slim
 WORKDIR /app
+ENV APP_ENV=production COOKIE_SECURE=true
 
 # Install system runtime dependencies
 RUN apt-get update && apt-get install -y --no-install-recommends gcc libpq-dev curl && rm -rf /var/lib/apt/lists/*

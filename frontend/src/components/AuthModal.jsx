@@ -1,6 +1,6 @@
 import React, { useState, useCallback } from 'react';
-import { X, Mail, Lock, User, Globe, Landmark, ShieldCheck } from 'lucide-react';
-import { register, login, getGoogleOAuthUrl } from '../services/authService';
+import { X, Mail, Lock, User, Globe, Landmark } from 'lucide-react';
+import { register, login } from '../services/authService';
 import { useAuthStore } from '../stores/authStore';
 
 export default function AuthModal({ isOpen, onClose, onSuccess }) {
@@ -20,7 +20,7 @@ export default function AuthModal({ isOpen, onClose, onSuccess }) {
       const result = mode === 'login' 
         ? await login({ email, password }) 
         : await register({ email, password, name });
-      loginStore({ user: result.user, access_token: result.access_token, refresh_token: result.refresh_token });
+      loginStore({ user: result.user });
       onSuccess?.();
       onClose();
     } catch (err) {

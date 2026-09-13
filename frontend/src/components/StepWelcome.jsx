@@ -1,8 +1,7 @@
 import React from 'react';
 import { 
-  ArrowRight, Shield, Landmark, TrendingUp, Sparkles, CheckCircle2, 
-  Scale, PiggyBank, Bot, Lock, Award, ChevronRight, ShieldCheck, 
-  BarChart3, Zap, Layers3
+  ArrowRight, Shield, TrendingUp, Sparkles, CheckCircle2,
+  Scale, PiggyBank, Lock, Award, ShieldCheck
 } from 'lucide-react';
 import { FadeInUp } from './PageTransition';
 
@@ -13,7 +12,7 @@ const emaPath = "M 0 96 C 25 90, 50 74, 75 48 C 88 34, 95 18, 100 6";
 
 const STATS = [
   { value: '§ 32a', unit: 'EStG', label: 'Statutory Tax Engine', note: 'Progressive tariff & deductions' },
-  { value: '1,000', unit: 'Draws', label: 'Monte Carlo Simulations', note: 'Stochastic wealth dispersion' },
+  { value: 'Model', unit: 'Based', label: 'Monte Carlo Simulations', note: 'See the laboratory for run settings' },
   { value: '3-Pillar', unit: 'Model', label: 'Rentenlücke Gap Analysis', note: 'DRV, bAV & private capital' },
   { value: '0.00%', unit: 'Comm.', label: 'Fiduciary Independence', note: '100% fee-only & neutral' },
 ];
@@ -36,7 +35,7 @@ const PILLARS = [
   {
     icon: TrendingUp,
     title: 'Quantitative ETF Laboratory',
-    desc: '1,000-draw Monte Carlo simulations with real TER fee drag and § 20 InvStG 30% partial tax exemption modeling.',
+    desc: 'Monte Carlo simulations with an explicit all-in portfolio fee assumption and § 20 InvStG 30% partial tax exemption modeling.',
     badge: '§ 20 InvStG',
     metric: '+3.4% Alpha'
   },
@@ -52,8 +51,8 @@ const PILLARS = [
 const TRUST_FACTORS = [
   {
     icon: Lock,
-    title: 'Client-Side Data Sovereignty',
-    desc: 'Financial calculations are processed transiently. Your personal financial ledger is never monetized, indexed, or sold.'
+    title: 'Controlled Data Processing',
+    desc: 'Your profile is stored locally for continuity and sent to the configured analysis API only when calculations are requested.'
   },
   {
     icon: Award,
@@ -67,8 +66,8 @@ const TRUST_FACTORS = [
   },
   {
     icon: ShieldCheck,
-    title: 'GDPR Art. 17 Compliance',
-    desc: 'One-click full cryptographic purge of all locally stored audit session profiles with zero trace retention.'
+    title: 'Local Data Controls',
+    desc: 'Export your current profile or erase locally stored profile and session data from the privacy panel.'
   },
 ];
 
@@ -91,7 +90,7 @@ export default function StepWelcome({ nextStep }) {
         position: 'fixed',
         top: 0,
         left: 0,
-        width: '100vw',
+        width: '100%',
         height: '100vh',
         pointerEvents: 'none',
         zIndex: 0,
@@ -257,7 +256,7 @@ export default function StepWelcome({ nextStep }) {
               margin: 0, 
               maxWidth: '620px' 
             }}>
-              Independent, fee-only actuarial consultation grounded in German statutory law. Optimize your income tax (§ 32a EStG), close your statutory pension gap (SGB VI), and simulate low-cost ETF portfolios with 1,000 Monte Carlo draws.
+              Independent, fee-only actuarial consultation grounded in German statutory law. Optimize your income tax (§ 32a EStG), close your statutory pension gap (SGB VI), and simulate low-cost ETF portfolios with reproducible Monte Carlo scenarios.
             </p>
           </FadeInUp>
 
@@ -302,7 +301,7 @@ export default function StepWelcome({ nextStep }) {
                 <ArrowRight size={18} color="var(--maison-gold)" />
               </button>
               <span style={{ fontSize: '0.78rem', color: 'var(--text-secondary)', fontWeight: 600 }}>
-                Takes ~3 min · 100% Client-Side Private
+                Takes ~3 min · Local profile storage · API-based analysis
               </span>
             </div>
           </FadeInUp>
@@ -427,7 +426,7 @@ export default function StepWelcome({ nextStep }) {
               Engineered for Sovereignty &amp; Transparency
             </h2>
             <p style={{ fontSize: '0.88rem', color: 'var(--text-secondary)', margin: 0, lineHeight: '1.55' }}>
-              Unlike commission-driven brokers, this platform operates on an open-source mathematical framework with strict client-side data isolation.
+              The platform separates locally saved profile data from API-based calculations and provides clear export and erase controls.
             </p>
           </div>
 
