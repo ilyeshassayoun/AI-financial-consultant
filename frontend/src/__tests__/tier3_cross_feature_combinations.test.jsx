@@ -107,20 +107,12 @@ describe('Tier 3: Cross-Feature Combinations — Concurrency, Resize & State Flo
       expect(screen.getByText('pension')).toBeInTheDocument();
     });
 
-    it('maintains consistent UI state when rapidly toggling theme during step navigation', () => {
+    it('keeps global theme and refresh controls out of the primary navigation', () => {
       const setStep = vi.fn();
       render(<TopNav currentStep="welcome" setStep={setStep} />);
 
-      const themeBtn = screen.getByRole('button', { name: /Switch to (dark|light) theme/i });
-
-      // Click theme toggle rapidly
-      fireEvent.click(themeBtn);
-      fireEvent.click(themeBtn);
-      fireEvent.click(themeBtn);
-
-      const finalTheme = localStorage.getItem('theme');
-      expect(['light', 'dark']).toContain(finalTheme);
-      expect(document.documentElement.getAttribute('data-theme')).toBe(finalTheme);
+      expect(screen.queryByRole('button', { name: /Switch to (dark|light) theme/i })).not.toBeInTheDocument();
+      expect(screen.queryByRole('button', { name: /Recalculate financial analysis/i })).not.toBeInTheDocument();
     });
   });
 

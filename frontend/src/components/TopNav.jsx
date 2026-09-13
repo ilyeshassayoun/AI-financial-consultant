@@ -1,13 +1,10 @@
 import React, { useState } from 'react';
-import { Menu, X, ChevronRight, Landmark, ShieldCheck, Moon, Sun, Bot, RefreshCw } from 'lucide-react';
+import { Menu, X, ChevronRight, ShieldCheck, Bot } from 'lucide-react';
 import AuthNavControls from './AuthNavControls';
 import { SECTION_SUBSTEPS, steps } from './TopNav.constants';
 
-export default function TopNav({ currentStep, setStep, currentSubStep = 0, onOpenGDPR, onOpenAdvisor, onRefreshAnalysis, analysisStatus }) {
+export default function TopNav({ currentStep, setStep, currentSubStep = 0, onOpenGDPR, onOpenAdvisor }) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  // App restores the DOM attribute in an effect, so read persisted state here as well.
-  // Otherwise a saved dark preference renders as dark while this toggle still says "dark".
-  const [isDark, setIsDark] = useState(() => localStorage.getItem('theme') === 'dark');
   const subTabs = SECTION_SUBSTEPS[currentStep] || [];
   
   const stepIndex = Math.max(0, steps.findIndex(s => s.id === currentStep));
@@ -63,19 +60,21 @@ export default function TopNav({ currentStep, setStep, currentSubStep = 0, onOpe
             flexShrink: 0
           }}
         >
-          <div style={{
-            width: 32,
-            height: 32,
-            borderRadius: 7,
-            background: 'linear-gradient(135deg, var(--maison-pine-deep), var(--maison-obsidian))',
+          <div aria-hidden="true" style={{
+            position: 'relative',
+            width: 38,
+            height: 38,
+            borderRadius: 10,
+            background: 'linear-gradient(145deg, var(--maison-obsidian), var(--maison-pine-deep))',
             border: '1px solid var(--maison-gold)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            boxShadow: 'var(--shadow-xs)',
-            flexShrink: 0
+            display: 'grid',
+            placeItems: 'center',
+            boxShadow: '0 6px 18px rgba(8, 15, 26, .16)',
+            flexShrink: 0,
+            overflow: 'hidden'
           }}>
-            <Landmark size={16} color="var(--maison-gold)" />
+            <span style={{ color: 'var(--maison-gold)', fontFamily: 'var(--font-serif)', fontSize: '.9rem', fontWeight: 800, letterSpacing: '-.06em' }}>IH</span>
+            <span style={{ position: 'absolute', right: 5, bottom: 5, width: 9, height: 1, background: 'var(--maison-gold)' }} />
           </div>
           <div>
             <div style={{ 
@@ -87,7 +86,7 @@ export default function TopNav({ currentStep, setStep, currentSubStep = 0, onOpe
               letterSpacing: '-0.02em',
               lineHeight: '1.1'
             }}>
-              Ilyes H.
+              Ilyes H
             </div>
             <div style={{ 
               fontSize: '0.58rem', 
@@ -96,7 +95,7 @@ export default function TopNav({ currentStep, setStep, currentSubStep = 0, onOpe
               fontWeight: 700, 
               textTransform: 'uppercase' 
             }}>
-              Private Wealth
+              Wealth Advisory
             </div>
           </div>
         </div>
@@ -182,54 +181,6 @@ export default function TopNav({ currentStep, setStep, currentSubStep = 0, onOpe
             >
               <ShieldCheck size={13} color="var(--maison-gold)" />
               <span className="hide-on-mobile">DSGVO</span>
-            </button>
-          )}
-
-          {/* Theme Toggle (Dark/Light) */}
-          <button
-            type="button"
-            aria-label={`Switch to ${isDark ? 'light' : 'dark'} theme`}
-            aria-pressed={isDark}
-            onClick={() => {
-              const next = isDark ? 'light' : 'dark';
-              document.documentElement.setAttribute('data-theme', next);
-              localStorage.setItem('theme', next);
-              setIsDark(next === 'dark');
-            }}
-            style={{
-              background: 'var(--bg-card-subtle)',
-              border: '1px solid var(--border-architectural)',
-              color: 'var(--text-primary)',
-              padding: '6px 10px',
-              borderRadius: '8px',
-              cursor: 'pointer',
-              fontSize: '0.74rem',
-              fontWeight: 700,
-              display: 'flex',
-              alignItems: 'center',
-              gap: '5px',
-              transition: 'all 0.2s ease'
-            }}
-          >
-            {isDark ? <Sun size={13} color="var(--maison-gold)" /> : <Moon size={13} color="var(--maison-gold)" />}
-            <span className="hide-on-mobile">Theme</span>
-          </button>
-
-          {onRefreshAnalysis && (
-            <button
-              type="button"
-              aria-label="Recalculate financial analysis"
-              onClick={onRefreshAnalysis}
-              disabled={analysisStatus === 'loading'}
-              style={{
-                background: analysisStatus === 'stale' ? 'var(--maison-gold-subtle)' : 'var(--bg-card-subtle)',
-                border: '1px solid var(--border-architectural)', color: 'var(--text-primary)',
-                padding: '6px 10px', borderRadius: '8px', cursor: analysisStatus === 'loading' ? 'wait' : 'pointer',
-                fontSize: '0.74rem', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '5px', opacity: analysisStatus === 'loading' ? 0.65 : 1,
-              }}
-            >
-              <RefreshCw size={13} color="var(--maison-gold)" />
-              <span className="hide-on-mobile">{analysisStatus === 'loading' ? 'Updating' : 'Refresh'}</span>
             </button>
           )}
 
@@ -341,12 +292,6 @@ export default function TopNav({ currentStep, setStep, currentSubStep = 0, onOpe
               }}
             >
               <span style={{ display: 'inline-flex', alignItems: 'center', gap: '8px' }}><Bot size={16} color="var(--maison-gold)" /> Open AI Concierge</span>
-              <ChevronRight size={14} color="var(--maison-gold)" />
-            </button>
-          )}
-          {onRefreshAnalysis && (
-            <button type="button" onClick={() => { onRefreshAnalysis(); setMobileMenuOpen(false); }} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '10px', padding: '12px 14px', borderRadius: '10px', border: '1px solid var(--border-architectural)', background: 'var(--bg-card-subtle)', color: 'var(--text-primary)', fontWeight: 800, fontSize: '0.84rem', cursor: 'pointer' }}>
-              <span style={{ display: 'inline-flex', alignItems: 'center', gap: '8px' }}><RefreshCw size={16} color="var(--maison-gold)" /> Refresh financial analysis</span>
               <ChevronRight size={14} color="var(--maison-gold)" />
             </button>
           )}

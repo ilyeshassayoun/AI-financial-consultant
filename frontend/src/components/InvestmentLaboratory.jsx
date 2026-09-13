@@ -276,7 +276,36 @@ function GoalRepairPanel({ optimizer, updateProfile }) {
     { id:'target', label:'Reset to after-tax median', value:money(optimizer.revised_target), detail:`Reduce by ${money(optimizer.target_reduction)}`, apply:() => updateProfile({ target_wealth:optimizer.revised_target }) },
     { id:'risk', label:'Review the risk budget', value:best.name || 'No improvement', detail:`Goal probability ${pct(best.probability,0)}`, apply:() => best.id && updateProfile({ investment_strategy:best.id }) }
   ];
-  return <section className="guide-repair-panel"><div><span>Goal repair menu</span><h3>Four controlled ways to close the funding gap</h3><p>Change one lever at a time. Increasing market risk is shown last because it is the least controllable solution.</p></div><div className="guide-repair-grid">{levers.map((lever,index) => <article key={lever.id}><span>0{index+1}</span><small>{lever.label}</small><strong>{lever.value}</strong><p>{lever.detail}</p><button type="button" onClick={lever.apply}>Apply scenario<ArrowUpRight size={14}/></button></article>)}</div></section>;
+  return (
+    <section className="guide-repair-panel" aria-labelledby="goal-repair-title">
+      <header className="guide-repair-header">
+        <span>Goal repair menu</span>
+        <h3 id="goal-repair-title">Four controlled ways to close the funding gap</h3>
+        <p>Change one lever at a time. Increasing market risk is shown last because it is the least controllable solution.</p>
+      </header>
+      <div className="guide-repair-grid">
+        {levers.map((lever, index) => (
+          <article className={`guide-repair-card guide-repair-card--${lever.id}`} key={lever.id}>
+            <div className="guide-repair-card__heading">
+              <span className="guide-repair-card__index">0{index + 1}</span>
+              <small>{lever.label}</small>
+            </div>
+            <strong className="guide-repair-card__value">{lever.value}</strong>
+            <p>{lever.detail}</p>
+            <button
+              type="button"
+              className="guide-repair-card__action"
+              aria-label={`Apply ${lever.label.toLowerCase()} scenario`}
+              onClick={lever.apply}
+            >
+              <span>Apply scenario</span>
+              <ArrowUpRight size={16} aria-hidden="true" />
+            </button>
+          </article>
+        ))}
+      </div>
+    </section>
+  );
 }
 
 function RiskPage({ answers, answer, recommendation }) {

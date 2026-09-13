@@ -107,8 +107,8 @@ describe('Tier 1: Feature Coverage — Navigation, Routes & Layout', () => {
       const nextStep = vi.fn();
       render(<StepWelcome nextStep={nextStep} analysis={mockFullAnalysis} />);
 
-      expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent(/Your German Finances/i);
-      const ctaBtn = screen.getByRole('button', { name: /Launch Actuarial Analysis/i });
+      expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent(/A clearer plan/i);
+      const ctaBtn = screen.getByRole('button', { name: /Build my financial plan/i });
       expect(ctaBtn).toBeInTheDocument();
 
       fireEvent.click(ctaBtn);

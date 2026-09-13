@@ -1,6 +1,6 @@
 import React from 'react';
 import { 
-  ArrowRight, Shield, TrendingUp, Sparkles, CheckCircle2,
+  ArrowRight, Shield, TrendingUp, CheckCircle2,
   Scale, PiggyBank, Lock, Award, ShieldCheck
 } from 'lucide-react';
 import { FadeInUp } from './PageTransition';
@@ -20,29 +20,29 @@ const STATS = [
 const PILLARS = [
   {
     icon: Shield,
-    title: 'Income & Family Protection',
-    desc: 'DIN 77230 existential risk defense, occupational disability (BU) sizing, and statutory vs private healthcare headroom.',
+    title: 'Protect your income',
+    desc: 'See the cover your household actually needs.',
     badge: 'DIN 77230',
     metric: 'Full Shield'
   },
   {
     icon: Scale,
-    title: 'Statutory Tax Optimization',
-    desc: 'Full German progressive income tax engine (§ 32a EStG) with Werbungskosten, Homeoffice-Pauschale, and Vorsorgeaufwand.',
+    title: 'Pay the right tax',
+    desc: 'Find practical, evidence-based German tax opportunities.',
     badge: '§ 32a EStG',
     metric: 'Up to €2,850/yr'
   },
   {
     icon: TrendingUp,
-    title: 'Quantitative ETF Laboratory',
-    desc: 'Monte Carlo simulations with an explicit all-in portfolio fee assumption and § 20 InvStG 30% partial tax exemption modeling.',
+    title: 'Invest with confidence',
+    desc: 'Compare diversified strategies and realistic outcomes.',
     badge: '§ 20 InvStG',
     metric: '+3.4% Alpha'
   },
   {
     icon: PiggyBank,
-    title: '3-Pillar Pension Solvency',
-    desc: 'Actuarial DRV statutory pension gap modeling with Entgeltpunkte tracking, corporate bAV subsidy, and 4% SWR longevity planning.',
+    title: 'Plan your retirement',
+    desc: 'Understand your pension income and close the gap.',
     badge: 'SGB VI',
     metric: '100% Solvency'
   },
@@ -213,24 +213,9 @@ export default function StepWelcome({ nextStep }) {
               boxShadow: 'var(--shadow-xs)',
               width: 'fit-content'
             }}>
-              <div style={{ 
-                width: '20px', 
-                height: '20px', 
-                borderRadius: '6px', 
-                background: 'linear-gradient(135deg, var(--maison-pine-deep), var(--maison-obsidian))', 
-                border: '1px solid var(--maison-gold)',
-                display: 'flex', 
-                alignItems: 'center', 
-                justifyContent: 'center' 
-              }}>
-                <Sparkles size={11} strokeWidth={2.2} color="var(--maison-gold)" />
-              </div>
-              <span style={{ fontSize: '0.78rem', fontWeight: 800, color: 'var(--text-primary)' }}>
-                GERMAN STATUTORY WEALTH PLANNING 2026
-              </span>
-              <span style={{ width: '1px', height: '11px', background: 'var(--maison-gold)', opacity: 0.4 }} />
-              <span style={{ fontSize: '0.72rem', fontWeight: 700, color: 'var(--maison-gold)' }}>
-                DIN 77230 · § 32a EStG
+              <span style={{ width: '7px', height: '7px', borderRadius: '50%', background: 'var(--accent-emerald)' }} />
+              <span style={{ fontSize: '0.74rem', fontWeight: 800, color: 'var(--text-primary)', letterSpacing: '.04em', textTransform: 'uppercase' }}>
+                Independent financial planning for Germany
               </span>
             </div>
           </FadeInUp>
@@ -244,7 +229,7 @@ export default function StepWelcome({ nextStep }) {
               letterSpacing: '-0.03em',
               fontWeight: 800
             }}>
-              Your German Finances,<br />Built with Institutional Rigor.
+              A clearer plan<br />for your money.
             </h1>
           </FadeInUp>
 
@@ -256,15 +241,14 @@ export default function StepWelcome({ nextStep }) {
               margin: 0, 
               maxWidth: '620px' 
             }}>
-              Independent, fee-only actuarial consultation grounded in German statutory law. Optimize your income tax (§ 32a EStG), close your statutory pension gap (SGB VI), and simulate low-cost ETF portfolios with reproducible Monte Carlo scenarios.
+              Bring your taxes, protection, investments and retirement into one practical financial plan.
             </p>
           </FadeInUp>
 
           <FadeInUp delay={0.22}>
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: '16px' }}>
-              <Credential icon={<CheckCircle2 size={16} color="var(--accent-emerald)" />} text="100% Fee-Only &amp; Independent" />
-              <Credential icon={<CheckCircle2 size={16} color="var(--accent-emerald)" />} text="German Statutory Tax Engine (§ 32a)" />
-              <Credential icon={<CheckCircle2 size={16} color="var(--accent-emerald)" />} text="Monte Carlo Wealth Lab (§ 20 InvStG)" />
+              <Credential icon={<CheckCircle2 size={16} color="var(--accent-emerald)" />} text="Independent and fee-only" />
+              <Credential icon={<CheckCircle2 size={16} color="var(--accent-emerald)" />} text="Transparent calculations" />
             </div>
           </FadeInUp>
 
@@ -297,11 +281,11 @@ export default function StepWelcome({ nextStep }) {
                   e.currentTarget.style.boxShadow = '0 4px 20px rgba(197, 160, 89, 0.28)';
                 }}
               >
-                <span>Launch Actuarial Analysis</span>
+                <span>Build my financial plan</span>
                 <ArrowRight size={18} color="var(--maison-gold)" />
               </button>
               <span style={{ fontSize: '0.78rem', color: 'var(--text-secondary)', fontWeight: 600 }}>
-                Takes ~3 min · Local profile storage · API-based analysis
+                Allow 8–10 minutes · Your progress is saved
               </span>
             </div>
           </FadeInUp>
@@ -354,18 +338,6 @@ export default function StepWelcome({ nextStep }) {
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                       <span style={{ fontSize: '0.94rem', fontWeight: 800, color: 'var(--text-primary)' }}>
                         {p.title}
-                      </span>
-                      <span style={{ 
-                        fontSize: '0.62rem', 
-                        fontFamily: 'var(--font-mono)', 
-                        fontWeight: 700, 
-                        padding: '2px 7px', 
-                        borderRadius: '5px', 
-                        background: 'var(--bg-card-subtle)', 
-                        color: 'var(--maison-gold)',
-                        border: '1px solid var(--border-architectural)'
-                      }}>
-                        {p.badge}
                       </span>
                     </div>
                     <p style={{ margin: 0, fontSize: '0.78rem', color: 'var(--text-secondary)', lineHeight: '1.45' }}>
@@ -498,7 +470,7 @@ export default function StepWelcome({ nextStep }) {
               Ready to Stress-Test Your Financial Strategy?
             </h3>
             <p style={{ margin: 0, fontSize: '0.88rem', color: 'rgba(255,255,255,0.7)', lineHeight: '1.5' }}>
-              Generate your full 360° financial plan across German taxes, insurance shields, ETF investments, and DRV statutory pensions in 3 minutes.
+              Build a connected plan across German taxes, protection, investments and retirement in about 8–10 minutes.
             </p>
           </div>
 

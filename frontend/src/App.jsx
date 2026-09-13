@@ -130,10 +130,8 @@ function App() {
   const inRouter = useInRouterContext();
 
   useEffect(() => {
-    const savedTheme = safeLocalStorage.getItem('theme');
-    if (savedTheme) {
-      document.documentElement.setAttribute('data-theme', savedTheme);
-    }
+    document.documentElement.setAttribute('data-theme', 'light');
+    safeLocalStorage.removeItem('theme');
   }, []);
 
   const profile = useProfileStore((state) => state.profile);
@@ -284,8 +282,6 @@ function App() {
         onSubStepChange={setSubStepForCurrent}
         onOpenGDPR={() => setIsGDPROpen(true)}
         onOpenAdvisor={() => setIsAdvisorDrawerOpen(true)}
-        onRefreshAnalysis={retryAnalysis}
-        analysisStatus={analysisState.status}
       />
       <main
         id="main-content"

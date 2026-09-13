@@ -66,8 +66,8 @@ describe('Tier 4: Real-World Scenarios — E2E Journey & Offline Backend Simulat
           <StepWelcome nextStep={nextStep} analysis={mockFullAnalysis} />
         </ErrorBoundary>
       );
-      expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent(/Your German Finances/i);
-      fireEvent.click(screen.getByRole('button', { name: /Launch Actuarial Analysis/i }));
+      expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent(/A clearer plan/i);
+      fireEvent.click(screen.getByRole('button', { name: /Build my financial plan/i }));
       expect(nextStep).toHaveBeenCalledTimes(1);
       expect(currentStep).toBe('profile');
 
@@ -199,7 +199,7 @@ describe('Tier 4: Real-World Scenarios — E2E Journey & Offline Backend Simulat
       );
 
       // Welcome screen on mobile has Launch button
-      const cta = screen.getByRole('button', { name: /Launch Actuarial Analysis/i });
+      const cta = screen.getByRole('button', { name: /Build my financial plan/i });
       fireEvent.click(cta);
       expect(setStep).toHaveBeenCalledWith('profile');
 
