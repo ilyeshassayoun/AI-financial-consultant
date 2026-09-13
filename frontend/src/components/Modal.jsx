@@ -1,7 +1,6 @@
-import React, { useId, useRef, Fragment } from 'react';
+import { useId, useRef, Fragment } from 'react';
 import { X } from 'lucide-react';
 import { FocusTrap } from './FocusTrap';
-import styles from '../styles/shared.module.css';
 
 /**
  * Accessible Modal Dialog
@@ -44,18 +43,24 @@ export function Modal({
 
   if (!isOpen) return null;
 
-  const sizeClasses = {
-    sm: 'max-w-md',
-    md: 'max-w-lg',
-    lg: 'max-w-2xl',
-    xl: 'max-w-4xl',
-    full: 'max-w-[90vw]',
+  const sizeMaxWidth = {
+    sm: '480px',
+    md: '576px',
+    lg: '768px',
+    xl: '960px',
+    full: '90vw',
   };
 
   return (
     <Fragment>
       <div
-        className={`${styles.modalBackdrop} fixed inset-0 z-[1000]`}
+        style={{
+          position: 'fixed',
+          inset: 0,
+          zIndex: 1000,
+          background: 'rgba(6, 11, 20, 0.72)',
+          backdropFilter: 'blur(8px)',
+        }}
         role="presentation"
         onClick={handleOverlayClick}
         aria-hidden="true"
@@ -67,29 +72,66 @@ export function Modal({
       />
       <div
         ref={modalRef}
-        className={`${styles.modal} fixed inset-0 z-[1100] flex items-center justify-center p-4`}
+        style={{
+          position: 'fixed',
+          inset: 0,
+          zIndex: 1100,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          padding: '16px',
+        }}
         role="dialog"
         aria-modal="true"
         aria-labelledby={titleId}
         aria-describedby={description ? descId : undefined}
       >
         <div
-          className={`${sizeClasses[size]} w-full ${styles.modalContent} ${styles.cardElevated} ${styles.animateScaleIn}`}
-          style={{ maxHeight: '90vh', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}
+          style={{
+            maxWidth: sizeMaxWidth[size] || '576px',
+            width: '100%',
+            maxHeight: '90vh',
+            overflow: 'hidden',
+            display: 'flex',
+            flexDirection: 'column',
+            background: 'var(--bg-card)',
+            borderRadius: '16px',
+            border: '1px solid var(--border-architectural)',
+            boxShadow: 'var(--shadow-elevated)',
+          }}
         >
           {(title || showCloseButton) && (
-            <header className={`${styles.modalHeader} flex items-start justify-between p-6 border-b border-[var(--color-border-default)] flex-shrink-0`}>
+            <header
+              style={{
+                display: 'flex',
+                alignItems: 'flex-start',
+                justifyContent: 'space-between',
+                padding: '24px',
+                borderBottom: '1px solid var(--border-architectural)',
+                flexShrink: 0,
+              }}
+            >
               <div>
                 <h2
                   id={titleId}
-                  className={`${styles.modalTitle} text-xl font-extrabold text-[var(--color-text-primary)]`}
+                  style={{
+                    fontSize: '1.25rem',
+                    fontWeight: 800,
+                    color: 'var(--text-primary)',
+                    margin: 0,
+                  }}
                 >
                   {title}
                 </h2>
                 {description && (
                   <p
                     id={descId}
-                    className={`${styles.modalDescription} mt-1 text-sm text-[var(--color-text-secondary)]`}
+                    style={{
+                      marginTop: '4px',
+                      marginBottom: 0,
+                      fontSize: '0.86rem',
+                      color: 'var(--text-secondary)',
+                    }}
                   >
                     {description}
                   </p>
@@ -98,17 +140,31 @@ export function Modal({
               {showCloseButton && (
                 <button
                   type="button"
-                  className={`${styles.btnIcon} ${styles.focusRing}`}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    width: '36px',
+                    height: '36px',
+                    borderRadius: '8px',
+                    border: '1px solid var(--border-architectural)',
+                    background: 'var(--bg-card-subtle)',
+                    cursor: 'pointer',
+                  }}
                   onClick={onClose}
                   aria-label="Close dialog"
                 >
-                  <X size={20} color="var(--color-text-secondary)" strokeWidth={2} />
+                  <X size={20} color="var(--text-secondary)" strokeWidth={2} />
                 </button>
               )}
             </header>
           )}
           <div
-            className={`${styles.modalBody} flex-1 overflow-y-auto p-6`}
+            style={{
+              flex: 1,
+              overflowY: 'auto',
+              padding: '24px',
+            }}
             tabIndex={0}
           >
             {children}

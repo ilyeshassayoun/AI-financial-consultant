@@ -1,21 +1,16 @@
 import React from 'react';
-import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
+import { motion, useReducedMotion } from 'framer-motion';
 
 const pageVariants = {
-  initial: { opacity: 0, x: 30, scale: 0.99, filter: 'blur(4px)' },
+  initial: { opacity: 0, y: 6 },
   enter: { 
     opacity: 1, 
-    x: 0, 
-    scale: 1, 
-    filter: 'blur(0px)',
-    transition: { duration: 0.45, ease: [0.16, 1, 0.3, 1] }
+    y: 0,
+    transition: { duration: 0.09, ease: [0.16, 1, 0.3, 1] }
   },
   exit: { 
     opacity: 0, 
-    x: -30, 
-    scale: 0.99, 
-    filter: 'blur(4px)',
-    transition: { duration: 0.25, ease: [0.16, 1, 0.3, 1] }
+    transition: { duration: 0.05, ease: 'easeOut' }
   }
 };
 
@@ -23,37 +18,37 @@ const staggerContainer = {
   hidden: { opacity: 0 },
   show: {
     opacity: 1,
-    transition: { staggerChildren: 0.05 }
+    transition: { staggerChildren: 0.03 }
   }
 };
 
 const staggerItem = {
-  hidden: { opacity: 0, y: 16 },
+  hidden: { opacity: 0, y: 8 },
   show: { 
     opacity: 1, 
     y: 0,
-    transition: { duration: 0.4, ease: [0.16, 1, 0.3, 1] }
+    transition: { duration: 0.1, ease: [0.16, 1, 0.3, 1] }
   }
 };
 
 export function PageTransition({ children, transitionKey }) {
   const reduceMotion = useReducedMotion();
 
+  // Replacing this keyed wrapper unmounts the previous route immediately.
+  // The incoming page still animates, while assistive technology never sees
+  // two complete application sections during an exit animation.
   return (
-    <AnimatePresence mode="wait" initial={!reduceMotion}>
-      <motion.div
-        key={transitionKey}
-        initial={reduceMotion ? false : 'initial'}
-        animate={reduceMotion ? { opacity: 1 } : 'enter'}
-        exit={reduceMotion ? { opacity: 1 } : 'exit'}
-        variants={pageVariants}
-        style={{ width: '100%' }}
-      >
-        <motion.div variants={staggerContainer} initial={reduceMotion ? false : 'hidden'} animate={reduceMotion ? undefined : 'show'}>
-          {typeof children === 'function' ? children(staggerItem) : children}
-        </motion.div>
+    <motion.div
+      key={transitionKey}
+      initial={reduceMotion ? false : 'initial'}
+      animate={reduceMotion ? { opacity: 1 } : 'enter'}
+      variants={pageVariants}
+      style={{ width: '100%' }}
+    >
+      <motion.div variants={staggerContainer} initial={reduceMotion ? false : 'hidden'} animate={reduceMotion ? undefined : 'show'}>
+        {typeof children === 'function' ? children(staggerItem) : children}
       </motion.div>
-    </AnimatePresence>
+    </motion.div>
   );
 }
 

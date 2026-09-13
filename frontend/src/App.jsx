@@ -1,4 +1,5 @@
 import { lazy, Suspense, useEffect, useCallback, useMemo, useRef, useState } from 'react';
+import { useInRouterContext, useNavigate, useLocation } from 'react-router-dom';
 import './App.css';
 import TopNav from './components/TopNav';
 import AdvisorDrawer from './components/AdvisorDrawer';
@@ -7,7 +8,7 @@ import { PageTransition } from './components/PageTransition';
 import ErrorBoundary from './components/ErrorBoundary';
 import SkipLinks from './components/SkipLinks';
 import GDPRConsentModal from './components/GDPRConsentModal';
-import { useProfileStore } from './stores/profileStore';
+import { useProfileStore, safeLocalStorage } from './stores/profileStore';
 import { useAuthStore } from './stores/authStore';
 import { fetchFullAnalysis } from './services/apiService';
 import { getCurrentSession, logoutSession } from './services/authService';
@@ -63,7 +64,7 @@ const ErrorFallback = ({ error, resetError }) => (
       </button>
       <button
         onClick={() => {
-          localStorage.removeItem('financial-consultant-profile');
+          safeLocalStorage.removeItem('financial-consultant-profile');
           window.location.reload();
         }}
         className="btn-secondary"
@@ -77,10 +78,59 @@ const ErrorFallback = ({ error, resetError }) => (
 
 const STEPS_ORDER = ['welcome', 'profile', 'insurance', 'tax', 'invest', 'pension'];
 
-function App() {
-  // BUG 1 FIX: theme useEffect must be INSIDE the component
+const PATH_TO_STEP = {
+  '/': 'welcome',
+  '/welcome': 'welcome',
+  '/profile': 'profile',
+  '/mandate': 'profile',
+  '/insurance': 'insurance',
+  '/risk': 'insurance',
+  '/tax': 'tax',
+  '/invest': 'invest',
+  '/pension': 'pension',
+  '/solvency': 'pension',
+};
+
+const STEP_TO_PATH = {
+  welcome: '/welcome',
+  profile: '/profile',
+  insurance: '/insurance',
+  tax: '/tax',
+  invest: '/invest',
+  pension: '/pension',
+};
+
+function RouteSync({ currentStep, setCurrentStep }) {
+  const location = useLocation();
+  const navigate = useNavigate();
+  const lastPathname = useRef(null);
+
+  // A single effect avoids two independent synchronization effects racing.
+  // If the pathname changed first (deep link, back/forward), URL wins. If the
+  // app step changed first (navigation button), state wins and updates the URL.
   useEffect(() => {
-    const savedTheme = localStorage.getItem('theme');
+    const rawPath = location.pathname.toLowerCase().replace(/\/$/, '') || '/';
+    const mappedStep = PATH_TO_STEP[rawPath];
+    if (lastPathname.current !== rawPath) {
+      lastPathname.current = rawPath;
+      if (mappedStep && mappedStep !== currentStep) setCurrentStep(mappedStep);
+      return;
+    }
+    if (mappedStep !== currentStep) {
+      const targetPath = STEP_TO_PATH[currentStep] || '/';
+      lastPathname.current = targetPath;
+      navigate(targetPath, { replace: false });
+    }
+  }, [currentStep, location.pathname, navigate, setCurrentStep]);
+
+  return null;
+}
+
+function App() {
+  const inRouter = useInRouterContext();
+
+  useEffect(() => {
+    const savedTheme = safeLocalStorage.getItem('theme');
     if (savedTheme) {
       document.documentElement.setAttribute('data-theme', savedTheme);
     }
@@ -123,16 +173,33 @@ function App() {
     profileRef.current = profile;
   }, [profile]);
 
+  // Reactive recalculation on profile change with 400ms debounce
+  const isInitialMount = useRef(true);
+  useEffect(() => {
+    if (isInitialMount.current) {
+      isInitialMount.current = false;
+      return;
+    }
+    const timer = setTimeout(() => {
+      setAnalysisRetryKey((key) => key + 1);
+    }, 400);
+    return () => clearTimeout(timer);
+  }, [profile]);
+
   const currentSubStep = useMemo(() =>
-    typeof subStepMap[currentStep] === 'number' ? subStepMap[currentStep] : 0,
+    (subStepMap && typeof subStepMap[currentStep] === 'number' && Number.isFinite(subStepMap[currentStep]))
+      ? Math.max(0, subStepMap[currentStep])
+      : 0,
     [subStepMap, currentStep]
   );
 
   const setSubStepForCurrent = useCallback((updaterOrValue) => {
     setSubStepMap(prev => {
-      const current = typeof prev[currentStep] === 'number' ? prev[currentStep] : 0;
+      const safePrev = (prev && typeof prev === 'object') ? prev : {};
+      const current = (typeof safePrev[currentStep] === 'number' && Number.isFinite(safePrev[currentStep])) ? safePrev[currentStep] : 0;
       const nextVal = typeof updaterOrValue === 'function' ? updaterOrValue(current) : updaterOrValue;
-      return { ...prev, [currentStep]: nextVal };
+      const safeNext = Number.isFinite(nextVal) ? Math.max(0, nextVal) : 0;
+      return { ...safePrev, [currentStep]: safeNext };
     });
   }, [currentStep, setSubStepMap]);
 
@@ -182,7 +249,7 @@ function App() {
   const handleResetData = useCallback(async () => {
     resetAll();
     logout();
-    localStorage.removeItem('financial-consultant-profile');
+    safeLocalStorage.removeItem('financial-consultant-profile');
     try {
       await logoutSession();
     } catch {
@@ -208,6 +275,7 @@ function App() {
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh', width: '100%', background: 'var(--bg-porcelain)' }}>
+      {inRouter && <RouteSync currentStep={currentStep} setCurrentStep={setCurrentStep} />}
       <SkipLinks />
       <TopNav
         currentStep={currentStep}
@@ -235,62 +303,116 @@ function App() {
         }}
         role="main"
       >
-        <Suspense fallback={<div className="route-loading" role="status" aria-live="polite">Preparing your financial analysis...</div>}>
-          <ErrorBoundary fallback={ErrorFallback} resetKey={`${currentStep}:${currentSubStep}`}>
+        <ErrorBoundary fallback={ErrorFallback} resetKey={`${currentStep}:${currentSubStep}`}>
+          <Suspense fallback={<div className="route-loading" role="status" aria-live="polite">Preparing this section…</div>}>
             <PageTransition transitionKey={currentStep}>
-              {currentStep === 'welcome' && <StepWelcome nextStep={nextStep} analysis={analysis} />}
-              {currentStep === 'profile' && (
-                <StepProfile profile={profile} updateProfile={updateProfile} nextStep={nextStep} prevStep={prevStep}
-                  analysis={analysis} subStep={currentSubStep} setSubStep={setSubStepForCurrent}
-                  onApplyPatch={handleApplyPatch} onOpenChat={handleOpenChat} />
-              )}
-              {currentStep === 'insurance' && (
-                <StepInsurance profile={profile} updateProfile={updateProfile} nextStep={nextStep} prevStep={prevStep}
-                  analysis={analysis} subStep={currentSubStep} setSubStep={setSubStepForCurrent}
-                  onApplyPatch={handleApplyPatch} onOpenChat={handleOpenChat} />
-              )}
-              {currentStep === 'tax' && (
-                <StepTax profile={profile} updateProfile={updateProfile} nextStep={nextStep} prevStep={prevStep}
-                  analysis={analysis} subStep={currentSubStep} setSubStep={setSubStepForCurrent}
-                  onApplyPatch={handleApplyPatch} onOpenChat={handleOpenChat} />
-              )}
-              {currentStep === 'invest' && (
-                <StepInvestment profile={profile} updateProfile={updateProfile} nextStep={nextStep} prevStep={prevStep}
-                  analysis={analysis} subStep={currentSubStep} setSubStep={setSubStepForCurrent}
-                  analysisStatus={analysisState.status} analysisError={analysisState.error} onRetryAnalysis={retryAnalysis}
-                  onApplyPatch={handleApplyPatch} onOpenChat={handleOpenChat} />
-              )}
-              {currentStep === 'pension' && (
-                <StepRetirement profile={profile} updateProfile={updateProfile} nextStep={nextStep} prevStep={prevStep}
-                  analysis={analysis} subStep={currentSubStep} setSubStep={setSubStepForCurrent}
-                  onApplyPatch={handleApplyPatch} onOpenChat={handleOpenChat} />
-              )}
+            {currentStep === 'welcome' && <StepWelcome nextStep={nextStep} analysis={analysis} />}
+            {currentStep === 'profile' && (
+              <StepProfile
+                profile={profile}
+                updateProfile={updateProfile}
+                nextStep={nextStep}
+                prevStep={prevStep}
+                analysis={analysis}
+                subStep={currentSubStep}
+                setSubStep={setSubStepForCurrent}
+                onApplyPatch={handleApplyPatch}
+                onOpenChat={handleOpenChat}
+              />
+            )}
+            {currentStep === 'insurance' && (
+              <StepInsurance
+                profile={profile}
+                updateProfile={updateProfile}
+                nextStep={nextStep}
+                prevStep={prevStep}
+                analysis={analysis}
+                subStep={currentSubStep}
+                setSubStep={setSubStepForCurrent}
+                analysisStatus={analysisState.status}
+                analysisError={analysisState.error}
+                onRetryAnalysis={retryAnalysis}
+                onApplyPatch={handleApplyPatch}
+                onOpenChat={handleOpenChat}
+              />
+            )}
+            {currentStep === 'tax' && (
+              <StepTax
+                profile={profile}
+                updateProfile={updateProfile}
+                nextStep={nextStep}
+                prevStep={prevStep}
+                analysis={analysis}
+                subStep={currentSubStep}
+                setSubStep={setSubStepForCurrent}
+                analysisStatus={analysisState.status}
+                analysisError={analysisState.error}
+                onRetryAnalysis={retryAnalysis}
+                onApplyPatch={handleApplyPatch}
+                onOpenChat={handleOpenChat}
+              />
+            )}
+            {currentStep === 'invest' && (
+              <StepInvestment
+                profile={profile}
+                updateProfile={updateProfile}
+                nextStep={nextStep}
+                prevStep={prevStep}
+                analysis={analysis}
+                subStep={currentSubStep}
+                setSubStep={setSubStepForCurrent}
+                analysisStatus={analysisState.status}
+                analysisError={analysisState.error}
+                onRetryAnalysis={retryAnalysis}
+                onApplyPatch={handleApplyPatch}
+                onOpenChat={handleOpenChat}
+              />
+            )}
+            {currentStep === 'pension' && (
+              <StepRetirement
+                profile={profile}
+                updateProfile={updateProfile}
+                nextStep={nextStep}
+                prevStep={prevStep}
+                analysis={analysis}
+                subStep={currentSubStep}
+                setSubStep={setSubStepForCurrent}
+                analysisStatus={analysisState.status}
+                analysisError={analysisState.error}
+                onRetryAnalysis={retryAnalysis}
+                onApplyPatch={handleApplyPatch}
+                onOpenChat={handleOpenChat}
+              />
+            )}
             </PageTransition>
-          </ErrorBoundary>
-        </Suspense>
+          </Suspense>
+        </ErrorBoundary>
       </main>
 
-      <FloatingAdvisorButton
-        isOpen={isAdvisorDrawerOpen}
-        onClick={() => setIsAdvisorDrawerOpen(prev => !prev)}
-      />
+      <ErrorBoundary fallback={() => null}>
+        <FloatingAdvisorButton
+          isOpen={isAdvisorDrawerOpen}
+          onClick={() => setIsAdvisorDrawerOpen(prev => !prev)}
+        />
+        <AdvisorDrawer
+          isOpen={isAdvisorDrawerOpen}
+          onClose={() => setIsAdvisorDrawerOpen(false)}
+          profile={profile}
+          analysis={analysis}
+          currentStep={currentStep}
+          initialMessage={initialChatMessage}
+          onApplyPatch={handleApplyPatch}
+        />
+      </ErrorBoundary>
 
-      <AdvisorDrawer
-        isOpen={isAdvisorDrawerOpen}
-        onClose={() => setIsAdvisorDrawerOpen(false)}
-        profile={profile}
-        analysis={analysis}
-        currentStep={currentStep}
-        initialMessage={initialChatMessage}
-        onApplyPatch={handleApplyPatch}
-      />
-
-      <GDPRConsentModal
-        isOpen={isGDPROpen}
-        onClose={() => setIsGDPROpen(false)}
-        profile={profile}
-        onResetData={handleResetData}
-      />
+      <ErrorBoundary fallback={() => null}>
+        <GDPRConsentModal
+          isOpen={isGDPROpen}
+          onClose={() => setIsGDPROpen(false)}
+          profile={profile}
+          onResetData={handleResetData}
+        />
+      </ErrorBoundary>
     </div>
   );
 }

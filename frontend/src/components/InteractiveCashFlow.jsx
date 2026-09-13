@@ -8,42 +8,45 @@ import {
 } from 'recharts';
 
 export default function InteractiveCashFlow({ profile, updateProfile, analysis, mode = 'output' }) {
+  const safeProf = profile || {};
   // Derived Net Salary Calculation
-  const grossAnnual = profile.income || 60000;
+  const grossAnnual = Number.isFinite(safeProf.income) ? safeProf.income : (safeProf.income ?? 60000);
   const taxData = analysis?.tax || {};
-  const netAnnual = taxData.net_income || (grossAnnual * 0.60);
+  const netAnnual = Number.isFinite(taxData.net_income) ? taxData.net_income : (grossAnnual * 0.60);
   const primaryNetMonthly = Math.round(netAnnual / 12);
-  const secondaryIncome = profile.secondary_income || 0;
+  const secondaryIncome = Number.isFinite(safeProf.secondary_income) ? safeProf.secondary_income : 0;
   const totalNetInflow = primaryNetMonthly + secondaryIncome;
 
   // Granular Sub-Category Expenses (Monthly base values)
-  const housing = profile.housing_cost !== undefined ? profile.housing_cost : 1100;
-  const groceries = profile.living_cost !== undefined ? profile.living_cost : 500;
-  const mobility = profile.mobility_cost !== undefined ? profile.mobility_cost : 200;
-  const leisure = profile.leisure_cost !== undefined ? profile.leisure_cost : 300;
-  const subscriptions = profile.subscriptions_cost !== undefined ? profile.subscriptions_cost : 80;
-  const travel = profile.travel_cost !== undefined ? profile.travel_cost : 150;
-  const insurancePremiums = (profile.existing_insurances || []).length * 25;
+  const housing = Number.isFinite(safeProf.housing_cost) ? safeProf.housing_cost : 1100;
+  const groceries = Number.isFinite(safeProf.living_cost) ? safeProf.living_cost : 500;
+  const mobility = Number.isFinite(safeProf.mobility_cost) ? safeProf.mobility_cost : 200;
+  const leisure = Number.isFinite(safeProf.leisure_cost) ? safeProf.leisure_cost : 300;
+  const subscriptions = Number.isFinite(safeProf.subscriptions_cost) ? safeProf.subscriptions_cost : 80;
+  const travel = Number.isFinite(safeProf.travel_cost) ? safeProf.travel_cost : 150;
+  const insurancesList = Array.isArray(safeProf.existing_insurances) ? safeProf.existing_insurances : [];
+  const insurancePremiums = insurancesList.length * 25;
 
   // Categorical Aggregates
-  const totalFixedNeeds = housing + groceries + mobility;
-  const totalDiscretionary = leisure + subscriptions + travel;
+  const totalFixedNeeds = Math.max(0, housing + groceries + mobility);
+  const totalDiscretionary = Math.max(0, leisure + subscriptions + travel);
   const totalProtection = Math.max(15, insurancePremiums);
   const totalOutflow = totalFixedNeeds + totalDiscretionary + totalProtection;
   const unallocatedSurplus = totalNetInflow - totalOutflow;
 
   // Investment Slider bounds: €10 to Surplus Value
-  const maxInvestable = Math.max(10, unallocatedSurplus);
-  const [monthlyInvestAmount, setMonthlyInvestAmount] = useState(() => Math.min(250, Math.max(10, unallocatedSurplus)));
+  const maxInvestable = Math.max(10, Number.isFinite(unallocatedSurplus) ? unallocatedSurplus : 10);
+  const [monthlyInvestAmount, setMonthlyInvestAmount] = useState(() => Math.min(250, Math.max(10, Number.isFinite(unallocatedSurplus) ? unallocatedSurplus : 10)));
 
   // Derived current invested amount within safe bounds
-  const currentInvestAmount = Math.min(maxInvestable, Math.max(10, monthlyInvestAmount));
+  const currentInvestAmount = Math.min(maxInvestable, Math.max(10, Number.isFinite(monthlyInvestAmount) ? monthlyInvestAmount : 10));
 
   // 50/30/20 Rule Metrics
-  const needsRatio = Math.min(100, Math.round((totalFixedNeeds / (totalNetInflow || 1)) * 100));
-  const wantsRatio = Math.min(100, Math.round((totalDiscretionary / (totalNetInflow || 1)) * 100));
-  const wealthRatio = Math.max(0, Math.round((Math.max(0, unallocatedSurplus) / (totalNetInflow || 1)) * 100));
-  const housingRatio = Math.round((housing / (totalNetInflow || 1)) * 100);
+  const safeTotalInflow = Math.max(1, totalNetInflow);
+  const needsRatio = Math.min(100, Math.round((totalFixedNeeds / safeTotalInflow) * 100));
+  const wantsRatio = Math.min(100, Math.round((totalDiscretionary / safeTotalInflow) * 100));
+  const wealthRatio = Math.max(0, Math.round((Math.max(0, unallocatedSurplus) / safeTotalInflow) * 100));
+  const housingRatio = Math.round((housing / safeTotalInflow) * 100);
 
   // AI Solvency Calculation & Score
   let aiGrade = 'A';
@@ -592,7 +595,7 @@ export default function InteractiveCashFlow({ profile, updateProfile, analysis, 
           </div>
 
           {/* Money Invested -> Terminal Growth Breakdown Strip */}
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(110px, 1fr))', gap: '8px', paddingTop: '4px', borderTop: '1px solid var(--border-architectural)' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(95px, 1fr))', gap: '8px', paddingTop: '4px', borderTop: '1px solid var(--border-architectural)' }}>
             <div>
               <div style={{ fontSize: '0.6rem', color: 'var(--text-secondary)', fontWeight: 700, textTransform: 'uppercase' }}>INVESTED PRINCIPAL</div>
               <div className="tabular-nums" style={{ fontSize: '1rem', fontWeight: 800, color: 'var(--text-primary)' }}>

@@ -1,3 +1,7 @@
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+
 :root {
   /* European Private Banking & Wall Street Wealth Palette */
   --maison-obsidian: #0a121e;       /* Deep Obsidian Navy */
@@ -504,6 +508,10 @@ input[type="number"]:focus, input[type="text"]:focus {
   box-shadow: 0 0 0 3px rgba(197, 168, 104, 0.35);
 }
 
+.mobile-nav-btn {
+  display: none;
+}
+
 @media (max-width: 1024px) {
   .desktop-nav {
     display: none !important;
@@ -546,10 +554,6 @@ input[type="number"]:focus, input[type="text"]:focus {
 }
 
 @media (max-width: 640px) {
-  .hide-on-mobile {
-    display: none !important;
-  }
-
   #main-navigation > div:first-child {
     padding-inline: 12px !important;
     gap: 6px !important;
@@ -590,17 +594,91 @@ input[type="number"]:focus, input[type="text"]:focus {
   .profile-goals-grid {
     grid-template-columns: 1fr;
   }
+}
 
-  .profile-stepper,
-  .investment-stepper {
-    mask-image: linear-gradient(90deg, transparent 0, #000 14px, #000 calc(100% - 28px), transparent 100%);
-    padding-inline: 14px !important;
+/* Responsive Visibility Utilities */
+@media (min-width: 841px) {
+  .hide-on-desktop {
+    display: none !important;
   }
 }
 
-@media (max-width: 768px) {
+@media (max-width: 840px) {
+  .hide-on-mobile {
+    display: none !important;
+  }
+
   .wizard-card {
     padding: 16px 14px;
+  }
+}
+
+/* Universal Stepper Fade Mask for Touch Devices */
+.profile-stepper,
+.investment-stepper,
+.insurance-stepper,
+.tax-stepper,
+.retirement-stepper {
+  mask-image: linear-gradient(90deg, transparent 0, #000 16px, #000 calc(100% - 32px), transparent 100%);
+  padding-inline: 16px !important;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Touch Accessibility for Range Sliders */
+input[type="range"] {
+  touch-action: pan-y;
+  min-height: 44px;
+  height: 44px;
+  cursor: pointer;
+}
+input[type="range"]::-webkit-slider-thumb {
+  width: 22px;
+  height: 22px;
+}
+input[type="range"]::-moz-range-thumb {
+  width: 22px;
+  height: 22px;
+}
+
+/* Actuarial Ledger Table Layout */
+.actuarial-ledger-container {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  border: 1px solid var(--border-architectural);
+  border-radius: 12px;
+  overflow-x: auto;
+}
+
+.actuarial-ledger-header {
+  display: grid;
+  grid-template-columns: minmax(200px, 1.8fr) minmax(130px, 1.2fr) minmax(130px, 1.2fr) minmax(140px, 1.3fr) minmax(110px, 0.9fr);
+  padding: 12px 20px;
+  background: var(--bg-card);
+  border-bottom: 1px solid var(--border-architectural);
+  font-size: 0.68rem;
+  font-weight: 800;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.actuarial-ledger-row {
+  display: grid;
+  grid-template-columns: minmax(200px, 1.8fr) minmax(130px, 1.2fr) minmax(130px, 1.2fr) minmax(140px, 1.3fr) minmax(110px, 0.9fr);
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--border-architectural);
+  align-items: center;
+  gap: 12px;
+}
+
+@media (max-width: 840px) {
+  .actuarial-ledger-row {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+    padding: 16px;
   }
 }
 
@@ -665,26 +743,22 @@ input[type="number"]:focus, input[type="text"]:focus {
 @keyframes pageSlideIn {
   from {
     opacity: 0;
-    transform: translateX(20px) scale(0.995);
-    filter: blur(4px);
+    transform: translateY(6px);
   }
   to {
     opacity: 1;
-    transform: translateX(0) scale(1);
-    filter: blur(0);
+    transform: translateY(0);
   }
 }
 
 @keyframes pageSlideOut {
   from {
     opacity: 1;
-    transform: translateX(0) scale(1);
-    filter: blur(0);
+    transform: translateY(0);
   }
   to {
     opacity: 0;
-    transform: translateX(-20px) scale(0.995);
-    filter: blur(4px);
+    transform: translateY(-6px);
   }
 }
 

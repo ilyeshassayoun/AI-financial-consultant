@@ -10,7 +10,9 @@ import InteractiveCashFlow from './InteractiveCashFlow';
 
 export default function StepProfile({ profile, updateProfile, nextStep, prevStep, analysis, subStep: propSubStep, setSubStep: propSetSubStep, onApplyPatch, onOpenChat }) {
   const [localSubStep, setLocalSubStep] = useState(0);
-  const subStep = typeof propSubStep === 'number' ? propSubStep : localSubStep;
+  const subStep = Number.isFinite(propSubStep)
+    ? Math.max(0, Math.min(5, propSubStep))
+    : (Number.isFinite(localSubStep) ? Math.max(0, Math.min(5, localSubStep)) : 0);
   const setSubStep = (updaterOrVal) => {
     if (propSetSubStep) {
       propSetSubStep(updaterOrVal);
@@ -243,7 +245,8 @@ export default function StepProfile({ profile, updateProfile, nextStep, prevStep
                 background: subStep === idx ? 'var(--maison-obsidian)' : 'var(--bg-card-subtle)',
                 color: subStep === idx ? '#ffffff' : 'var(--text-secondary)',
                 border: subStep === idx ? '1px solid var(--maison-gold)' : '1px solid var(--border-architectural)',
-                padding: '6px 12px',
+                padding: '8px 14px',
+                minHeight: '44px',
                 borderRadius: '8px',
                 fontSize: '0.74rem',
                 fontWeight: subStep === idx ? 800 : 600,
@@ -426,7 +429,7 @@ export default function StepProfile({ profile, updateProfile, nextStep, prevStep
                 <label className="hover-lift" style={{ display: 'flex', alignItems: 'center', gap: '10px', background: 'var(--bg-card-subtle)', padding: '12px 14px', borderRadius: '10px', border: '1px solid var(--border-architectural)', cursor: 'pointer' }}>
                   <input 
                     type="checkbox" 
-                    checked={profile.is_married} 
+                    checked={Boolean(safeProfile.is_married)}
                     onChange={e => updateProfile({ is_married: e.target.checked })} 
                   />
                   <div style={{ fontSize: '0.82rem', fontWeight: 700, color: 'var(--text-primary)' }}>Married (Joint Tax Assessment)</div>
@@ -435,7 +438,7 @@ export default function StepProfile({ profile, updateProfile, nextStep, prevStep
                 <label className="hover-lift" style={{ display: 'flex', alignItems: 'center', gap: '10px', background: 'var(--bg-card-subtle)', padding: '12px 14px', borderRadius: '10px', border: '1px solid var(--border-architectural)', cursor: 'pointer' }}>
                   <input 
                     type="checkbox" 
-                    checked={profile.has_dependents} 
+                    checked={Boolean(safeProfile.has_dependents)}
                     onChange={e => updateProfile({ has_dependents: e.target.checked })} 
                   />
                   <div style={{ fontSize: '0.82rem', fontWeight: 700, color: 'var(--text-primary)' }}>Has Dependents (Kinderfreibetrag)</div>
@@ -469,7 +472,7 @@ export default function StepProfile({ profile, updateProfile, nextStep, prevStep
                     <span style={{ fontSize: '0.85rem', fontWeight: 800, color: 'var(--text-primary)' }}>€</span>
                     <input 
                       type="number"
-                      value={profile.income}
+                      value={safeProfile.income ?? 60000}
                       onChange={e => {
                         const val = parseFloat(e.target.value);
                         if (!isNaN(val) && val >= 0) updateProfile({ income: val });
@@ -483,7 +486,7 @@ export default function StepProfile({ profile, updateProfile, nextStep, prevStep
                   min="20000" 
                   max="250000" 
                   step="2500" 
-                  value={profile.income} 
+                  value={safeProfile.income ?? 60000}
                   onChange={e => updateProfile({ income: parseFloat(e.target.value) })} 
                   style={{ width: '100%' }} 
                 />
@@ -495,7 +498,7 @@ export default function StepProfile({ profile, updateProfile, nextStep, prevStep
                 </label>
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(6, 1fr)', gap: '6px' }}>
                   {[1, 2, 3, 4, 5, 6].map((cls) => {
-                    const isSel = profile.tax_class === cls;
+                    const isSel = (safeProfile.tax_class ?? 1) === cls;
                     return (
                       <button
                         key={cls}
@@ -536,8 +539,8 @@ export default function StepProfile({ profile, updateProfile, nextStep, prevStep
                   ['Liquid savings', 'liquid_savings', 1, '€'], ['Unsecured debt', 'unsecured_debt', 1, '€'],
                   ['Debt interest rate', 'unsecured_debt_rate', .1, '%'], ['Monthly debt payment', 'monthly_debt_payment', 1, '€'],
                   ['Existing BU benefit', 'bu_monthly_benefit', 1, '€/mo']
-                ].map(([label, key, step, suffix]) => <label key={key} style={{ fontSize: '.72rem', fontWeight: 700, color: 'var(--text-secondary)' }}>{label}<div className="foundation-input"><input aria-label={label} type="number" min="0" step={step} value={key === 'unsecured_debt_rate' ? (profile[key] || 0) * 100 : profile[key] || 0} onChange={e => updateProfile({ [key]: key === 'unsecured_debt_rate' ? Number(e.target.value) / 100 : Number(e.target.value) })} /><span>{suffix}</span></div></label>)}
-                <label style={{ fontSize: '.72rem', fontWeight: 700, color: 'var(--text-secondary)' }}>Income stability<select aria-label="Income stability" value={profile.employment_stability || 'stable'} onChange={e => updateProfile({ employment_stability: e.target.value })}><option value="stable">Stable employment</option><option value="variable">Variable / self-employed</option></select></label>
+                ].map(([label, key, step, suffix]) => <label key={key} style={{ fontSize: '.72rem', fontWeight: 700, color: 'var(--text-secondary)' }}>{label}<div className="foundation-input"><input aria-label={label} type="number" min="0" step={step} value={key === 'unsecured_debt_rate' ? (safeProfile[key] || 0) * 100 : safeProfile[key] || 0} onChange={e => updateProfile({ [key]: key === 'unsecured_debt_rate' ? Number(e.target.value) / 100 : Number(e.target.value) })} /><span>{suffix}</span></div></label>)}
+                <label style={{ fontSize: '.72rem', fontWeight: 700, color: 'var(--text-secondary)' }}>Income stability<select aria-label="Income stability" value={safeProfile.employment_stability || 'stable'} onChange={e => updateProfile({ employment_stability: e.target.value })}><option value="stable">Stable employment</option><option value="variable">Variable / self-employed</option></select></label>
               </div>
             </section>
           </div>
@@ -814,21 +817,10 @@ export default function StepProfile({ profile, updateProfile, nextStep, prevStep
               </div>
 
               {/* Analytical Ledger Rows */}
-              <div style={{ display: 'flex', flexDirection: 'column' }}>
+              <div className="actuarial-ledger-container">
                 
                 {/* Ledger Header */}
-                <div className="hide-on-mobile" style={{ 
-                  display: 'grid', 
-                  gridTemplateColumns: 'minmax(220px, 1.8fr) minmax(130px, 1.2fr) minmax(130px, 1.2fr) minmax(140px, 1.3fr) minmax(110px, 0.9fr)', 
-                  padding: '10px 22px', 
-                  background: 'var(--bg-card)', 
-                  borderBottom: '1px solid var(--border-architectural)',
-                  fontSize: '0.68rem',
-                  fontWeight: 800,
-                  color: 'var(--text-muted)',
-                  textTransform: 'uppercase',
-                  letterSpacing: '0.06em'
-                }}>
+                <div className="hide-on-mobile actuarial-ledger-header">
                   <div>Diagnostic Pillar</div>
                   <div>Current Exposure</div>
                   <div>Statutory Benchmark</div>
@@ -837,15 +829,7 @@ export default function StepProfile({ profile, updateProfile, nextStep, prevStep
                 </div>
 
                 {/* Row 1: Income & Human Capital Shield */}
-                <div style={{ 
-                  display: 'grid', 
-                  gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 180px), 1fr))', 
-                  padding: '16px 22px', 
-                  borderBottom: '1px solid var(--border-architectural)',
-                  alignItems: 'center',
-                  gap: '12px',
-                  background: hasBU ? 'transparent' : 'rgba(239, 68, 68, 0.02)'
-                }}>
+                <div className="actuarial-ledger-row" style={{ background: hasBU ? 'transparent' : 'rgba(239, 68, 68, 0.02)' }}>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '3px' }}>
                     <strong style={{ fontSize: '0.88rem', color: 'var(--text-primary)' }}>1. Income &amp; Human Capital Shield</strong>
                     <span style={{ fontSize: '0.72rem', color: 'var(--maison-gold)', fontWeight: 700 }}>DIN 77230 § 1.1 Existential Risk</span>
@@ -887,14 +871,7 @@ export default function StepProfile({ profile, updateProfile, nextStep, prevStep
                 </div>
 
                 {/* Row 2: Statutory Tax Optimization (§ 32a EStG) */}
-                <div style={{ 
-                  display: 'grid', 
-                  gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 180px), 1fr))', 
-                  padding: '16px 22px', 
-                  borderBottom: '1px solid var(--border-architectural)',
-                  alignItems: 'center',
-                  gap: '12px'
-                }}>
+                <div className="actuarial-ledger-row">
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '3px' }}>
                     <strong style={{ fontSize: '0.88rem', color: 'var(--text-primary)' }}>2. Statutory Tax Optimization</strong>
                     <span style={{ fontSize: '0.72rem', color: 'var(--maison-gold)', fontWeight: 700 }}>EStG § 32a / § 9 Werbungskosten</span>
@@ -934,14 +911,7 @@ export default function StepProfile({ profile, updateProfile, nextStep, prevStep
                 </div>
 
                 {/* Row 3: Quantitative Compound Growth (§ 20 InvStG) */}
-                <div style={{ 
-                  display: 'grid', 
-                  gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 180px), 1fr))', 
-                  padding: '16px 22px', 
-                  borderBottom: '1px solid var(--border-architectural)',
-                  alignItems: 'center',
-                  gap: '12px'
-                }}>
+                <div className="actuarial-ledger-row">
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '3px' }}>
                     <strong style={{ fontSize: '0.88rem', color: 'var(--text-primary)' }}>3. Quantitative ETF Accumulation</strong>
                     <span style={{ fontSize: '0.72rem', color: 'var(--maison-gold)', fontWeight: 700 }}>§ 20 InvStG 30% Teilfreistellung</span>
@@ -983,14 +953,7 @@ export default function StepProfile({ profile, updateProfile, nextStep, prevStep
                 </div>
 
                 {/* Row 4: 3-Pillar Pension Solvency (SGB VI) */}
-                <div style={{ 
-                  display: 'grid', 
-                  gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 180px), 1fr))', 
-                  padding: '16px 22px', 
-                  borderBottom: '1px solid var(--border-architectural)',
-                  alignItems: 'center',
-                  gap: '12px'
-                }}>
+                <div className="actuarial-ledger-row">
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '3px' }}>
                     <strong style={{ fontSize: '0.88rem', color: 'var(--text-primary)' }}>4. 3-Pillar Pension Solvency</strong>
                     <span style={{ fontSize: '0.72rem', color: 'var(--maison-gold)', fontWeight: 700 }}>SGB VI Actuarial Entgeltpunkte</span>
@@ -1032,13 +995,7 @@ export default function StepProfile({ profile, updateProfile, nextStep, prevStep
                 </div>
 
                 {/* Row 5: Liquidity Coverage Ratio (LCR) */}
-                <div style={{ 
-                  display: 'grid', 
-                  gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 180px), 1fr))', 
-                  padding: '16px 22px', 
-                  alignItems: 'center',
-                  gap: '12px'
-                }}>
+                <div className="actuarial-ledger-row" style={{ borderBottom: 'none' }}>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '3px' }}>
                     <strong style={{ fontSize: '0.88rem', color: 'var(--text-primary)' }}>5. Emergency Liquidity Ratio (LCR)</strong>
                     <span style={{ fontSize: '0.72rem', color: 'var(--maison-gold)', fontWeight: 700 }}>DIN 77230 § 2.1 Cash Buffer</span>

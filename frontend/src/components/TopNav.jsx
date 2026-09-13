@@ -251,7 +251,6 @@ export default function TopNav({ currentStep, setStep, currentSubStep = 0, onOpe
             aria-expanded={mobileMenuOpen}
             onClick={() => setMobileMenuOpen(prev => !prev)}
             style={{
-              display: 'none',
               background: 'transparent',
               border: 'none',
               color: 'var(--text-primary)',

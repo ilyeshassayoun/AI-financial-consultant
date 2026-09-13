@@ -78,16 +78,26 @@ export default function InvestmentLaboratory({ profile, updateProfile, lab, subS
     guideTopRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
   }, [page]);
 
-  if (!selected && analysisStatus === 'error') return (
-    <div className="investment-lab investment-lab--loading investment-lab--error" role="alert">
-      <AlertTriangle size={34} aria-hidden="true" />
-      <div>
-        <strong>Investment model unavailable</strong>
-        <p>{analysisError || 'The analysis service did not return a result. Please try again.'}</p>
-        <button type="button" className="btn-brand" onClick={onRetryAnalysis}>Retry analysis</button>
+  if (!selected && analysisStatus === 'error') {
+    const errorHeading = 'Investment model unavailable';
+    const isRedundantDetail = Boolean(
+      analysisError && analysisError.trim().toLowerCase() === errorHeading.toLowerCase()
+    );
+    const errorDescription = (!analysisError || isRedundantDetail)
+      ? 'The analysis service did not return a result. Please try again.'
+      : analysisError;
+
+    return (
+      <div className="investment-lab investment-lab--loading investment-lab--error" role="alert">
+        <AlertTriangle size={34} aria-hidden="true" />
+        <div>
+          <strong>{errorHeading}</strong>
+          <p>{errorDescription}</p>
+          <button type="button" className="btn-brand" onClick={onRetryAnalysis}>Retry analysis</button>
+        </div>
       </div>
-    </div>
-  );
+    );
+  }
 
   if (!selected) return (
     <div className="investment-lab investment-lab--loading" role="status" aria-live="polite">
@@ -115,7 +125,7 @@ export default function InvestmentLaboratory({ profile, updateProfile, lab, subS
       {page === 0 && (
         <header className="investment-hero">
           <div>
-            <span className="investment-eyebrow">Quantitative ETF Allocation · Monte Carlo Simulation</span>
+            <span className="investment-eyebrow">Quantitative ETF Allocation · Core Quantitative Comparison</span>
             <h1 id="investment-lab-title">Institutional Wealth Architecture</h1>
             <p>{lab.methodology?.simulations_per_strategy ?? '—'}-draw Monte Carlo simulations with an all-in annual fee assumption and illustrative German horizon-liquidation tax estimates across five strategies.</p>
           </div>
@@ -346,7 +356,7 @@ function DecisionPage({ selected, profile, policy, tax, optimizer, onChangeStrat
 }
 
 function ProjectionView({ selected, comparison, target }) {
-  return <div className="lab-projection"><article className="lab-chart-card lab-chart-card--wide"><div className="lab-chart-title"><div><span>Wealth cone</span><h2>Range of simulated outcomes</h2></div><div className="lab-legend"><i className="p90"/>Optimistic <i className="p50"/>Median <i className="p10"/>Adverse</div></div><div className="lab-chart"><ResponsiveContainer width="100%" height="100%"><AreaChart data={selected.timeline} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}><defs><linearGradient id="range90" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stopColor="#bda05f" stopOpacity=".36"/><stop offset="1" stopColor="#bda05f" stopOpacity=".02"/></linearGradient><linearGradient id="range50" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stopColor="#173d29" stopOpacity=".5"/><stop offset="1" stopColor="#173d29" stopOpacity=".03"/></linearGradient></defs><CartesianGrid vertical={false} stroke="#e8ece5" strokeDasharray="3 3"/><XAxis dataKey="year" tickLine={false} axisLine={false}/><YAxis tickFormatter={v => `€${Math.round(v/1000)}k`} tickLine={false} axisLine={false} width={55}/><Tooltip formatter={(v,n) => [money(v),n]} contentStyle={{ borderRadius: 12, border: '1px solid #dce3d8' }}/><Area type="monotone" dataKey="p90" name="Optimistic P90" stroke="#bda05f" fill="url(#range90)" animationDuration={900}/><Area type="monotone" dataKey="p50" name="Median P50" stroke="#173d29" strokeWidth={3} fill="url(#range50)" animationDuration={1000}/><Area type="monotone" dataKey="p10" name="Adverse P10" stroke="#b85d52" strokeDasharray="5 5" fill="transparent" animationDuration={1100}/><Area type="monotone" dataKey="contributions" name="Deposits" stroke="#8a988d" fill="transparent" strokeWidth={1.5}/></AreaChart></ResponsiveContainer></div><div className="lab-target-line"><Target size={15}/>Goal {money(target)} · probability {pct(selected.probability_target,0)}</div></article><article className="lab-chart-card"><div className="lab-chart-title"><div><span>Strategy comparison</span><h2>Median vs adverse result</h2></div></div><div className="lab-chart"><ResponsiveContainer width="100%" height="100%"><BarChart data={comparison} layout="vertical" margin={{ left: 10, right: 10 }}><CartesianGrid horizontal={false} stroke="#e8ece5"/><XAxis type="number" tickFormatter={v => `€${Math.round(v/1000)}k`} axisLine={false}/><YAxis dataKey="name" type="category" width={92} tick={{ fontSize: 10 }} axisLine={false}/><Tooltip formatter={v => money(v)} contentStyle={{ borderRadius:12 }}/><Bar dataKey="median" name="Median" fill="#173d29" radius={[0,5,5,0]} animationDuration={900}/><Bar dataKey="adverse" name="Adverse" fill="#c7a866" radius={[0,5,5,0]} animationDuration={1100}/></BarChart></ResponsiveContainer></div></article></div>;
+  return <div className="lab-projection"><article className="lab-chart-card lab-chart-card--wide"><div className="lab-chart-title"><div><span>Wealth cone</span><h2>Range of simulated outcomes</h2></div><div className="lab-legend"><i className="p90"/>Optimistic <i className="p50"/>Median <i className="p10"/>Adverse</div></div><div className="lab-chart"><ResponsiveContainer width="100%" height="100%"><AreaChart data={selected.timeline} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}><defs><linearGradient id="range90" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stopColor="#bda05f" stopOpacity=".36"/><stop offset="1" stopColor="#bda05f" stopOpacity=".02"/></linearGradient><linearGradient id="range50" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stopColor="#173d29" stopOpacity=".5"/><stop offset="1" stopColor="#173d29" stopOpacity=".03"/></linearGradient></defs><CartesianGrid vertical={false} stroke="#e8ece5" strokeDasharray="3 3"/><XAxis dataKey="year" tickLine={false} axisLine={false}/><YAxis tickFormatter={v => `€${Math.round(v/1000)}k`} tickLine={false} axisLine={false} width={55}/><Tooltip formatter={(v,n) => [money(v),n]} contentStyle={{ borderRadius: 12, border: '1px solid #dce3d8' }}/><Area type="monotone" dataKey="p90" name="Optimistic P90" stroke="#bda05f" fill="url(#range90)" animationDuration={900}/><Area type="monotone" dataKey="p50" name="Median P50" stroke="#173d29" strokeWidth={3} fill="url(#range50)" animationDuration={1000}/><Area type="monotone" dataKey="p10" name="Adverse P10" stroke="#b85d52" strokeDasharray="5 5" fill="transparent" animationDuration={1100}/><Area type="monotone" dataKey="contributions" name="Deposits" stroke="#8a988d" fill="transparent" strokeWidth={1.5}/></AreaChart></ResponsiveContainer></div><div className="lab-target-line"><Target size={15}/>Goal {money(target)} · probability {pct(selected.probability_target,0)}</div></article><article className="lab-chart-card"><div className="lab-chart-title"><div><span>Core Quantitative Comparison</span><h2>Median vs adverse result</h2></div></div><div className="lab-chart"><ResponsiveContainer width="100%" height="100%"><BarChart data={comparison} layout="vertical" margin={{ left: 10, right: 10 }}><CartesianGrid horizontal={false} stroke="#e8ece5"/><XAxis type="number" tickFormatter={v => `€${Math.round(v/1000)}k`} axisLine={false}/><YAxis dataKey="name" type="category" width={92} tick={{ fontSize: 10 }} axisLine={false}/><Tooltip formatter={v => money(v)} contentStyle={{ borderRadius:12 }}/><Bar dataKey="median" name="Median" fill="#173d29" radius={[0,5,5,0]} animationDuration={900}/><Bar dataKey="adverse" name="Adverse" fill="#c7a866" radius={[0,5,5,0]} animationDuration={1100}/></BarChart></ResponsiveContainer></div></article></div>;
 }
 
 function AllocationView({ selected, profile }) {

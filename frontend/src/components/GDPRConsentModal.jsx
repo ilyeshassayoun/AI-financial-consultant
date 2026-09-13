@@ -23,7 +23,6 @@ export default function GDPRConsentModal({ isOpen, onClose, profile, onResetData
   const handleEraseData = () => {
     if (window.confirm("Are you sure you want to permanently erase all locally stored audit data under GDPR Art. 17? This cannot be undone.")) {
       if (onResetData) onResetData();
-      onClose();
     }
   };
 
@@ -77,7 +76,7 @@ export default function GDPRConsentModal({ isOpen, onClose, profile, onResetData
           <button 
             type="button"
             onClick={onClose}
-            aria-label="Close Privacy Modal"
+            aria-label="Close privacy settings"
             style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: 'var(--text-secondary)' }}
           >
             <X size={20} />
@@ -132,7 +131,7 @@ export default function GDPRConsentModal({ isOpen, onClose, profile, onResetData
             }}
           >
             <Trash2 size={14} />
-            Erase All Data (Art. 17)
+            Erase All Local Data (Art. 17)
           </button>
         </div>
 

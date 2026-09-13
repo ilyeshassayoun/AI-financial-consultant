@@ -5,6 +5,16 @@ import { Landmark, Sparkles } from 'lucide-react';
 const formatEUR = (val) => `€${Math.round(val).toLocaleString()}`;
 
 export default function SankeyTaxFlow({ taxData, profile, gross: propGross, taxes: propTaxes, socialSecurity: propSS, netIncome: propNet }) {
+  const [isMobile, setIsMobile] = React.useState(() => typeof window !== 'undefined' ? window.innerWidth < 640 : false);
+
+  React.useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth < 640);
+    };
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
   const gross = Number(propGross ?? taxData?.gross_income ?? profile?.income ?? 60000);
   const details = taxData?.details || {};
   const ss = details.social_security || {};
@@ -97,10 +107,10 @@ export default function SankeyTaxFlow({ taxData, profile, gross: propGross, taxe
         <ResponsiveContainer width="100%" height="100%">
           <Sankey
             data={data}
-            nodePadding={24}
-            nodeWidth={12}
+            nodePadding={isMobile ? 12 : 24}
+            nodeWidth={isMobile ? 10 : 12}
             link={{ stroke: 'var(--border-architectural)', strokeOpacity: 0.6 }}
-            margin={{ top: 12, right: 180, bottom: 12, left: 10 }}
+            margin={{ top: 12, right: isMobile ? 60 : 180, bottom: 12, left: 10 }}
           >
             <Tooltip
               formatter={(val) => [formatEUR(val), 'Volume']}
