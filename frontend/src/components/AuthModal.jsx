@@ -1,4 +1,5 @@
 import React, { useState, useCallback } from 'react';
+import { createPortal } from 'react-dom';
 import { X, Mail, Lock, User, Globe, Landmark } from 'lucide-react';
 import { register, login } from '../services/authService';
 import { useAuthStore } from '../stores/authStore';
@@ -45,7 +46,7 @@ export default function AuthModal({ isOpen, onClose, onSuccess }) {
     transition: 'border-color 0.2s ease, box-shadow 0.2s ease'
   };
 
-  return (
+  return createPortal(
     <div 
       style={{ 
         position: 'fixed', 
@@ -56,7 +57,8 @@ export default function AuthModal({ isOpen, onClose, onSuccess }) {
         display: 'flex', 
         alignItems: 'center', 
         justifyContent: 'center', 
-        padding: 20 
+        padding: 'clamp(16px, 4vw, 28px)',
+        boxSizing: 'border-box'
       }}
       onClick={(e) => e.target === e.currentTarget && onClose()} 
       role="dialog" 
@@ -70,7 +72,10 @@ export default function AuthModal({ isOpen, onClose, onSuccess }) {
           padding: 36, 
           width: '100%', 
           maxWidth: 440, 
+          maxHeight: 'calc(100dvh - 32px)',
+          overflowY: 'auto',
           position: 'relative',
+          margin: 'auto',
           boxShadow: '0 20px 50px rgba(0, 0, 0, 0.7), 0 0 30px rgba(197, 160, 89, 0.12)'
         }}
       >
@@ -277,6 +282,7 @@ export default function AuthModal({ isOpen, onClose, onSuccess }) {
           All portfolio snapshots are encrypted. Data is stored solely on explicit save.
         </p>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }
