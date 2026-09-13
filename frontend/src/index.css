@@ -392,10 +392,6 @@ h1, h2, h3, h4, h5, h6 {
   grid-template-columns: repeat(3, minmax(0, 1fr));
 }
 
-.profile-stepper {
-  position: relative;
-}
-
 /* Luxury Financial Inputs & Form Controls */
 .luxury-field {
   display: flex;
@@ -611,17 +607,6 @@ input[type="number"]:focus, input[type="text"]:focus {
   .wizard-card {
     padding: 16px 14px;
   }
-}
-
-/* Universal Stepper Fade Mask for Touch Devices */
-.profile-stepper,
-.investment-stepper,
-.insurance-stepper,
-.tax-stepper,
-.retirement-stepper {
-  mask-image: linear-gradient(90deg, transparent 0, #000 16px, #000 calc(100% - 32px), transparent 100%);
-  padding-inline: 16px !important;
-  -webkit-overflow-scrolling: touch;
 }
 
 /* Touch Accessibility for Range Sliders */

@@ -880,30 +880,8 @@
 .investment-page-heading h2 { font-size: clamp(1.7rem, 3vw, 2.55rem); line-height: 1.05; margin: 4px 0 6px; }
 .investment-page-heading p { font-size: 1rem; }
 
-.investment-stepper {
-  gap: 10px !important;
-  padding: 10px !important;
-  margin-bottom: 2px !important;
-  border: 1px solid var(--border-architectural) !important;
-  border-radius: 16px !important;
-  background: color-mix(in srgb, var(--bg-card) 92%, var(--maison-gold-subtle)) !important;
-  box-shadow: 0 10px 28px rgba(8,15,26,.06);
-  scrollbar-width: thin !important;
-}
-
-.investment-step-button {
-  min-height: 42px;
-  padding: 10px 14px !important;
-  border-radius: 11px !important;
-  font-size: .82rem !important;
-  letter-spacing: .02em;
-  transition: transform .22s var(--ease-luxury), box-shadow .22s var(--ease-luxury), background .22s ease !important;
-}
-.investment-step-button:hover { transform: translateY(-2px); box-shadow: 0 6px 16px rgba(8,15,26,.1); }
-.investment-step-button > span { width: 20px !important; height: 20px !important; font-size: .7rem !important; }
 .guide-choice-group button:focus-visible,
 .guide-strategy-tabs button:focus-visible,
-.investment-step-button:focus-visible,
 .investment-primary-button:focus-visible,
 .investment-secondary-button:focus-visible { outline: 3px solid color-mix(in srgb, var(--maison-gold) 58%, transparent); outline-offset: 3px; }
 
@@ -1157,8 +1135,6 @@
   .investment-hero { padding: 28px 22px; border-radius: 22px; }
   .investment-hero h1 { font-size: clamp(2.15rem, 11vw, 3rem); }
   .investment-readiness { width: 100%; box-sizing: border-box; }
-  .investment-stepper { margin-inline: -2px; }
-  .investment-step-button { flex: 0 0 auto; }
   .investment-page { padding: 18px; border-radius: 20px; }
   .guide-intro { padding: 18px; }
   .guide-intro p { font-size: .88rem; }
@@ -1169,7 +1145,7 @@
 @media (prefers-reduced-motion: reduce) {
   .investment-loading-orbit, .investment-hero::before { animation: none !important; }
   .investment-hero, .investment-page, .lab-chart-card, .lab-instruments, .guide-specialist-diagnostic > div, .guide-strategy-tabs button, .guide-repair-card, .ips-section-grid article { animation: none !important; }
-  .investment-step-button:hover, .guide-strategy-tabs button:hover, .guide-repair-card:hover, .guide-repair-card__action:hover, .lab-chart-card:hover, .lab-instruments:hover, .guide-specialist-diagnostic > div:hover { transform: none; }
+  .guide-strategy-tabs button:hover, .guide-repair-card:hover, .guide-repair-card__action:hover, .lab-chart-card:hover, .lab-instruments:hover, .guide-specialist-diagnostic > div:hover { transform: none; }
 }
 
 /* Final visual system pass: make analytical surfaces feel intentional rather than stacked. */

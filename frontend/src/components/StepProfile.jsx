@@ -226,57 +226,6 @@ export default function StepProfile({ profile, updateProfile, nextStep, prevStep
       {/* Main Profile Wizard Card */}
       <div className="wizard-card" style={{ padding: '24px 28px' }}>
 
-        {/* Sub-Step Indicator Bar */}
-        <div className="profile-stepper" style={{
-          display: 'flex',
-          gap: '6px',
-          overflowX: 'auto',
-          paddingBottom: '12px',
-          marginBottom: '18px',
-          borderBottom: '1px solid var(--border-architectural)',
-          scrollbarWidth: 'none'
-        }}>
-          {subStepTitles.map((title, idx) => (
-            <button
-              key={idx}
-              type="button"
-              onClick={() => setSubStep(idx)}
-              style={{
-                background: subStep === idx ? 'var(--maison-obsidian)' : 'var(--bg-card-subtle)',
-                color: subStep === idx ? '#ffffff' : 'var(--text-secondary)',
-                border: subStep === idx ? '1px solid var(--maison-gold)' : '1px solid var(--border-architectural)',
-                padding: '8px 14px',
-                minHeight: '44px',
-                borderRadius: '8px',
-                fontSize: '0.74rem',
-                fontWeight: subStep === idx ? 800 : 600,
-                cursor: 'pointer',
-                whiteSpace: 'nowrap',
-                transition: 'all 0.2s var(--ease-luxury)',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '6px'
-              }}
-            >
-              <span style={{
-                width: '16px',
-                height: '16px',
-                borderRadius: '50%',
-                background: subStep === idx ? 'var(--maison-gold)' : 'var(--border-architectural)',
-                color: subStep === idx ? '#060b14' : 'var(--text-secondary)',
-                display: 'inline-flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                fontSize: '0.7rem',
-                fontWeight: 800
-              }}>
-                {idx + 1}
-              </span>
-              {title.replace(/^\d+\.\s*/, '')}
-            </button>
-          ))}
-        </div>
-
         {/* SUBSTEP 0: Financial Goals */}
         {subStep === 0 && (
           <div className="animate-fade-in-up" style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
