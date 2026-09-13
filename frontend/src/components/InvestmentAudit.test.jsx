@@ -41,8 +41,15 @@ describe('investment audit workflows', () => {
   it('writes questionnaire changes to the persistent profile boundary', () => {
     const updateProfile = vi.fn();
     render(<InvestmentLaboratory lab={lab} subStep={1} updateProfile={updateProfile} profile={{}} />);
-    fireEvent.click(screen.getByRole('button', { name: /Within 3 years/ }));
+    fireEvent.click(screen.getByRole('radio', { name: /Within 3 years/ }));
     expect(updateProfile).toHaveBeenCalledWith({ investment_liquidity: 'short' });
+  });
+
+  it('exposes single-choice investment answers as radio controls', () => {
+    render(<InvestmentLaboratory lab={lab} subStep={1} updateProfile={vi.fn()} profile={{}} />);
+    expect(screen.getByRole('radiogroup', { name: 'What matters most?' })).toBeInTheDocument();
+    expect(screen.getAllByRole('radio')).toHaveLength(10);
+    expect(screen.getByRole('radio', { name: /10\% feels severe/ })).toHaveAttribute('aria-checked', 'false');
   });
 
   it('cannot show an eligible policy by jumping past a suitability gate', () => {

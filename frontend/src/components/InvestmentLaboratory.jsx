@@ -271,16 +271,16 @@ function RiskPage({ answers, answer, recommendation }) {
 }
 
 function ChoiceGroup({ title, value, choices, onChange }) {
-  return <fieldset className="guide-choice-group"><legend>{title}</legend><div>{choices.map(([id, label, hint]) => <button type="button" key={id} className={value === id ? 'is-active' : ''} onClick={() => onChange(id)} aria-pressed={value === id}><i>{value === id && <Check size={12}/>}</i><strong>{label}</strong><small>{hint}</small></button>)}</div></fieldset>;
+  return <fieldset className="guide-choice-group"><legend>{title}</legend><div role="radiogroup" aria-label={title}>{choices.map(([id, label, hint]) => <button type="button" role="radio" key={id} className={value === id ? 'is-active' : ''} onClick={() => onChange(id)} aria-checked={value === id}><i aria-hidden="true">{value === id && <Check size={12}/>}</i><strong>{label}</strong><small>{hint}</small></button>)}</div></fieldset>;
 }
 
 function StrategyPage({ strategies, selected, selectedId, recommendedId, updateProfile }) {
   return <div className="guide-strategy">
     <div className="guide-intro"><ChartNoAxesCombined/><div><h3>Compare the complete risk–return trade-off.</h3><p>The recommended label reflects your answers. You remain in control and can inspect or choose any strategy.</p></div></div>
-    <div className="guide-strategy-tabs" aria-label="Available investment strategies">{strategies.map(strategy => {
+    <div className="guide-strategy-tabs" role="radiogroup" aria-label="Available investment strategies">{strategies.map(strategy => {
       const active = strategy.id === selectedId;
       const recommended = strategy.id === recommendedId;
-      return <button key={strategy.id} type="button" className={`${active ? 'is-active' : ''} ${recommended ? 'is-recommended' : ''}`} onClick={() => updateProfile({ investment_strategy: strategy.id })} aria-pressed={active}><span>{recommended ? 'Best match' : strategy.subtitle}</span><strong>{strategy.name}</strong></button>;
+      return <button key={strategy.id} type="button" role="radio" className={`${active ? 'is-active' : ''} ${recommended ? 'is-recommended' : ''}`} onClick={() => updateProfile({ investment_strategy: strategy.id })} aria-checked={active}><span>{recommended ? 'Best match' : strategy.subtitle}</span><strong>{strategy.name}</strong></button>;
     })}</div>
     <div className="guide-strategy-analysis">
       <StrategyFrontier strategies={strategies} selectedId={selectedId} recommendedId={recommendedId}/>

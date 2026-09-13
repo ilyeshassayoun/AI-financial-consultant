@@ -32,6 +32,21 @@ const labels = {
   not_applicable: 'Not applicable'
 };
 
+const essentialGapLabels = {
+  bu: 'Income & disability cover',
+  liability: 'Private liability cover',
+  term_life: 'Term-life cover',
+  contents: 'Household contents cover',
+  building: 'Residential building cover',
+  motor: 'Motor liability cover',
+  legal: 'Legal protection cover'
+};
+
+function readableGapLabel(value) {
+  const key = String(value || '').trim().toLowerCase();
+  return essentialGapLabels[key] || key.replace(/[_-]+/g, ' ').replace(/\b\w/g, character => character.toUpperCase());
+}
+
 function Status({ value }) {
   return <span className={`insurance-status insurance-status--${value}`}>{labels[value] || value}</span>;
 }
@@ -222,7 +237,7 @@ export default function StepInsurance({
 
         {page === 5 && <div className="insurance-policy">
           <div className="insurance-policy-header"><div><span>Household protection policy · {lab.model?.version || '2026.1'}</span><h2>Implementation mandate</h2><p>Prepared from the current household profile. Review after every material life event and at least annually.</p></div><button type="button" className="insurance-print-button" onClick={() => window.print()}><Printer size={17} /> Print / Save PDF</button></div>
-          <div className="insurance-policy-grid"><section><h3>Execution gate</h3><strong>{lab.readiness === 'gated' ? 'Do not treat protection as complete' : 'Proceed to broker and policy review'}</strong><p>{(lab.missing_essential || []).length ? `Open essential gaps: ${lab.missing_essential.join(', ')}.` : 'No essential gap is visible from the supplied profile.'}</p></section><section><h3>Benefit targets</h3><strong>{money(lab.summary?.bu_target_monthly)} BU / month</strong><p>{lab.summary?.term_life_need ? `${money(lab.summary.term_life_need)} term-life capital target.` : 'No dependant-based term-life target modelled.'}</p></section></div>
+          <div className="insurance-policy-grid"><section><h3>Execution gate</h3><strong>{lab.readiness === 'gated' ? 'Do not treat protection as complete' : 'Proceed to broker and policy review'}</strong><p>{(lab.missing_essential || []).length ? `Open essential gaps: ${lab.missing_essential.map(readableGapLabel).join(', ')}.` : 'No essential gap is visible from the supplied profile.'}</p></section><section><h3>Benefit targets</h3><strong>{money(lab.summary?.bu_target_monthly)} BU / month</strong><p>{lab.summary?.term_life_need ? `${money(lab.summary.term_life_need)} term-life capital target.` : 'No dependant-based term-life target modelled.'}</p></section></div>
           <ol className="insurance-implementation-list">{(lab.implementation || []).map((item, index) => <li key={item}><span>{index + 1}</span><p>{item}</p></li>)}</ol>
           <div className="insurance-signoff"><div><span>Household review</span><strong>________________________</strong></div><div><span>Broker / adviser review</span><strong>________________________</strong></div><div><span>Next annual review</span><strong>________________________</strong></div></div>
         </div>}

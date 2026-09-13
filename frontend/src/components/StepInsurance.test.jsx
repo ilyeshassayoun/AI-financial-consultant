@@ -1,4 +1,8 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
+import { render, screen } from '@testing-library/react';
+import StepInsurance from './StepInsurance';
+
+Element.prototype.scrollIntoView = vi.fn();
 
 describe('StepInsurance utility functions', () => {
   const money = value => new Intl.NumberFormat('de-DE', {
@@ -65,5 +69,28 @@ describe('StepInsurance utility functions', () => {
       expect(aliases.bu).toBe('BU');
       expect(aliases.term_life).toBe('Risikoleben');
     });
+  });
+
+  it('translates internal protection gap ids into client-facing labels', () => {
+    render(<StepInsurance
+      profile={{ existing_insurances: [] }}
+      updateProfile={vi.fn()}
+      nextStep={vi.fn()}
+      prevStep={vi.fn()}
+      analysisStatus="success"
+      subStep={5}
+      setSubStep={vi.fn()}
+      analysis={{
+        insurance_lab: {
+          readiness: 'gated',
+          missing_essential: ['bu'],
+          summary: { bu_target_monthly: 2037 },
+          implementation: ['Close the gap.']
+        }
+      }}
+    />);
+
+    expect(screen.getByText('Open essential gaps: Income & disability cover.')).toBeInTheDocument();
+    expect(screen.queryByText(/Open essential gaps: bu/)).not.toBeInTheDocument();
   });
 });
