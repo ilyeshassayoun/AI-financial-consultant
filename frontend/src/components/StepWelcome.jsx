@@ -200,26 +200,6 @@ export default function StepWelcome({ nextStep }) {
         {/* Left Hero Column */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: '24px', textAlign: 'left' }}>
           
-          <FadeInUp delay={0.06}>
-            <div style={{
-              display: 'inline-flex', 
-              alignItems: 'center', 
-              gap: '10px',
-              background: 'var(--bg-card)', 
-              backdropFilter: 'blur(16px)',
-              padding: '6px 16px', 
-              borderRadius: '30px',
-              border: '1px solid var(--maison-gold-border)',
-              boxShadow: 'var(--shadow-xs)',
-              width: 'fit-content'
-            }}>
-              <span style={{ width: '7px', height: '7px', borderRadius: '50%', background: 'var(--accent-emerald)' }} />
-              <span style={{ fontSize: '0.74rem', fontWeight: 800, color: 'var(--text-primary)', letterSpacing: '.04em', textTransform: 'uppercase' }}>
-                Independent financial planning for Germany
-              </span>
-            </div>
-          </FadeInUp>
-
           <FadeInUp delay={0.12}>
             <h1 style={{ 
               fontSize: 'clamp(2.4rem, 4.2vw, 4.2rem)', 
@@ -285,7 +265,7 @@ export default function StepWelcome({ nextStep }) {
                 <ArrowRight size={18} color="var(--maison-gold)" />
               </button>
               <span style={{ fontSize: '0.78rem', color: 'var(--text-secondary)', fontWeight: 600 }}>
-                Allow 8–10 minutes · Your progress is saved
+                Allow 8–10 minutes
               </span>
             </div>
           </FadeInUp>
