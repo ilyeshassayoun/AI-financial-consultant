@@ -164,7 +164,7 @@ export default function LandingPage({ onGetStarted }) {
               fontWeight: 700, 
               textTransform: 'uppercase' 
             }}>
-              Private Wealth Advisory
+              Financial Advisory
             </div>
           </div>
         </div>
@@ -697,14 +697,14 @@ export default function LandingPage({ onGetStarted }) {
             fontSize: 15,
             color: '#f8fafc'
           }}>
-            Ilyes H. Private Wealth
+            Ilyes H. Financial Advisory
           </span>
         </div>
         <div style={{ fontSize: 12, color: 'rgba(241, 245, 249, 0.4)', maxWidth: 540, textAlign: 'center' }}>
           Statutory financial educational modeling platform. Calculations are based on German statutory frameworks (EStG, SGB, InvStG). Consult a certified Steuerberater for formal filing.
         </div>
         <div style={{ fontSize: 12, color: 'rgba(241, 245, 249, 0.4)' }}>
-          © {new Date().getFullYear()} Ilyes Private Wealth Advisory
+          © {new Date().getFullYear()} Ilyes Financial Advisory
         </div>
       </footer>
     </div>

@@ -1,7 +1,7 @@
 export const translations = {
   en: {
     brand_title: "Ilyes H.",
-    brand_sub: "Private Wealth Advisory",
+    brand_sub: "Financial Advisory",
     steps: {
       welcome: "Portal",
       profile: "Mandate & Cashflow",
@@ -61,7 +61,7 @@ export const translations = {
   },
   de: {
     brand_title: "Ilyes H.",
-    brand_sub: "Private Wealth Advisory",
+    brand_sub: "Financial Advisory",
     steps: {
       welcome: "Portal",
       profile: "Mandat & Cashflow",

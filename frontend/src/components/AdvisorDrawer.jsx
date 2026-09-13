@@ -259,7 +259,7 @@ export default function AdvisorDrawer({ isOpen, onClose, profile, currentStep = 
               </span>
             </div>
             <div style={{ fontSize: '0.68rem', color: 'var(--text-secondary)', fontWeight: 600 }}>
-              Fiduciary Wealth Advisory • DIN 77230 Certified
+              Fiduciary Financial Advisory • DIN 77230 Certified
             </div>
           </div>
         </div>

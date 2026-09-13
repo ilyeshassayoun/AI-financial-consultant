@@ -124,7 +124,7 @@ export default function AuthModal({ isOpen, onClose, onSuccess }) {
             margin: 0,
             letterSpacing: '-0.02em'
           }}>
-            Ilyes Private Wealth
+            Ilyes Financial Advisory
           </h2>
           <p style={{ 
             fontSize: 12, 

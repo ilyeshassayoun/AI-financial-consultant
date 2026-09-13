@@ -265,7 +265,7 @@ export default function StepWelcome({ nextStep }) {
                 <ArrowRight size={18} color="var(--maison-gold)" />
               </button>
               <span style={{ fontSize: '0.78rem', color: 'var(--text-secondary)', fontWeight: 600 }}>
-                Allow 8–10 minutes
+                Takes 8–10 minutes
               </span>
             </div>
           </FadeInUp>

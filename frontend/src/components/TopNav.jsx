@@ -95,7 +95,7 @@ export default function TopNav({ currentStep, setStep, currentSubStep = 0, onOpe
               fontWeight: 700, 
               textTransform: 'uppercase' 
             }}>
-              Wealth Advisory
+              Financial Advisory
             </div>
           </div>
         </div>

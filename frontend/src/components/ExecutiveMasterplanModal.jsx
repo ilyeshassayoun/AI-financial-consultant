@@ -101,7 +101,7 @@ export default function ExecutiveMasterplanModal({ isOpen, onClose, analysis }) 
           <div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
               <h2 id="masterplan-title" style={{ margin: 0, fontSize: '1.45rem', color: 'var(--text-primary)', fontWeight: 800 }}>
-                Ilyes Private Wealth 360° Financial Masterplan
+                Ilyes Financial Advisory 360° Masterplan
               </h2>
               <span className="badge badge-brand" style={{ fontSize: '0.68rem' }}>
                 DIN 77230 CERTIFIED
