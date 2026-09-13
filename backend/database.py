@@ -16,11 +16,13 @@ def get_engine():
     global _engine
     if _engine is None:
         database_url = settings.DATABASE_URL
+        if not database_url:
+            raise RuntimeError("DATABASE_URL is not configured")
         if database_url.startswith("postgresql://"):
             database_url = database_url.replace("postgresql://", "postgresql+asyncpg://", 1)
+        elif database_url.startswith("sqlite://") and not database_url.startswith("sqlite+"):
+            database_url = database_url.replace("sqlite://", "sqlite+aiosqlite://", 1)
         
-        # max_overflow is only supported by QueuePool (PostgreSQL, MySQL, etc.)
-        # SQLite uses NullPool and doesn't support this parameter
         is_sqlite = "sqlite" in database_url.lower()
         
         engine_kwargs = {
@@ -31,6 +33,11 @@ def get_engine():
         if not is_sqlite:
             engine_kwargs["pool_size"] = 5
             engine_kwargs["max_overflow"] = 10
+        else:
+            if ":memory:" in database_url:
+                from sqlalchemy.pool import StaticPool
+                engine_kwargs["poolclass"] = StaticPool
+            engine_kwargs["connect_args"] = {"check_same_thread": False}
         
         _engine = create_async_engine(database_url, **engine_kwargs)
     return _engine
@@ -48,6 +55,9 @@ def get_session_factory():
 
 
 async def get_db() -> AsyncGenerator[AsyncSession, None]:
+    if not settings.DATABASE_URL:
+        from fastapi import HTTPException
+        raise HTTPException(status_code=503, detail="Database service is not configured")
     async with get_session_factory()() as session:
         try:
             yield session

@@ -12,7 +12,7 @@ const RISK_RANK = {
 // Maximum risk rank allowed for each loss-tolerance level.
 const TOLERANCE_CEILING = {
   low: 0,      // no growth portfolio is suitable
-  medium: 3,   // up to real_asset_income
+  medium: 2,   // balanced_60_40 or all_weather
   high: 5,     // any strategy
 };
 
