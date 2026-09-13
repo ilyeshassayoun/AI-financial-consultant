@@ -133,7 +133,6 @@ export default function StepProfile({ profile, updateProfile, nextStep, prevStep
   const hasLiquidity = liquidReserve >= Math.max(3000, monthlyExpenses * 3);
   const hasETF = existingAssets.includes('etf') || Boolean((Number(safeProfile.monthly_investment) || 0) > 0);
   const hasBAV = existingAssets.includes('bav') || Boolean((Number(safeProfile.bav_contribution) || 0) > 0);
-  const salary = Number(safeProfile.income) || 60000;
   const monthlyInvestment = safeProfile.monthly_investment !== undefined && safeProfile.monthly_investment !== null ? Number(safeProfile.monthly_investment) : 500;
 
   // 5-Pillar Structural Audit Matrix with DIN 77230 citations
@@ -666,447 +665,86 @@ export default function StepProfile({ profile, updateProfile, nextStep, prevStep
 
         {/* SUBSTEP 5: Actuarial Financial Health Audit */}
         {subStep === 5 && (
-          <div className="animate-fade-in-up" style={{ display: 'flex', flexDirection: 'column', gap: '28px', padding: '6px 0' }}>
-            
-            {/* Header: Clean Stately Private Wealth Memo Header */}
-            <div style={{ 
-              display: 'flex', 
-              justifyContent: 'space-between', 
-              alignItems: 'flex-start', 
-              flexWrap: 'wrap', 
-              gap: '16px', 
-              borderBottom: '1px solid var(--border-architectural)', 
-              paddingBottom: '20px' 
-            }}>
-              <div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
-                  <span className="jpm-gold-tag">DIN 77230 / EStG § 32a / SGB VI</span>
-                  <span style={{ fontSize: '0.72rem', color: 'var(--text-secondary)', fontWeight: 600 }}>· 2026 Fiscal Cycle</span>
-                </div>
-                <h3 style={{ 
-                  margin: 0, 
-                  fontSize: 'clamp(1.35rem, 2.5vw, 1.65rem)', 
-                  fontWeight: 700, 
-                  color: 'var(--text-primary)', 
-                  letterSpacing: '-0.025em', 
-                  fontFamily: 'var(--font-heading)' 
-                }}>
-                  Actuarial Balance Sheet &amp; Solvency Audit
-                </h3>
-                <p style={{ margin: '4px 0 0 0', fontSize: '0.88rem', color: 'var(--text-secondary)', maxWidth: '780px', lineHeight: '1.55' }}>
-                  Institutional diagnostic evaluating your household balance sheet across human capital risk, progressive tax leakage, compound savings velocity, and 3-pillar retirement solvency.
-                </p>
+          <section className="profile-audit animate-fade-in-up" aria-labelledby="profile-audit-title">
+            <header className="profile-audit__header">
+              <div className="profile-audit__intro">
+                <span className="jpm-gold-tag">Financial health audit · 2026</span>
+                <h3 id="profile-audit-title">Your household balance sheet</h3>
+                <p>Five signals show where your income, tax, liquidity and retirement plan are strong — and where to act next.</p>
               </div>
+              <div className="profile-audit__score" aria-label={`Overall solvency score ${score} out of 100`}>
+                <span>Overall score</span>
+                <strong>{score}</strong>
+                <em>{score >= 80 ? 'Strong foundation' : 'Action plan needed'}</em>
+              </div>
+            </header>
 
-              {/* Overall Executive Rating Badge */}
-              <div style={{ 
-                background: 'var(--bg-card)', 
-                border: '1px solid var(--border-architectural)', 
-                borderTop: '3px solid var(--maison-gold)',
-                borderRadius: '12px', 
-                padding: '14px 20px', 
-                display: 'flex', 
-                alignItems: 'center', 
-                gap: '16px',
-                boxShadow: 'var(--shadow-xs)',
-                flexShrink: 0
-              }}>
+            <div className="profile-audit__summary" aria-label="Audit summary">
+              <div><span>Signals reviewed</span><strong>05</strong></div>
+              <div><span>Priority focus</span><strong>{pillarAudits.filter((pillar) => pillar.score < 70).length || '—'}</strong></div>
+              <div><span>Framework</span><strong>DIN 77230</strong></div>
+            </div>
+
+            <section className="profile-audit__section" aria-labelledby="solvency-signals-title">
+              <div className="profile-audit__section-head">
                 <div>
-                  <div style={{ fontSize: '0.64rem', color: 'var(--text-muted)', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.08em' }}>
-                    SOLVENCY RATING
-                  </div>
-                  <div style={{ fontSize: '1.05rem', fontWeight: 800, color: 'var(--text-primary)', marginTop: '2px', fontFamily: 'var(--font-heading)' }}>
-                    {score >= 80 ? 'Grade A · Sovereign' : 'Grade B+ · High Alpha'}
-                  </div>
+                  <span className="profile-audit__eyebrow">At a glance</span>
+                  <h4 id="solvency-signals-title">Solvency signals</h4>
                 </div>
-                <div style={{ 
-                  width: '46px', 
-                  height: '46px', 
-                  borderRadius: '50%', 
-                  background: 'linear-gradient(135deg, var(--maison-pine-deep), var(--maison-obsidian))', 
-                  border: '1.5px solid var(--maison-gold)',
-                  display: 'flex', 
-                  alignItems: 'center', 
-                  justifyContent: 'center',
-                  color: 'var(--maison-gold)',
-                  fontWeight: 800,
-                  fontSize: '1.15rem',
-                  fontVariantNumeric: 'tabular-nums',
-                  fontFamily: 'var(--font-heading)'
-                }}>
-                  {score}
-                </div>
-              </div>
-            </div>
-
-            {/* SECTION 1: Master Actuarial Balance Sheet Ledger Table */}
-            <div style={{
-              background: 'var(--bg-card)',
-              border: '1px solid var(--border-architectural)',
-              borderRadius: '14px',
-              overflow: 'hidden',
-              boxShadow: 'var(--shadow-xs)'
-            }}>
-              <div style={{ 
-                padding: '16px 22px', 
-                background: 'var(--bg-card-subtle)', 
-                borderBottom: '1px solid var(--border-architectural)',
-                display: 'flex',
-                justifyContent: 'space-between',
-                alignItems: 'center',
-                flexWrap: 'wrap',
-                gap: '10px'
-              }}>
-                <span style={{ fontSize: '0.74rem', fontWeight: 800, color: 'var(--text-primary)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
-                  HOUSEHOLD SOLVENCY &amp; CAPITAL ALLOCATION MATRIX
-                </span>
-                <span style={{ fontSize: '0.72rem', color: 'var(--text-secondary)', fontWeight: 600 }}>
-                  Actuarial Benchmarks Aligned with German Statutory Law
-                </span>
+                <span className="profile-audit__legend"><span className="profile-audit__legend-dot" /> score vs target</span>
               </div>
 
-              {/* Analytical Ledger Rows */}
-              <div className="actuarial-ledger-container">
-                
-                {/* Ledger Header */}
-                <div className="hide-on-mobile actuarial-ledger-header">
-                  <div>Diagnostic Pillar</div>
-                  <div>Current Exposure</div>
-                  <div>Statutory Benchmark</div>
-                  <div>Solvency Ratio</div>
-                  <div style={{ textAlign: 'right' }}>Status Verdict</div>
-                </div>
-
-                {/* Row 1: Income & Human Capital Shield */}
-                <div className="actuarial-ledger-row" style={{ background: hasBU ? 'transparent' : 'rgba(239, 68, 68, 0.02)' }}>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '3px' }}>
-                    <strong style={{ fontSize: '0.88rem', color: 'var(--text-primary)' }}>1. Income &amp; Human Capital Shield</strong>
-                    <span style={{ fontSize: '0.72rem', color: 'var(--maison-gold)', fontWeight: 700 }}>DIN 77230 § 1.1 Existential Risk</span>
-                  </div>
-                  <div>
-                    <div style={{ fontSize: '0.68rem', color: 'var(--text-muted)', textTransform: 'uppercase' }} className="hide-on-desktop">Current:</div>
-                    <span className="tabular-nums" style={{ fontSize: '0.86rem', fontWeight: 700, color: 'var(--text-primary)' }}>
-                      {hasBU ? '80% Net Salary Active' : '€0 Shield (Uncovered)'}
-                    </span>
-                  </div>
-                  <div>
-                    <div style={{ fontSize: '0.68rem', color: 'var(--text-muted)', textTransform: 'uppercase' }} className="hide-on-desktop">Benchmark:</div>
-                    <span className="tabular-nums" style={{ fontSize: '0.86rem', color: 'var(--text-secondary)' }}>
-                      €{Math.round((salary * 0.8) / 12).toLocaleString()} / mo (80%)
-                    </span>
-                  </div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                    <div style={{ flex: 1, height: '6px', background: 'var(--border-architectural)', borderRadius: '3px', overflow: 'hidden' }}>
-                      <div style={{ width: hasBU ? '94%' : '48%', height: '100%', background: hasBU ? 'var(--accent-emerald)' : 'var(--accent-coral)' }} />
-                    </div>
-                    <span className="tabular-nums" style={{ fontSize: '0.8rem', fontWeight: 800, color: 'var(--text-primary)' }}>
-                      {hasBU ? '94%' : '48%'}
-                    </span>
-                  </div>
-                  <div style={{ textAlign: 'right' }}>
-                    <span style={{ 
-                      fontSize: '0.7rem', 
-                      fontWeight: 800, 
-                      color: hasBU ? 'var(--accent-emerald)' : 'var(--accent-coral)',
-                      background: hasBU ? 'rgba(16, 185, 129, 0.1)' : 'rgba(239, 68, 68, 0.1)',
-                      border: `1px solid ${hasBU ? 'rgba(16, 185, 129, 0.3)' : 'rgba(239, 68, 68, 0.3)'}`,
-                      padding: '3px 8px',
-                      borderRadius: '4px',
-                      display: 'inline-block'
-                    }}>
-                      {hasBU ? 'Protected' : 'Shield Gap'}
-                    </span>
-                  </div>
-                </div>
-
-                {/* Row 2: Statutory Tax Optimization (§ 32a EStG) */}
-                <div className="actuarial-ledger-row">
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '3px' }}>
-                    <strong style={{ fontSize: '0.88rem', color: 'var(--text-primary)' }}>2. Statutory Tax Optimization</strong>
-                    <span style={{ fontSize: '0.72rem', color: 'var(--maison-gold)', fontWeight: 700 }}>EStG § 32a / § 9 Werbungskosten</span>
-                  </div>
-                  <div>
-                    <div style={{ fontSize: '0.68rem', color: 'var(--text-muted)', textTransform: 'uppercase' }} className="hide-on-desktop">Current:</div>
-                    <span className="tabular-nums" style={{ fontSize: '0.86rem', fontWeight: 700, color: 'var(--text-primary)' }}>
-                      €{salary.toLocaleString()} Gross Tax Base
-                    </span>
-                  </div>
-                  <div>
-                    <div style={{ fontSize: '0.68rem', color: 'var(--text-muted)', textTransform: 'uppercase' }} className="hide-on-desktop">Benchmark:</div>
-                    <span className="tabular-nums" style={{ fontSize: '0.86rem', color: 'var(--text-secondary)' }}>
-                      +€2,850 Deductions Potential
-                    </span>
-                  </div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                    <div style={{ flex: 1, height: '6px', background: 'var(--border-architectural)', borderRadius: '3px', overflow: 'hidden' }}>
-                      <div style={{ width: '88%', height: '100%', background: 'var(--accent-emerald)' }} />
-                    </div>
-                    <span className="tabular-nums" style={{ fontSize: '0.8rem', fontWeight: 800, color: 'var(--text-primary)' }}>88%</span>
-                  </div>
-                  <div style={{ textAlign: 'right' }}>
-                    <span style={{ 
-                      fontSize: '0.7rem', 
-                      fontWeight: 800, 
-                      color: 'var(--accent-emerald)',
-                      background: 'rgba(16, 185, 129, 0.1)',
-                      border: '1px solid rgba(16, 185, 129, 0.3)',
-                      padding: '3px 8px',
-                      borderRadius: '4px',
-                      display: 'inline-block'
-                    }}>
-                      +€1,450 / yr
-                    </span>
-                  </div>
-                </div>
-
-                {/* Row 3: Quantitative Compound Growth (§ 20 InvStG) */}
-                <div className="actuarial-ledger-row">
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '3px' }}>
-                    <strong style={{ fontSize: '0.88rem', color: 'var(--text-primary)' }}>3. Quantitative ETF Accumulation</strong>
-                    <span style={{ fontSize: '0.72rem', color: 'var(--maison-gold)', fontWeight: 700 }}>§ 20 InvStG 30% Teilfreistellung</span>
-                  </div>
-                  <div>
-                    <div style={{ fontSize: '0.68rem', color: 'var(--text-muted)', textTransform: 'uppercase' }} className="hide-on-desktop">Current:</div>
-                    <span className="tabular-nums" style={{ fontSize: '0.86rem', fontWeight: 700, color: 'var(--text-primary)' }}>
-                      €{monthlyInvestment.toLocaleString()} / mo (TER 0.14%)
-                    </span>
-                  </div>
-                  <div>
-                    <div style={{ fontSize: '0.68rem', color: 'var(--text-muted)', textTransform: 'uppercase' }} className="hide-on-desktop">Benchmark:</div>
-                    <span className="tabular-nums" style={{ fontSize: '0.86rem', color: 'var(--text-secondary)' }}>
-                      7.0% p.a. Compound Engine
-                    </span>
-                  </div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                    <div style={{ flex: 1, height: '6px', background: 'var(--border-architectural)', borderRadius: '3px', overflow: 'hidden' }}>
-                      <div style={{ width: hasETF ? '92%' : '52%', height: '100%', background: hasETF ? 'var(--accent-emerald)' : 'var(--accent-ochre)' }} />
-                    </div>
-                    <span className="tabular-nums" style={{ fontSize: '0.8rem', fontWeight: 800, color: 'var(--text-primary)' }}>
-                      {hasETF ? '92%' : '52%'}
-                    </span>
-                  </div>
-                  <div style={{ textAlign: 'right' }}>
-                    <span style={{ 
-                      fontSize: '0.7rem', 
-                      fontWeight: 800, 
-                      color: hasETF ? 'var(--accent-emerald)' : 'var(--accent-ochre)',
-                      background: hasETF ? 'rgba(16, 185, 129, 0.1)' : 'rgba(245, 158, 11, 0.1)',
-                      border: `1px solid ${hasETF ? 'rgba(16, 185, 129, 0.3)' : 'rgba(245, 158, 11, 0.3)'}`,
-                      padding: '3px 8px',
-                      borderRadius: '4px',
-                      display: 'inline-block'
-                    }}>
-                      {hasETF ? 'Optimal' : 'Underallocated'}
-                    </span>
-                  </div>
-                </div>
-
-                {/* Row 4: 3-Pillar Pension Solvency (SGB VI) */}
-                <div className="actuarial-ledger-row">
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '3px' }}>
-                    <strong style={{ fontSize: '0.88rem', color: 'var(--text-primary)' }}>4. 3-Pillar Pension Solvency</strong>
-                    <span style={{ fontSize: '0.72rem', color: 'var(--maison-gold)', fontWeight: 700 }}>SGB VI Actuarial Entgeltpunkte</span>
-                  </div>
-                  <div>
-                    <div style={{ fontSize: '0.68rem', color: 'var(--text-muted)', textTransform: 'uppercase' }} className="hide-on-desktop">Current:</div>
-                    <span className="tabular-nums" style={{ fontSize: '0.86rem', fontWeight: 700, color: 'var(--text-primary)' }}>
-                      ~48% Statutory Replacement
-                    </span>
-                  </div>
-                  <div>
-                    <div style={{ fontSize: '0.68rem', color: 'var(--text-muted)', textTransform: 'uppercase' }} className="hide-on-desktop">Benchmark:</div>
-                    <span className="tabular-nums" style={{ fontSize: '0.86rem', color: 'var(--text-secondary)' }}>
-                      80% Net Income Target
-                    </span>
-                  </div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                    <div style={{ flex: 1, height: '6px', background: 'var(--border-architectural)', borderRadius: '3px', overflow: 'hidden' }}>
-                      <div style={{ width: hasBAV ? '86%' : '64%', height: '100%', background: hasBAV ? 'var(--accent-emerald)' : 'var(--accent-ochre)' }} />
-                    </div>
-                    <span className="tabular-nums" style={{ fontSize: '0.8rem', fontWeight: 800, color: 'var(--text-primary)' }}>
-                      {hasBAV ? '86%' : '64%'}
-                    </span>
-                  </div>
-                  <div style={{ textAlign: 'right' }}>
-                    <span style={{ 
-                      fontSize: '0.7rem', 
-                      fontWeight: 800, 
-                      color: hasBAV ? 'var(--accent-emerald)' : 'var(--accent-ochre)',
-                      background: hasBAV ? 'rgba(16, 185, 129, 0.1)' : 'rgba(245, 158, 11, 0.1)',
-                      border: `1px solid ${hasBAV ? 'rgba(16, 185, 129, 0.3)' : 'rgba(245, 158, 11, 0.3)'}`,
-                      padding: '3px 8px',
-                      borderRadius: '4px',
-                      display: 'inline-block'
-                    }}>
-                      {hasBAV ? 'Pillars Active' : 'Gap Present'}
-                    </span>
-                  </div>
-                </div>
-
-                {/* Row 5: Liquidity Coverage Ratio (LCR) */}
-                <div className="actuarial-ledger-row" style={{ borderBottom: 'none' }}>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '3px' }}>
-                    <strong style={{ fontSize: '0.88rem', color: 'var(--text-primary)' }}>5. Emergency Liquidity Ratio (LCR)</strong>
-                    <span style={{ fontSize: '0.72rem', color: 'var(--maison-gold)', fontWeight: 700 }}>DIN 77230 § 2.1 Cash Buffer</span>
-                  </div>
-                  <div>
-                    <div style={{ fontSize: '0.68rem', color: 'var(--text-muted)', textTransform: 'uppercase' }} className="hide-on-desktop">Current:</div>
-                    <span className="tabular-nums" style={{ fontSize: '0.86rem', fontWeight: 700, color: 'var(--text-primary)' }}>
-                      €{liquidReserve.toLocaleString()} Liquid Buffer
-                    </span>
-                  </div>
-                  <div>
-                    <div style={{ fontSize: '0.68rem', color: 'var(--text-muted)', textTransform: 'uppercase' }} className="hide-on-desktop">Benchmark:</div>
-                    <span className="tabular-nums" style={{ fontSize: '0.86rem', color: 'var(--text-secondary)' }}>
-                      3.0 Months OpEx (€{(monthlyExpenses * 3).toLocaleString()})
-                    </span>
-                  </div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                    <div style={{ flex: 1, height: '6px', background: 'var(--border-architectural)', borderRadius: '3px', overflow: 'hidden' }}>
-                      <div style={{ width: hasLiquidity ? '96%' : '58%', height: '100%', background: hasLiquidity ? 'var(--accent-emerald)' : 'var(--accent-ochre)' }} />
-                    </div>
-                    <span className="tabular-nums" style={{ fontSize: '0.8rem', fontWeight: 800, color: 'var(--text-primary)' }}>
-                      {hasLiquidity ? '96%' : '58%'}
-                    </span>
-                  </div>
-                  <div style={{ textAlign: 'right' }}>
-                    <span style={{ 
-                      fontSize: '0.7rem', 
-                      fontWeight: 800, 
-                      color: hasLiquidity ? 'var(--accent-emerald)' : 'var(--accent-ochre)',
-                      background: hasLiquidity ? 'rgba(16, 185, 129, 0.1)' : 'rgba(245, 158, 11, 0.1)',
-                      border: `1px solid ${hasLiquidity ? 'rgba(16, 185, 129, 0.3)' : 'rgba(245, 158, 11, 0.3)'}`,
-                      padding: '3px 8px',
-                      borderRadius: '4px',
-                      display: 'inline-block'
-                    }}>
-                      {hasLiquidity ? 'Adequate' : 'Replenish'}
-                    </span>
-                  </div>
-                </div>
-
+              <div className="profile-audit__signals">
+                {pillarAudits.map((pillar, index) => {
+                  const Icon = pillar.icon;
+                  return (
+                    <article className="profile-audit__signal" key={pillar.pillar}>
+                      <div className="profile-audit__signal-top">
+                        <div className="profile-audit__signal-icon"><Icon size={18} strokeWidth={1.8} /></div>
+                        <div className="profile-audit__signal-title">
+                          <div><span>0{index + 1}</span> · {pillar.status}</div>
+                          <h5>{pillar.pillar}</h5>
+                          <small>{pillar.citation}</small>
+                        </div>
+                      </div>
+                      <p>{pillar.desc}</p>
+                      {pillar.pillar === 'Quantitative ETF Compounding' && (
+                        <span className="profile-audit__current">€{monthlyInvestment.toLocaleString()} / mo (TER 0.14%)</span>
+                      )}
+                      <div className="profile-audit__meter-label"><span>Current score</span><strong>{pillar.score}%</strong></div>
+                      <div className="profile-audit__meter" role="progressbar" aria-valuenow={pillar.score} aria-valuemin="0" aria-valuemax="100" aria-label={`${pillar.pillar} score`}>
+                        <span style={{ width: `${pillar.score}%`, background: pillar.statusColor }} />
+                      </div>
+                      <div className="profile-audit__signal-foot"><span>{pillar.highlight}</span><small>{pillar.benchmark}</small></div>
+                    </article>
+                  );
+                })}
               </div>
-            </div>
+            </section>
 
-            {/* SECTION 2: Quantitative Stress-Test Sensitivity Matrix */}
-            <div style={{
-              background: 'var(--bg-card)',
-              border: '1px solid var(--border-architectural)',
-              borderRadius: '14px',
-              padding: '22px',
-              display: 'flex',
-              flexDirection: 'column',
-              gap: '16px',
-              boxShadow: 'var(--shadow-xs)'
-            }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '8px' }}>
+            <section className="profile-audit__section profile-audit__stress" aria-labelledby="stress-test-title">
+              <div className="profile-audit__section-head">
                 <div>
-                  <span style={{ fontSize: '0.7rem', fontWeight: 800, color: 'var(--maison-gold)', letterSpacing: '0.08em', textTransform: 'uppercase' }}>
-                    QUANTITATIVE STRESS-TEST SCENARIOS
-                  </span>
-                  <h4 style={{ margin: '2px 0 0 0', fontSize: '1.05rem', fontWeight: 700, color: 'var(--text-primary)', fontFamily: 'var(--font-heading)' }}>
-                    Household Capital Sensitivity Under Adverse Shocks
-                  </h4>
+                  <span className="profile-audit__eyebrow">Decision support</span>
+                  <h4 id="stress-test-title">Three planning lenses</h4>
                 </div>
-                <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>
-                  DIN 77230 Actuarial Multi-Factor Stress
-                </span>
+                <span className="profile-audit__muted">Illustrative scenarios</span>
               </div>
-
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 260px), 1fr))', gap: '14px' }}>
-                
-                {/* Scenario A: Baseline */}
-                <div style={{ 
-                  background: 'var(--bg-card-subtle)', 
-                  padding: '16px', 
-                  borderRadius: '11px', 
-                  border: '1px solid var(--border-architectural)',
-                  display: 'flex',
-                  flexDirection: 'column',
-                  gap: '8px'
-                }}>
-                  <div style={{ fontSize: '0.72rem', fontWeight: 800, color: 'var(--text-secondary)', textTransform: 'uppercase' }}>
-                    Scenario A · Baseline
-                  </div>
-                  <strong style={{ fontSize: '1.15rem', color: 'var(--text-primary)', fontFamily: 'var(--font-heading)' }}>
-                    €250,000+ Terminal Wealth
-                  </strong>
-                  <p style={{ margin: 0, fontSize: '0.78rem', color: 'var(--text-secondary)', lineHeight: '1.5' }}>
-                    Current savings trajectory with 7.0% p.a. baseline ETF growth and standard statutory tax tariff.
-                  </p>
-                </div>
-
-                {/* Scenario B: Adverse Stress */}
-                <div style={{ 
-                  background: 'var(--bg-card-subtle)', 
-                  padding: '16px', 
-                  borderRadius: '11px', 
-                  border: '1px solid var(--border-architectural)',
-                  borderLeft: '3px solid var(--accent-coral)',
-                  display: 'flex',
-                  flexDirection: 'column',
-                  gap: '8px'
-                }}>
-                  <div style={{ fontSize: '0.72rem', fontWeight: 800, color: 'var(--accent-coral)', textTransform: 'uppercase' }}>
-                    Scenario B · Severe Stress Shock
-                  </div>
-                  <strong style={{ fontSize: '1.15rem', color: 'var(--text-primary)', fontFamily: 'var(--font-heading)' }}>
-                    {hasBU ? '100% Solvency Preserved' : '-52% Income Loss (BU Gap)'}
-                  </strong>
-                  <p style={{ margin: 0, fontSize: '0.78rem', color: 'var(--text-secondary)', lineHeight: '1.5' }}>
-                    Simulates 36-month occupational disability or severe sequence-of-returns equity market shock (-35%).
-                  </p>
-                </div>
-
-                {/* Scenario C: Optimized Fiduciary */}
-                <div style={{ 
-                  background: 'var(--bg-card-subtle)', 
-                  padding: '16px', 
-                  borderRadius: '11px', 
-                  border: '1px solid var(--border-architectural)',
-                  borderLeft: '3px solid var(--maison-gold)',
-                  display: 'flex',
-                  flexDirection: 'column',
-                  gap: '8px'
-                }}>
-                  <div style={{ fontSize: '0.72rem', fontWeight: 800, color: 'var(--maison-gold)', textTransform: 'uppercase' }}>
-                    Scenario C · Fiduciary Optimized
-                  </div>
-                  <strong style={{ fontSize: '1.15rem', color: 'var(--text-primary)', fontFamily: 'var(--font-heading)' }}>
-                    +€1,450 / yr + €1.8M Shield
-                  </strong>
-                  <p style={{ margin: 0, fontSize: '0.78rem', color: 'var(--text-secondary)', lineHeight: '1.5' }}>
-                    Full statutory tax capture (§ 32a), 80% net salary shield, and subsidized 3-pillar retirement closure.
-                  </p>
-                </div>
-
+              <div className="profile-audit__scenarios">
+                <article className="profile-audit__scenario">
+                  <span>Baseline</span><strong>€250,000+ terminal wealth</strong><p>Current savings path at 7.0% p.a. assumed growth.</p>
+                </article>
+                <article className="profile-audit__scenario profile-audit__scenario--risk">
+                  <span>Stress</span><strong>{hasBU ? 'Solvency preserved' : 'Income shield gap'}</strong><p>36-month disability and a −35% market shock.</p>
+                </article>
+                <article className="profile-audit__scenario profile-audit__scenario--gold">
+                  <span>Optimized</span><strong>+€1,450 / yr potential</strong><p>Tax capture, income cover and pension funding aligned.</p>
+                </article>
               </div>
-            </div>
+            </section>
 
-            {/* SECTION 3: Fiduciary Methodology Declaration */}
-            <div style={{
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'space-between',
-              gap: '12px',
-              padding: '12px 18px',
-              background: 'var(--bg-card-subtle)',
-              border: '1px solid var(--border-architectural)',
-              borderRadius: '10px',
-              flexWrap: 'wrap'
-            }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <Sparkles size={14} color="var(--maison-gold)" />
-                <span style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>
-                  Audit calculations strictly cite statutory federal law (§ 32a EStG, InvStG § 20, SGB VI) under DIN 77230 financial analysis standards.
-                </span>
-              </div>
-              <span style={{ fontSize: '0.72rem', fontWeight: 700, color: 'var(--maison-gold)', letterSpacing: '0.04em' }}>
-                100% Fee-Only &amp; Independent
-              </span>
-            </div>
-
-          </div>
+            <div className="profile-audit__method"><Sparkles size={15} /><span>Uses DIN 77230 with EStG § 32a, InvStG § 20 and SGB VI references.</span><strong>Fee-only · independent</strong></div>
+          </section>
         )}
 
         {/* Wizard Footer Navigation Controls */}
