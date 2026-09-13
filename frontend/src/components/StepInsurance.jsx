@@ -162,7 +162,7 @@ export default function StepInsurance({
         </header>
       )}
 
-      <div className="insurance-page animate-fade-in-up" key={page}>
+      <div className={`insurance-page insurance-page--${page} animate-fade-in-up`} key={page}>
         <div className="insurance-page-heading">
           <span><PageIcon size={20} /></span>
           <div>

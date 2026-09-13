@@ -19,3 +19,48 @@
 @media(max-width:460px){.insurance-steps{grid-template-columns:1fr}.insurance-steps button{padding:10px}.insurance-risk-row{padding:16px 14px}.insurance-metric,.insurance-panel,.insurance-cover-card{padding:18px}.insurance-footer-nav>span{display:none}}
 @media(prefers-reduced-motion:reduce){.insurance-page{animation:none}.insurance-steps button,.insurance-primary-button,.insurance-secondary-button,.insurance-print-button{transition:none}}
 @media print{body *{visibility:hidden}.insurance-policy,.insurance-policy *{visibility:visible}.insurance-policy{border:0;left:0;position:absolute;top:0;width:100%}.insurance-print-button{display:none}}
+
+/* Property coverage inventory: dense, decision-ready cards instead of tall form blocks. */
+.insurance-page--3 .insurance-page-heading {
+  align-items: center;
+  background: linear-gradient(135deg, var(--bg-card) 0%, var(--bg-card-subtle) 100%);
+  border: 1px solid var(--border-architectural);
+  border-radius: 14px;
+  box-shadow: var(--shadow-xs);
+  padding: 14px 16px;
+}
+
+.insurance-page--3 .insurance-card-grid {
+  align-items: stretch;
+  gap: 12px;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.insurance-page--3 .insurance-cover-card {
+  min-height: 0;
+  padding: 16px;
+  border-radius: 14px;
+  transition: border-color .22s ease, box-shadow .22s ease, transform .22s ease;
+}
+
+.insurance-page--3 .insurance-cover-card:hover {
+  border-color: var(--maison-gold-border);
+  box-shadow: var(--shadow-xs);
+  transform: translateY(-1px);
+}
+
+.insurance-page--3 .insurance-cover-card:has(.insurance-status--active) { border-top: 3px solid var(--accent-emerald); }
+.insurance-page--3 .insurance-cover-card:has(.insurance-status--gap) { border-top: 3px solid var(--accent-coral); }
+.insurance-page--3 .insurance-cover-card:has(.insurance-status--not_applicable) { border-top: 3px solid var(--border-architectural); }
+.insurance-page--3 .insurance-cover-card h2 { font-size: 1.03rem; margin: 14px 0 6px; }
+.insurance-page--3 .insurance-cover-card p { font-size: .79rem; line-height: 1.42; min-height: 3.4em; }
+.insurance-page--3 .insurance-cover-card dl { gap: 6px; margin: 13px 0; padding: 11px 0; }
+.insurance-page--3 .insurance-cover-card dt,
+.insurance-page--3 .insurance-cover-card dd { font-size: .78rem; }
+.insurance-page--3 .insurance-cover-card > small { font-size: .72rem; line-height: 1.4; }
+.insurance-page--3 .insurance-cover-card button { font-size: .78rem; padding: 9px 12px; }
+
+@media(max-width:760px){
+  .insurance-page--3 .insurance-card-grid { grid-template-columns: 1fr; }
+  .insurance-page--3 .insurance-cover-card p { min-height: 0; }
+}
