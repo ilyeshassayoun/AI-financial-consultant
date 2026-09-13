@@ -66,22 +66,10 @@ describe('Tier 1: Feature Coverage — Navigation, Routes & Layout', () => {
       expect(setStep).toHaveBeenCalledWith('welcome');
     });
 
-    it('renders responsive progressbar reflecting current step weighting', () => {
-      const { rerender } = render(<TopNav currentStep="welcome" currentSubStep={0} setStep={vi.fn()} />);
-      let progressBar = screen.getByRole('progressbar');
-      const welcomeProgress = Number(progressBar.getAttribute('aria-valuenow'));
-
-      rerender(<TopNav currentStep="tax" currentSubStep={2} setStep={vi.fn()} />);
-      progressBar = screen.getByRole('progressbar');
-      const taxProgress = Number(progressBar.getAttribute('aria-valuenow'));
-
-      rerender(<TopNav currentStep="pension" currentSubStep={5} setStep={vi.fn()} />);
-      progressBar = screen.getByRole('progressbar');
-      const pensionProgress = Number(progressBar.getAttribute('aria-valuenow'));
-
-      expect(taxProgress).toBeGreaterThan(welcomeProgress);
-      expect(pensionProgress).toBeGreaterThan(taxProgress);
-      expect(pensionProgress).toBeLessThanOrEqual(100);
+    it('keeps the portal header free of progress indicators', () => {
+      render(<TopNav currentStep="welcome" setStep={vi.fn()} />);
+      expect(screen.queryByRole('progressbar')).not.toBeInTheDocument();
+      expect(screen.queryByText(/\d+%/)).not.toBeInTheDocument();
     });
 
     it('toggles mobile menu drawer with full step access on responsive viewports', () => {

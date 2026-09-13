@@ -278,7 +278,6 @@ function App() {
       <TopNav
         currentStep={currentStep}
         setStep={setCurrentStep}
-        currentSubStep={currentSubStep}
         onSubStepChange={setSubStepForCurrent}
         onOpenGDPR={() => setIsGDPROpen(true)}
         onOpenAdvisor={() => setIsAdvisorDrawerOpen(true)}

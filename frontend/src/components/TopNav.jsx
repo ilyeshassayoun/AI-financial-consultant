@@ -1,17 +1,10 @@
 import React, { useState } from 'react';
 import { Menu, X, ChevronRight, ShieldCheck, Bot } from 'lucide-react';
 import AuthNavControls from './AuthNavControls';
-import { SECTION_SUBSTEPS, steps } from './TopNav.constants';
+import { steps } from './TopNav.constants';
 
-export default function TopNav({ currentStep, setStep, currentSubStep = 0, onOpenGDPR, onOpenAdvisor }) {
+export default function TopNav({ currentStep, setStep, onOpenGDPR, onOpenAdvisor }) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const subTabs = SECTION_SUBSTEPS[currentStep] || [];
-  
-  const stepIndex = Math.max(0, steps.findIndex(s => s.id === currentStep));
-  const subIndex = Math.max(0, currentSubStep || 0);
-  const subTotal = Math.max(1, subTabs.length);
-  const stepWeight = 100 / steps.length;
-  const progressPercent = Math.min(100, Math.round((stepIndex * stepWeight) + (((subIndex + 1) / subTotal) * stepWeight)));
 
   const handleNavClick = (id) => {
     setStep(id);
@@ -184,16 +177,6 @@ export default function TopNav({ currentStep, setStep, currentSubStep = 0, onOpe
             </button>
           )}
 
-          <span className="hide-on-mobile nav-progress" style={{
-            fontSize: '0.72rem',
-            fontWeight: 700,
-            color: 'var(--text-secondary)',
-            letterSpacing: '0.04em',
-            fontFamily: 'var(--font-mono)'
-          }}>
-            {progressPercent}%
-          </span>
-
           {/* Mobile Menu Toggle */}
           <button
             type="button"
@@ -214,23 +197,6 @@ export default function TopNav({ currentStep, setStep, currentSubStep = 0, onOpe
           </button>
         </div>
 
-      </div>
-
-      {/* Whisper-Thin Progress Hairline */}
-      <div style={{ width: '100%', height: '2px', background: 'var(--border-architectural)' }}>
-        <div 
-          role="progressbar"
-          aria-valuenow={progressPercent}
-          aria-valuemin={0}
-          aria-valuemax={100}
-          className="progress-animated"
-          style={{ 
-            height: '100%', 
-            width: `${progressPercent}%`, 
-            background: 'linear-gradient(90deg, var(--maison-obsidian), var(--maison-gold))', 
-            transition: 'width 0.4s cubic-bezier(0.16, 1, 0.3, 1)' 
-          }} 
-        />
       </div>
 
       {/* Mobile Drawer Menu */}
