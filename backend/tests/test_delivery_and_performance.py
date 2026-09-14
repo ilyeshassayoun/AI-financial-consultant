@@ -6,7 +6,7 @@ from fastapi.testclient import TestClient
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
-from main import FullAnalysisResponse, _cache_control_for_path, app
+from main import FullAnalysisResponse, _cache_control_for_path, _safe_frontend_path, app
 
 
 client = TestClient(app)
@@ -33,3 +33,11 @@ def test_delivery_middleware_adds_security_headers_and_gzip():
     assert response.headers["x-content-type-options"] == "nosniff"
     assert response.headers["referrer-policy"] == "strict-origin-when-cross-origin"
     assert response.headers["content-encoding"] == "gzip"
+
+
+def test_frontend_static_path_cannot_escape_distribution_directory(tmp_path):
+    frontend_root = tmp_path / "dist"
+    frontend_root.mkdir()
+    assert _safe_frontend_path(str(frontend_root), "assets/app.js") == str(frontend_root / "assets" / "app.js")
+    assert _safe_frontend_path(str(frontend_root), "../secret.txt") is None
+    assert _safe_frontend_path(str(frontend_root), "..\\secret.txt") is None

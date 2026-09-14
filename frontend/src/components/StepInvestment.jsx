@@ -10,7 +10,8 @@ export default function StepInvestment({
   setSubStep,
   analysisStatus,
   analysisError,
-  onRetryAnalysis
+  onRetryAnalysis,
+  onPreviewScenario,
 }) {
   return (
     <div className="investment-route animate-fade-in-up">
@@ -25,6 +26,7 @@ export default function StepInvestment({
         analysisStatus={analysisStatus}
         analysisError={analysisError}
         onRetryAnalysis={onRetryAnalysis}
+        onPreviewScenario={onPreviewScenario}
       />
     </div>
   );

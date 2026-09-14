@@ -28,7 +28,7 @@ const features = [
   },
   {
     icon: Bot,
-    title: 'AI Private Wealth Concierge',
+    title: 'AI Financial Planning Assistant',
     description: 'Real-time streaming advisory desk grounded in German statutory law. Every calculation cites its exact legal basis — explainable and verified.',
     badge: 'RAG-Grounded',
     metric: 'Instant Insights'

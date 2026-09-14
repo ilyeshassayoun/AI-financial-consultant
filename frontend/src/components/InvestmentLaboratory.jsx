@@ -45,7 +45,7 @@ const guideSteps = [
   ['decision', 'Policy statement', 'Commit to the rules']
 ];
 
-export default function InvestmentLaboratory({ profile, updateProfile, lab, subStep: controlledPage, setSubStep: setControlledPage, nextStep, prevStep, analysisStatus, analysisError, onRetryAnalysis }) {
+export default function InvestmentLaboratory({ profile, updateProfile, lab, subStep: controlledPage, setSubStep: setControlledPage, nextStep, prevStep, analysisStatus, analysisError, onRetryAnalysis, onPreviewScenario }) {
   const guideTopRef = useRef(null);
   const page = Math.max(0, Math.min(guideSteps.length - 1, Number(controlledPage || 0)));
   const setPage = setControlledPage || (() => {});
@@ -157,7 +157,7 @@ export default function InvestmentLaboratory({ profile, updateProfile, lab, subS
         </div>
 
         <details className="tax-methodology"><summary>Model costs and risk definitions</summary><p>{lab.methodology?.fee_model}</p><p>All-in annual fee: {pct(selected.annual_fee_rate, 2)}. Expected returns shown are after this modeled cost.</p><p>{lab.methodology?.risk_model}</p></details>
-        {page === 0 && <GoalPage profile={profile} updateProfile={updateProfile} selected={selected} requiredReturn={requiredReturn} requiredMonthly={requiredMonthly} optimizer={lab.goal_optimizer}/>} 
+        {page === 0 && <GoalPage profile={profile} updateProfile={updateProfile} previewScenario={onPreviewScenario || updateProfile} selected={selected} requiredReturn={requiredReturn} requiredMonthly={requiredMonthly} optimizer={lab.goal_optimizer}/>} 
         {page === 1 && <RiskPage answers={answers} answer={answer} recommendation={recommendation}/>} 
         {page === 2 && <StrategyPage strategies={strategies || []} selected={selected} selectedId={lab.selected_strategy} recommendedId={recommendationId} updateProfile={updateProfile}/>} 
         {page === 3 && <TestPage view={testView} setView={setTestView} selected={selected} comparison={comparison} target={lab.target_wealth} matrix={lab.stress_matrix || []}/>} 
@@ -192,7 +192,7 @@ export default function InvestmentLaboratory({ profile, updateProfile, lab, subS
   );
 }
 
-function GoalPage({ profile, updateProfile, selected, requiredReturn, requiredMonthly, optimizer = {} }) {
+function GoalPage({ profile, updateProfile, previewScenario, selected, requiredReturn, requiredMonthly, optimizer = {} }) {
   const optimizedReturn = optimizer.required_return ?? requiredReturn;
   const optimizedMonthly = optimizer.required_monthly ?? requiredMonthly;
   const contributionGap = optimizedMonthly - Number(profile.monthly_investment || 0);
@@ -209,7 +209,7 @@ function GoalPage({ profile, updateProfile, selected, requiredReturn, requiredMo
     </div>
     <div className={`guide-funding-status is-${optimizer.status || 'conditional'}`}><Target/><div><span>Funding diagnosis</span><strong>{optimizer.headline || 'Review the funding margin before selecting products.'}</strong></div></div>
     <div className="guide-specialist-diagnostic"><div><span>Required annual return</span><strong>{pct(optimizedReturn)}</strong><small>{optimizedReturn > selected.expected_return ? 'Above the selected strategy assumption' : 'Within the selected strategy assumption'}</small></div><div><span>Monthly funding at assumed return</span><strong>{money(optimizedMonthly)}</strong><small>{contributionGap > 0 ? `${money(contributionGap)} above the current contribution` : 'Current contribution meets the deterministic base case'}</small></div><div><span>Modeled success probability</span><strong>{pct(selected.probability_target, 0)}</strong><small>Based on identical simulated shocks</small></div></div>
-    {optimizer.levers && <GoalRepairPanel optimizer={optimizer} updateProfile={updateProfile}/>} 
+    {optimizer.levers && <GoalRepairPanel optimizer={optimizer} previewScenario={previewScenario}/>} 
   </div>;
 }
 
@@ -217,13 +217,13 @@ function FundingChart({ selected, target }) {
   return <article className="guide-funding-chart"><div className="lab-chart-title"><div><span>Funding trajectory</span><h2>Contributions versus modeled median</h2></div></div><div><ResponsiveContainer width="100%" height="100%"><AreaChart data={selected.timeline} margin={{ top: 14, right: 10, left: 2, bottom: 0 }}><defs><linearGradient id="fundingMedian" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stopColor="#1f5b3b" stopOpacity=".35"/><stop offset="1" stopColor="#1f5b3b" stopOpacity=".02"/></linearGradient></defs><CartesianGrid vertical={false} stroke="#e5ebe2"/><XAxis dataKey="year" tickLine={false} axisLine={false} tick={{fontSize:12}}/><YAxis tickFormatter={value => `€${Math.round(value/1000)}k`} tickLine={false} axisLine={false} width={56} tick={{fontSize:12}}/><Tooltip formatter={value => money(value)} contentStyle={{borderRadius:12}}/><ReferenceLine y={target} stroke="#b88d38" strokeDasharray="6 5" label={{ value:'Goal', fill:'#876a2f', fontSize:12 }}/><Area type="monotone" dataKey="p50" name="Modeled median" stroke="#173d29" strokeWidth={3} fill="url(#fundingMedian)" animationDuration={1200}/><Area type="monotone" dataKey="contributions" name="Contributions" stroke="#9a7b3e" strokeWidth={2} strokeDasharray="5 4" fill="transparent" animationDuration={900}/></AreaChart></ResponsiveContainer></div></article>;
 }
 
-function GoalRepairPanel({ optimizer, updateProfile }) {
+function GoalRepairPanel({ optimizer, previewScenario }) {
   const best = optimizer.best_probability_strategy || {};
   const levers = [
-    { id:'contribution', label:'Increase monthly funding', value:`${money(optimizer.required_monthly)}/mo`, detail:`Add ${money(optimizer.additional_monthly)} per month`, apply:() => updateProfile({ monthly_investment:optimizer.required_monthly }) },
-    { id:'horizon', label:'Extend the time horizon', value:`${optimizer.required_years} years`, detail:`Add ${optimizer.additional_years} years`, apply:() => updateProfile({ investment_years:optimizer.required_years }) },
-    { id:'target', label:'Reset to after-tax median', value:money(optimizer.revised_target), detail:`Reduce by ${money(optimizer.target_reduction)}`, apply:() => updateProfile({ target_wealth:optimizer.revised_target }) },
-    { id:'risk', label:'Review the risk budget', value:best.name || 'No improvement', detail:`Goal probability ${pct(best.probability,0)}`, apply:() => best.id && updateProfile({ investment_strategy:best.id }) }
+    { id:'contribution', label:'Increase monthly funding', value:`${money(optimizer.required_monthly)}/mo`, detail:`Add ${money(optimizer.additional_monthly)} per month`, apply:() => previewScenario({ monthly_investment:optimizer.required_monthly }) },
+    { id:'horizon', label:'Extend the time horizon', value:`${optimizer.required_years} years`, detail:`Add ${optimizer.additional_years} years`, apply:() => previewScenario({ investment_years:optimizer.required_years }) },
+    { id:'target', label:'Reset to after-tax median', value:money(optimizer.revised_target), detail:`Reduce by ${money(optimizer.target_reduction)}`, apply:() => previewScenario({ target_wealth:optimizer.revised_target }) },
+    { id:'risk', label:'Review the risk budget', value:best.name || 'No improvement', detail:`Goal probability ${pct(best.probability,0)}`, apply:() => best.id && previewScenario({ investment_strategy:best.id }) }
   ];
   return (
     <section className="guide-repair-panel" aria-labelledby="goal-repair-title">

@@ -98,34 +98,36 @@ export default function AIConsultantWidget({ insight, onApplyPatch, onOpenChat }
         </div>
       )}
 
-      {/* One-Click AI Optimizers & Direct Consultation Actions */}
+      {/* Explicit what-if controls and direct consultation actions */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '10px', paddingTop: '12px', borderTop: '1px solid var(--border-architectural)' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
-          <span style={{ fontSize: '0.72rem', fontWeight: 800, color: 'var(--text-primary)', textTransform: 'uppercase' }}>
-            <Zap size={13} style={{ display: 'inline', verticalAlign: 'middle', marginRight: '2px', color: 'var(--maison-gold)' }} />
-            1-CLICK AI OPTIMIZERS:
-          </span>
-          {recommended_actions && recommended_actions.map((act) => (
-            <button
-              key={act.id}
-              type="button"
-              onClick={() => onApplyPatch && onApplyPatch(act.patch)}
-              className="btn-secondary"
-              style={{
-                fontSize: '0.75rem',
-                padding: '6px 12px',
-                borderRadius: '6px',
-                background: 'var(--bg-card-subtle)',
-                borderColor: 'var(--border-architectural)',
-                color: 'var(--text-primary)',
-                fontWeight: 700
-              }}
-            >
-              <Zap size={11} color="var(--maison-gold)" />
-              {act.label}
-            </button>
-          ))}
-        </div>
+        {recommended_actions?.length > 0 && (
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+            <span style={{ fontSize: '0.72rem', fontWeight: 800, color: 'var(--text-primary)', textTransform: 'uppercase' }}>
+              <Zap size={13} style={{ display: 'inline', verticalAlign: 'middle', marginRight: '2px', color: 'var(--maison-gold)' }} />
+              What-if scenarios:
+            </span>
+            {recommended_actions.map((act) => (
+              <button
+                key={act.id}
+                type="button"
+                onClick={() => onApplyPatch && onApplyPatch(act.patch)}
+                className="btn-secondary"
+                style={{
+                  fontSize: '0.75rem',
+                  padding: '6px 12px',
+                  borderRadius: '6px',
+                  background: 'var(--bg-card-subtle)',
+                  borderColor: 'var(--border-architectural)',
+                  color: 'var(--text-primary)',
+                  fontWeight: 700
+                }}
+              >
+                <Zap size={11} color="var(--maison-gold)" />
+                {act.label}
+              </button>
+            ))}
+          </div>
+        )}
 
         {onOpenChat && (
           <button

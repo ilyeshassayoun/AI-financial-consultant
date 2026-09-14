@@ -55,6 +55,9 @@ def test_ai_step_consultation_generation():
         assert "recommended_actions" in insight
         assert len(insight["verdict"]) > 20
 
+    investment_insight = generate_step_ai_consultation("invest", profile_dict, analysis)
+    assert "600 paths per strategy" in investment_insight["verdict"]
+
 def test_api_analyze_endpoint():
     payload = {
         "age": 30,

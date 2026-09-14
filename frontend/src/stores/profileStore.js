@@ -54,6 +54,7 @@ export const useProfileStore = create(
   persist(
     immer((set) => ({
       profile: createDefaultProfile(),
+      scenarioOverrides: {},
       analysis: null,
       currentStep: 'welcome',
       subStepMap: { profile: 0, insurance: 0, tax: 0, invest: 0, pension: 0 },
@@ -104,9 +105,26 @@ export const useProfileStore = create(
           }
         }
       }),
-      resetProfile: () => set((state) => { state.profile = createDefaultProfile(); }),
+      previewScenario: (data) => set((state) => {
+        if (!data || typeof data !== 'object') return;
+        for (const key of Object.keys(data)) {
+          if (key === '__proto__' || key === 'constructor' || key === 'prototype') continue;
+          state.scenarioOverrides[key] = data[key];
+        }
+      }),
+      clearScenario: () => set((state) => { state.scenarioOverrides = {}; }),
+      commitScenario: () => set((state) => {
+        if (!state.profile) state.profile = createDefaultProfile();
+        Object.assign(state.profile, state.scenarioOverrides);
+        state.scenarioOverrides = {};
+      }),
+      resetProfile: () => set((state) => {
+        state.profile = createDefaultProfile();
+        state.scenarioOverrides = {};
+      }),
       resetAll: () => set((state) => {
         state.profile = createDefaultProfile();
+        state.scenarioOverrides = {};
         state.analysis = null;
         state.currentStep = 'welcome';
         state.subStepMap = { profile: 0, insurance: 0, tax: 0, invest: 0, pension: 0 };
@@ -158,6 +176,7 @@ export const useProfileStore = create(
           ...currentState,
           ...incoming,
           profile: sanitizedProfile,
+          scenarioOverrides: {},
           subStepMap: sanitizedSubStepMap,
           analysis: incoming.analysis ?? currentState.analysis ?? null,
           currentStep: typeof incoming.currentStep === 'string' ? incoming.currentStep : 'welcome',
@@ -281,8 +300,12 @@ export const useFullProfile = () => useProfileStore(useShallow((s) => ({
   currentStep: s.currentStep,
   subStepMap: s.subStepMap,
   isAdvisorDrawerOpen: s.isAdvisorDrawerOpen,
-  initialChatMessage: s.initialChatMessage,
+      initialChatMessage: s.initialChatMessage,
+  scenarioOverrides: s.scenarioOverrides,
   updateProfile: s.updateProfile,
+  previewScenario: s.previewScenario,
+  clearScenario: s.clearScenario,
+  commitScenario: s.commitScenario,
   resetProfile: s.resetProfile,
   resetAll: s.resetAll,
   setAnalysis: s.setAnalysis,

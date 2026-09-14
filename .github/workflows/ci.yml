@@ -48,5 +48,11 @@ jobs:
         run: npm ci
       - name: Run unit tests
         run: npm run test
+      - name: Lint
+        run: npm run lint
       - name: Build
         run: npm run build
+      - name: Install Chromium
+        run: npx playwright install --with-deps chromium
+      - name: Run browser tests
+        run: npm run test:e2e

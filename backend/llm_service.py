@@ -18,6 +18,7 @@ def generate_step_ai_consultation(step: str, profile: dict, analysis: dict) -> d
     tax = analysis.get("tax", {})
     tax_details = tax.get("details", {})
     inv = analysis.get("investment", {})
+    investment_lab = analysis.get("investment_lab", {})
     ret = analysis.get("retirement", {})
     opt = analysis.get("optimization", {})
     summary = opt.get("summary", {})
@@ -56,8 +57,7 @@ def generate_step_ai_consultation(step: str, profile: dict, analysis: dict) -> d
                 {"label": "Capitalized Human Asset", "value": f"€{round(human_capital):,}"}
             ],
             "recommended_actions": [
-                {"id": "boost_savings", "label": f"Boost ETF to 20% Net (€{round(net_monthly*0.20)}/mo)", "patch": {"monthly_investment": round(net_monthly*0.20)}},
-                {"id": "preset_exec", "label": "Apply Senior Executive Profile (€120k)", "patch": {"income": 120000, "age": 38, "monthly_investment": 1500, "risk_profile": "high", "commute_km": 35, "home_office_days": 80}}
+                {"id": "boost_savings", "label": f"Model 20% savings (€{round(net_monthly*0.20)}/mo)", "patch": {"monthly_investment": round(net_monthly*0.20)}}
             ]
         }
         
@@ -91,10 +91,9 @@ def generate_step_ai_consultation(step: str, profile: dict, analysis: dict) -> d
                 {"label": "State Safety Net", "value": "Requires DRV record"},
                 {"label": "JAEG Status", "value": "PKV Eligible" if pkv_eligible else "GKV Compulsory"}
             ],
-            "recommended_actions": [
-                {"id": "verify_all_core", "label": "Verify All Core Essential Shields", "patch": {"existing_insurances": ["BU", "Liability", "Legal", "Contents"]}},
-                {"id": "toggle_bu", "label": "Activate BU Income Protection (80% Net)", "patch": {"existing_insurances": list(set(profile.get("existing_insurances", []) + ["BU"]))}}
-            ]
+            # Coverage may only be recorded from a policy document or explicit user
+            # input. A model recommendation must never mark insurance as verified.
+            "recommended_actions": []
         }
         
     elif step == "tax":
@@ -110,6 +109,14 @@ def generate_step_ai_consultation(step: str, profile: dict, analysis: dict) -> d
         else:
             verdict += f"Your itemized deductions (€{round(total_werbungskosten):,}) exceed the statutory lump sum, generating an estimated €{round(est_savings):,} annual refund."
             
+        tax_actions = []
+        if profile.get("is_married") and tax_class != 3:
+            tax_actions.append({
+                "id": "compare_tax_class_3",
+                "label": "Compare tax class 3 scenario",
+                "patch": {"tax_class": 3},
+            })
+
         return {
             "title": "Ilyes AI Fiscal Strategy & EStG Optimization",
             "verdict": verdict,
@@ -120,21 +127,22 @@ def generate_step_ai_consultation(step: str, profile: dict, analysis: dict) -> d
                 {"label": "Itemized Werbungskosten", "value": f"€{round(total_werbungskosten):,}"},
                 {"label": "Potential Tax Refund", "value": f"€{round(est_savings):,}"}
             ],
-            "recommended_actions": [
-                {"id": "apply_commute_ho", "label": "Optimize 35km Commute + 80 HO Days", "patch": {"commute_km": 35, "home_office_days": 80}},
-                {"id": "switch_tax_class", "label": "Optimize Married Splitting (Class 3)", "patch": {"tax_class": 3, "is_married": True}}
-            ]
+            # Commute, home-office and marital status are facts, not optimizer
+            # variables. Only offer a tax-class comparison when marriage is known.
+            "recommended_actions": tax_actions
         }
         
     elif step == "invest":
-        p50 = inv.get("projected_p50", 0)
-        p10 = inv.get("projected_p10", 0)
-        p90 = inv.get("projected_p90", 0)
-        real_p50 = inv.get("real_p50", 0)
+        selected = investment_lab.get("selected", {})
+        p50 = selected.get("p50", inv.get("projected_p50", 0))
+        p10 = selected.get("p10", inv.get("projected_p10", 0))
+        p90 = selected.get("p90", inv.get("projected_p90", 0))
+        real_p50 = selected.get("real_p50", inv.get("real_p50", 0))
+        simulations = investment_lab.get("methodology", {}).get("simulations_per_strategy", 250)
         cost_drag = inv.get("cost_drag_analysis", {})
         fee_saved = cost_drag.get("total_fee_wealth_lost", 65000)
         
-        verdict = f"Monte Carlo 1,000-Draw Stochastic Analysis: Contributing €{monthly_inv}/mo yields a median nominal nest egg of €{round(p50):,} (real purchasing power: €{round(real_p50):,}). "
+        verdict = f"Monte Carlo analysis ({simulations} paths per strategy): Contributing €{monthly_inv}/mo yields a median nominal nest egg of €{round(p50):,} (real purchasing power: €{round(real_p50):,}). "
         verdict += f"The central 80% simulated range spans €{round(p10):,} (P10) to €{round(p90):,} (P90). The modelled fee comparison is a scenario, not a guaranteed saving; its assumptions are shown in the investment lab."
         
         return {
@@ -148,8 +156,8 @@ def generate_step_ai_consultation(step: str, profile: dict, analysis: dict) -> d
                 {"label": "Fee Drag Eliminated", "value": f"€{round(fee_saved):,}"}
             ],
             "recommended_actions": [
-                {"id": "switch_growth", "label": "Select Aggressive Growth (8.0% p.a.)", "patch": {"risk_profile": "high"}},
-                {"id": "boost_investment", "label": "Boost Monthly Investment to €800", "patch": {"monthly_investment": 800}}
+                {"id": "switch_growth", "label": "Compare a higher-risk allocation", "patch": {"risk_profile": "high"}},
+                {"id": "boost_investment", "label": "Model €800 monthly funding", "patch": {"monthly_investment": 800}}
             ]
         }
         
@@ -323,5 +331,3 @@ async def stream_financial_advice(messages: List[ChatMessage], context: str) -> 
         logger.warning("Stream error: %s", exc)
         yield f"data: {json.dumps({'token': 'Advisory service temporarily unavailable. Please retry.'})}\n\n"
         yield "data: [DONE]\n\n"
-
-

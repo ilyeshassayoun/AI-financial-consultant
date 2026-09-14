@@ -351,3 +351,48 @@
     border: 1px solid #ccc !important;
   }
 }
+.scenario-banner {
+  width: 100%;
+  margin: 0 auto 16px;
+  padding: 12px 14px;
+  border: 1px solid var(--maison-gold-border);
+  border-radius: 14px;
+  background: color-mix(in srgb, var(--maison-gold-subtle) 55%, var(--bg-card));
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  box-sizing: border-box;
+}
+
+.scenario-banner__summary,
+.scenario-banner__actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.scenario-banner__summary > div {
+  display: grid;
+  gap: 2px;
+}
+
+.scenario-banner__summary span {
+  color: var(--text-secondary);
+  font-size: 0.78rem;
+}
+
+.scenario-banner__actions button {
+  padding: 8px 12px;
+}
+
+@media (max-width: 640px) {
+  .scenario-banner {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .scenario-banner__actions button {
+    flex: 1;
+  }
+}

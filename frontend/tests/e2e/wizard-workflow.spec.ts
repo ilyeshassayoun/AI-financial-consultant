@@ -1,18 +1,23 @@
 ﻿import { test, expect } from '@playwright/test';
 
+import { mockFullAnalysis } from '../../src/__tests__/fixtures/mockAnalysisData.js';
+
 test.describe('End-to-End Wizard Workflow & Viewport Scaling', () => {
   test.beforeEach(async ({ page }) => {
     await page.addInitScript(() => localStorage.clear());
+    await page.route('**/api/analyze', async (route) => {
+      await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(mockFullAnalysis) });
+    });
     await page.goto('/');
     await page.waitForLoadState('domcontentloaded');
   });
 
   test('completes welcome CTA navigation to mandate and verifies route integrity', async ({ page }) => {
-    await expect(page.getByRole('button', { name: 'Launch Actuarial Analysis' })).toBeVisible();
-    await page.getByRole('button', { name: 'Launch Actuarial Analysis' }).click();
+    await expect(page.getByRole('button', { name: 'Build my financial plan' })).toBeVisible();
+    await page.getByRole('button', { name: 'Build my financial plan' }).click();
 
     // Verify transition into Profile Step
-    await expect(page.getByRole('heading', { name: 'Select Your Financial Goals' })).toBeVisible({ timeout: 15000 });
+    await expect(page.getByRole('heading', { name: 'Financial Goals' })).toBeVisible({ timeout: 15000 });
   });
 
   test('navigates through wizard sections via TopNav on desktop (1440px)', async ({ page }) => {
@@ -20,7 +25,7 @@ test.describe('End-to-End Wizard Workflow & Viewport Scaling', () => {
 
     // Click through each primary section
     const navSections = [
-      { name: 'Mandate & Cashflow', expectedHeading: /Financial Goals|Personal Timeline/i },
+      { name: 'Mandate & Cashflow', expectedText: /Financial Goals|Personal Timeline/i },
       { name: 'Risk Shield', expectedText: /Protect the balance sheet|protection needs analysis/i },
       { name: 'Tax Optimization', expectedText: /Build a defensible tax position|tax scenario lab/i },
       { name: 'Asset Allocation', expectedText: /Core Quantitative Comparison|Investment Laboratory/i },
@@ -48,7 +53,7 @@ test.describe('End-to-End Wizard Workflow & Viewport Scaling', () => {
   });
 
   test('simulates offline backend gracefully surfaces retry action', async ({ page }) => {
-    // Intercept /api/analyze with 503 Service Unavailable
+    await page.unroute('**/api/analyze');
     await page.route('**/api/analyze', async (route) => {
       await route.fulfill({ status: 503, contentType: 'application/json', body: '{"detail": "Backend unavailable"}' });
     });

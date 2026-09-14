@@ -100,6 +100,29 @@ describe('profileStore Defensive Hydration & Factory', () => {
     expect(useProfileStore.getState().profile.age).toBe(30);
   });
 
+  it('keeps hypothetical scenario values separate until explicitly committed', () => {
+    const baseline = useProfileStore.getState().profile.monthly_investment;
+    useProfileStore.getState().previewScenario({ monthly_investment: 900 });
+
+    expect(useProfileStore.getState().profile.monthly_investment).toBe(baseline);
+    expect(useProfileStore.getState().scenarioOverrides.monthly_investment).toBe(900);
+
+    useProfileStore.getState().commitScenario();
+    expect(useProfileStore.getState().profile.monthly_investment).toBe(900);
+    expect(useProfileStore.getState().scenarioOverrides).toEqual({});
+  });
+
+  it('never hydrates hypothetical scenario overrides from persisted data', () => {
+    const persistOptions = useProfileStore.persist.getOptions();
+    const merged = persistOptions.merge({
+      profile: { income: 70000 },
+      scenarioOverrides: { income: 500000 },
+    }, useProfileStore.getState());
+
+    expect(merged.profile.income).toBe(70000);
+    expect(merged.scenarioOverrides).toEqual({});
+  });
+
   it('all 8 domain selectors provide safe, reactive slices with fallback defaults', () => {
     const { result: personal } = renderHook(() => usePersonal());
     expect(personal.current.age).toBe(30);

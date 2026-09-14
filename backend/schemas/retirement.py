@@ -99,7 +99,7 @@ class OptimizerSummary(BaseModel):
     model_config = ConfigDict(allow_inf_nan=False, extra="allow")
     total_potential_tax_savings: float
     financial_health_score: int
-    score_breakdown: Dict[str, int]
+    score_breakdown: Dict[str, float]
     top_3_priorities: List[Dict[str, Any]]
     lifetime_human_capital_at_risk: float
     projected_30yr_wealth: float

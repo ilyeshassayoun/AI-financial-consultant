@@ -7,9 +7,9 @@ export default function FloatingAdvisorButton({ onClick, isOpen = false }) {
     <button
       type="button"
       onClick={onClick}
-      aria-label="Open Ilyes AI Wealth Concierge"
+      aria-label="Open Ilyes AI Financial Concierge"
       aria-expanded={isOpen}
-      title="Open Ilyes AI Wealth Concierge"
+      title="Open Ilyes AI Financial Concierge"
       className={styles.floatingButton}
     >
       <div className={styles.iconWrapper}>

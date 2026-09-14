@@ -1,9 +1,10 @@
+import math
 import os
 import sys
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
-from advanced_investment_engine import STRATEGIES, build_investment_lab
+from advanced_investment_engine import ASSETS, STRATEGIES, _portfolio_moments, build_investment_lab
 
 
 BASE = {"initial_amount": 10000, "monthly_investment": 700, "investment_years": 20, "expected_inflation": .02, "target_wealth": 400000}
@@ -30,6 +31,14 @@ def test_defensive_strategy_has_lower_model_volatility_than_global_core():
     lab = build_investment_lab(BASE)
     strategies = {item["id"]: item for item in lab["strategies"]}
     assert strategies["all_weather"]["expected_volatility"] < strategies["global_core"]["expected_volatility"]
+
+
+def test_small_value_uses_equity_correlation_not_fallback_bucket():
+    _, volatility, _ = _portfolio_moments({"world_equity": .5, "small_value": .5})
+    world_vol = ASSETS["world_equity"]["vol"]
+    value_vol = ASSETS["small_value"]["vol"]
+    expected = math.sqrt(.25 * world_vol ** 2 + .25 * value_vol ** 2 + .5 * world_vol * value_vol * .72)
+    assert volatility == expected
 
 
 def test_target_probability_declines_for_harder_goal():

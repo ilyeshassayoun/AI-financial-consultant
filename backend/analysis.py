@@ -73,16 +73,7 @@ def run_full_analysis(profile: ClientProfile) -> dict[str, Any]:
         bav_contribution=profile.bav_contribution,
     )
 
-    # 5. Financial Optimization Suggestions
     profile_dict = profile.model_dump()
-    optimizer_info = generate_optimization_suggestions(
-        profile=profile_dict,
-        tax_result=tax_info,
-        investment_result=investment_info,
-        retirement_result=retirement_info,
-        insurance_list=insurance_info,
-    )
-
     tax_result = {
         "gross_income": tax_info.get("gross_income", profile.income),
         "tax_amount": tax_info.get("tax_amount", 0),
@@ -114,6 +105,26 @@ def run_full_analysis(profile: ClientProfile) -> dict[str, Any]:
         "required_monthly_savings_to_close_gap": retirement_lab["savings_gap"]["required_monthly_total"],
         "private_nest_egg_projected": retirement_lab["private_capital"]["net"],
     }
+
+    # Recommendations must consume the same retirement values exposed by the
+    # API. Running this earlier made the optimizer disagree with the detailed
+    # retirement view for the same household.
+    optimizer_info = generate_optimization_suggestions(
+        profile=profile_dict,
+        tax_result=tax_result,
+        investment_result=investment_info,
+        retirement_result=retirement_result,
+        insurance_list=insurance_info,
+    )
+
+    advisory_plan = build_advisory_plan(
+        profile_dict, tax_result, investment_info, retirement_result
+    )
+    # Keep the legacy optimization response compatible while making the
+    # explainable resilience model the single score shown to clients.
+    optimizer_info["summary"]["financial_health_score"] = advisory_plan["financial_resilience_score"]
+    optimizer_info["summary"]["score_breakdown"] = advisory_plan["score_components"]
+
     raw_analysis = {
         "tax": tax_result,
         "tax_lab": build_tax_lab(profile_dict, tax_result),
@@ -122,13 +133,15 @@ def run_full_analysis(profile: ClientProfile) -> dict[str, Any]:
         "retirement": retirement_result,
         "retirement_lab": retirement_lab,
         "optimization": optimizer_info,
+        "advisory_plan": advisory_plan,
+        "model_metadata": {
+            "planning_year": 2026,
+            "investment_projection_simulations": 250,
+            "investment_lab_simulations_per_strategy": investment_lab["methodology"]["simulations_per_strategy"],
+            "investment_lab_seed": investment_lab["methodology"]["seed"],
+        },
     }
 
-    # 6. Deterministic, explainable household suitability plan.  This layer
-    # sequences recommendations by solvency rather than by product category.
-    raw_analysis["advisory_plan"] = build_advisory_plan(
-        profile_dict, tax_result, investment_info, retirement_result
-    )
     raw_analysis["risk_suitability"] = evaluate_risk_profile(profile_dict, raw_analysis)
     raw_analysis["investment_lab"] = investment_lab
     raw_analysis["insurance_lab"] = insurance_lab

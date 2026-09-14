@@ -185,11 +185,49 @@
     }
   },
   optimization: {
-    summary: { financial_health_score: 84 }
+    summary: {
+      financial_health_score: 73,
+      score_breakdown: {
+        liquidity: 12,
+        cash_flow: 15,
+        debt: 20,
+        protection: 4,
+        retirement: 18
+      }
+    }
   },
   advisory_plan: {
-    actions: [
-      { id: 'act_1', priority: 'high', title: 'Verify Haftpflicht Coverage' }
+    financial_resilience_score: 73,
+    score_components: {
+      liquidity: 12,
+      cash_flow: 15,
+      debt: 20,
+      protection: 4,
+      retirement: 18
+    },
+    household_kpis: {
+      monthly_net_income: 3083,
+      monthly_surplus: 1098,
+      savings_rate: 0.16,
+      emergency_fund_months: 2.8,
+      debt_service_ratio: 0
+    },
+    protection_needs: {
+      bu_target_monthly: 2500,
+      bu_current_monthly: 1,
+      bu_gap_monthly: 2499,
+      bu_adequacy_ratio: 0.0004
+    },
+    action_plan: [
+      {
+        id: 'act_1',
+        priority: 'high',
+        title: 'Close the occupational disability gap',
+        horizon: 'Now',
+        rationale: 'The recorded benefit is materially below the modelled income-protection need.',
+        success_metric: 'Document sufficient monthly disability cover',
+        monthly_commitment: 0
+      }
     ]
   }
 };

@@ -54,13 +54,15 @@ export function getAnalysisErrorMessage(error) {
 }
 
 export async function fetchFullAnalysis(profile, signal) {
-  return requestJson('/api/analyze', {
+  const { validateAnalysisResponse } = await import('./analysisSchema');
+  const payload = await requestJson('/api/analyze', {
     method: 'POST',
     credentials: 'include',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(profile),
     signal
   });
+  return validateAnalysisResponse(payload);
 }
 
 export async function fetchConsultantInsight(profile, step, signal) {

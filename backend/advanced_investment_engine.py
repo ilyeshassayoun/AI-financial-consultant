@@ -53,6 +53,29 @@ TAXABLE_GAIN_SHARE = {
     "gold": 0.0,
 }
 
+EQUITY_ASSETS = {"world_equity", "em_equity", "quality_equity", "small_value"}
+BOND_ASSETS = {"global_bonds", "inflation_bonds"}
+
+
+def _asset_correlation(first: str, second: str) -> float:
+    """Return the documented coarse asset-class correlation assumption."""
+    if first == second:
+        return 1.0
+    pair = {first, second}
+    if first in EQUITY_ASSETS and second in EQUITY_ASSETS:
+        return .72
+    if (first in BOND_ASSETS and second in EQUITY_ASSETS) or (
+        second in BOND_ASSETS and first in EQUITY_ASSETS
+    ):
+        return -.05
+    if "gold" in pair:
+        return .08
+    if "cash" in pair:
+        return .05
+    if "listed_property" in pair:
+        return .48
+    return .25
+
 
 def _portfolio_moments(weights: Dict[str, float]) -> tuple[float, float, float]:
     expected = sum(weight * float(ASSETS[key]["return"]) for key, weight in weights.items())
@@ -61,20 +84,7 @@ def _portfolio_moments(weights: Dict[str, float]) -> tuple[float, float, float]:
     variance = 0.0
     for a in keys:
         for b in keys:
-            if a == b:
-                corr = 1.0
-            elif "equity" in a and "equity" in b:
-                corr = .72
-            elif ("bonds" in a and "equity" in b) or ("equity" in a and "bonds" in b):
-                corr = -.05
-            elif "gold" in (a, b):
-                corr = .08
-            elif "cash" in (a, b):
-                corr = .05
-            elif "property" in a or "property" in b:
-                corr = .48
-            else:
-                corr = .25
+            corr = _asset_correlation(a, b)
             variance += weights[a] * weights[b] * float(ASSETS[a]["vol"]) * float(ASSETS[b]["vol"]) * corr
     return expected, math.sqrt(max(variance, 0)), income_yield
 

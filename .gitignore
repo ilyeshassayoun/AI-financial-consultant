@@ -30,7 +30,8 @@ build/
 *.swp
 *.swo
 
-# OS
-.DS_Store
-Thumbs.db
+# DB & Local
+*.db
+*.sqlite
+.agents/
 

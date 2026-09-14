@@ -1,17 +1,28 @@
 const API_BASE = (import.meta.env.VITE_API_URL || '').replace(/\/$/, '');
 
+export class AuthApiError extends Error {
+  constructor(message, status = 0, detail = null) {
+    super(message);
+    this.name = 'AuthApiError';
+    this.status = status;
+    this.detail = detail;
+  }
+}
+
 // ---------- Token refresh interceptor ----------
 // Ensures a single in-flight refresh and retries the original request once.
 let _refreshPromise = null;
 
 async function apiFetch(path, options = {}) {
   const response = await fetch(`${API_BASE}${path}`, {
+    ...options,
     credentials: 'include',
     headers: { 'Content-Type': 'application/json', ...options.headers },
-    ...options,
   });
   const data = await response.json().catch(() => ({}));
-  if (!response.ok) throw new Error(data.detail || `HTTP ${response.status}`);
+  if (!response.ok) {
+    throw new AuthApiError(data.detail || `HTTP ${response.status}`, response.status, data.detail ?? null);
+  }
   return data;
 }
 
@@ -20,7 +31,7 @@ async function apiFetchWithRetry(path, options = {}) {
     return await apiFetch(path, options);
   } catch (err) {
     // If the request failed with 401, attempt a silent token refresh and retry once.
-    if (err.message.includes('401') && !path.startsWith('/api/auth/')) {
+    if (err?.status === 401 && path !== '/api/auth/refresh') {
       try {
         if (!_refreshPromise) {
           _refreshPromise = apiFetch('/api/auth/refresh', { method: 'POST', body: JSON.stringify({}) })

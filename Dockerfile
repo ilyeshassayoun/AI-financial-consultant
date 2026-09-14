@@ -34,4 +34,4 @@ EXPOSE 8000
 WORKDIR /app/backend
 
 # Run with dynamic PORT provided by Railway / cloud host
-CMD ["sh", "-c", "uvicorn main:app --host 0.0.0.0 --port ${PORT:-8000} --workers 2 --log-level info"]
+CMD ["sh", "-c", "alembic -c alembic.ini upgrade head && uvicorn main:app --host 0.0.0.0 --port ${PORT:-8000} --workers 2 --log-level info"]

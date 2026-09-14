@@ -21,3 +21,4 @@ class User(Base):
     last_login: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
 
     profiles: Mapped[list["ProfileSnapshot"]] = relationship("ProfileSnapshot", back_populates="user", cascade="all, delete-orphan")
+    refresh_sessions: Mapped[list["RefreshTokenSession"]] = relationship("RefreshTokenSession", back_populates="user", cascade="all, delete-orphan")

@@ -6,6 +6,7 @@ import FloatingAdvisorButton from './components/FloatingAdvisorButton';
 import { PageTransition } from './components/PageTransition';
 import ErrorBoundary from './components/ErrorBoundary';
 import SkipLinks from './components/SkipLinks';
+import ScenarioBanner from './components/ScenarioBanner';
 import { useProfileStore, safeLocalStorage } from './stores/profileStore';
 import { useAuthStore } from './stores/authStore';
 import { fetchFullAnalysis, getAnalysisErrorMessage } from './services/apiService';
@@ -135,6 +136,10 @@ function App() {
   }, []);
 
   const profile = useProfileStore((state) => state.profile);
+  const scenarioOverrides = useProfileStore((state) => state.scenarioOverrides);
+  const previewScenario = useProfileStore((state) => state.previewScenario);
+  const clearScenario = useProfileStore((state) => state.clearScenario);
+  const commitScenario = useProfileStore((state) => state.commitScenario);
   const updateProfileStore = useProfileStore((state) => state.updateProfile);
   const analysis = useProfileStore((state) => state.analysis);
   const setAnalysis = useProfileStore((state) => state.setAnalysis);
@@ -153,12 +158,17 @@ function App() {
   const [hasLoadedAdvisor, setHasLoadedAdvisor] = useState(isAdvisorDrawerOpen);
   const [analysisState, setAnalysisState] = useState({ status: analysis ? 'success' : 'idle', error: null });
   const [analysisRetryKey, setAnalysisRetryKey] = useState(0);
-  const profileRef = useRef(profile);
+  const effectiveProfile = useMemo(
+    () => ({ ...profile, ...scenarioOverrides }),
+    [profile, scenarioOverrides],
+  );
+  const profileRef = useRef(effectiveProfile);
 
   const updateProfile = useCallback((patch) => {
+    clearScenario();
     setAnalysisState((state) => state.status === 'success' ? { status: 'stale', error: null } : state);
     updateProfileStore(patch);
-  }, [updateProfileStore]);
+  }, [clearScenario, updateProfileStore]);
 
   useEffect(() => {
     let active = true;
@@ -169,8 +179,8 @@ function App() {
   }, [login, logout]);
 
   useEffect(() => {
-    profileRef.current = profile;
-  }, [profile]);
+    profileRef.current = effectiveProfile;
+  }, [effectiveProfile]);
 
   // Reactive recalculation on profile change with 400ms debounce
   const isInitialMount = useRef(true);
@@ -183,7 +193,7 @@ function App() {
       setAnalysisRetryKey((key) => key + 1);
     }, 400);
     return () => clearTimeout(timer);
-  }, [profile]);
+  }, [effectiveProfile]);
 
   const currentSubStep = useMemo(() =>
     (subStepMap && typeof subStepMap[currentStep] === 'number' && Number.isFinite(subStepMap[currentStep]))
@@ -203,8 +213,8 @@ function App() {
   }, [currentStep, setSubStepMap]);
 
   const handleApplyPatch = useCallback((patch) => {
-    if (patch) updateProfile(patch);
-  }, [updateProfile]);
+    if (patch) previewScenario(patch);
+  }, [previewScenario]);
 
   const handleOpenChat = useCallback((query) => {
     setInitialChatMessage(query || '');
@@ -288,7 +298,10 @@ function App() {
         setStep={setCurrentStep}
         onSubStepChange={setSubStepForCurrent}
         onOpenGDPR={() => setIsGDPROpen(true)}
-        onOpenAdvisor={() => setIsAdvisorDrawerOpen(true)}
+        onOpenAdvisor={() => {
+          setHasLoadedAdvisor(true);
+          setIsAdvisorDrawerOpen(true);
+        }}
       />
       <main
         id="main-content"
@@ -306,13 +319,14 @@ function App() {
         }}
         role="main"
       >
+        <ScenarioBanner overrides={scenarioOverrides} onApply={commitScenario} onReset={clearScenario} />
         <ErrorBoundary fallback={ErrorFallback} resetKey={`${currentStep}:${currentSubStep}`}>
           <Suspense fallback={<div className="route-loading" role="status" aria-live="polite">Preparing this section…</div>}>
             <PageTransition transitionKey={currentStep}>
             {currentStep === 'welcome' && <StepWelcome nextStep={nextStep} analysis={analysis} />}
             {currentStep === 'profile' && (
               <StepProfile
-                profile={profile}
+                profile={effectiveProfile}
                 updateProfile={updateProfile}
                 nextStep={nextStep}
                 prevStep={prevStep}
@@ -325,7 +339,7 @@ function App() {
             )}
             {currentStep === 'insurance' && (
               <StepInsurance
-                profile={profile}
+                profile={effectiveProfile}
                 updateProfile={updateProfile}
                 nextStep={nextStep}
                 prevStep={prevStep}
@@ -341,7 +355,7 @@ function App() {
             )}
             {currentStep === 'tax' && (
               <StepTax
-                profile={profile}
+                profile={effectiveProfile}
                 updateProfile={updateProfile}
                 nextStep={nextStep}
                 prevStep={prevStep}
@@ -357,7 +371,7 @@ function App() {
             )}
             {currentStep === 'invest' && (
               <StepInvestment
-                profile={profile}
+                profile={effectiveProfile}
                 updateProfile={updateProfile}
                 nextStep={nextStep}
                 prevStep={prevStep}
@@ -367,13 +381,14 @@ function App() {
                 analysisStatus={analysisState.status}
                 analysisError={analysisState.error}
                 onRetryAnalysis={retryAnalysis}
+                onPreviewScenario={handleApplyPatch}
                 onApplyPatch={handleApplyPatch}
                 onOpenChat={handleOpenChat}
               />
             )}
             {currentStep === 'pension' && (
               <StepRetirement
-                profile={profile}
+                profile={effectiveProfile}
                 updateProfile={updateProfile}
                 nextStep={nextStep}
                 prevStep={prevStep}
@@ -405,7 +420,7 @@ function App() {
             <AdvisorDrawer
               isOpen={isAdvisorDrawerOpen}
               onClose={() => setIsAdvisorDrawerOpen(false)}
-              profile={profile}
+              profile={effectiveProfile}
               analysis={analysis}
               currentStep={currentStep}
               initialMessage={initialChatMessage}

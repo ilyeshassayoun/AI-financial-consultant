@@ -70,6 +70,18 @@ def _cache_control_for_path(path: str, content_type: str = "") -> str | None:
     return None
 
 
+def _safe_frontend_path(root: str, requested_path: str) -> str | None:
+    """Resolve a static path only when it remains inside the built frontend."""
+    root_path = os.path.realpath(root)
+    candidate = os.path.realpath(os.path.join(root_path, requested_path))
+    try:
+        if os.path.commonpath([root_path, candidate]) != root_path:
+            return None
+    except ValueError:
+        return None
+    return candidate
+
+
 @app.middleware("http")
 async def add_delivery_headers(request: Request, call_next):
     response = await call_next(request)
@@ -153,7 +165,7 @@ if frontend_dist:
     async def serve_spa_frontend(request: Request, full_path: str):
         if full_path.startswith("api/") or full_path == "api" or full_path == "docs" or full_path == "openapi.json":
             raise HTTPException(status_code=404, detail="Not Found")
-        file_path = os.path.join(frontend_dist, full_path)
-        if os.path.isfile(file_path):
+        file_path = _safe_frontend_path(frontend_dist, full_path)
+        if file_path and os.path.isfile(file_path):
             return FileResponse(file_path)
         return FileResponse(os.path.join(frontend_dist, "index.html"))

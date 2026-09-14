@@ -43,7 +43,7 @@ export default function AdvisorDrawer({ isOpen, onClose, profile, currentStep = 
   const [messages, setMessages] = useState([
     { 
       role: 'assistant', 
-      content: '### ✦ Ilyes AI Private Wealth Concierge\n\nWelcome to your personalized German financial consultation desk. I have full real-time visibility into your audit metrics, tax bracket (§ 32a EStG), liability defense (§ 823 BGB), and 3-Pillar statutory pension solvency.\n\n*How may I assist your wealth strategy today?*' 
+      content: '### Financial planning assistant\n\nI can explain the calculations currently shown in your plan, compare scenarios, and help you identify which inputs still need verification.\n\n*What would you like to review?*'
     }
   ]);
   const [input, setInput] = useState('');
