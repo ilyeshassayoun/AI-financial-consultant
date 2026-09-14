@@ -47,7 +47,10 @@ describe('apiService', () => {
         expect.objectContaining({
           method: 'POST',
           credentials: 'include',
-          headers: { 'Content-Type': 'application/json' },
+          headers: expect.objectContaining({
+            'Content-Type': 'application/json',
+            'X-Correlation-ID': expect.any(String)
+          }),
           body: JSON.stringify(mockProfile),
         })
       );
@@ -109,7 +112,10 @@ describe('apiService', () => {
         expect.objectContaining({
           method: 'POST',
           credentials: 'include',
-          headers: { 'Content-Type': 'application/json' },
+          headers: expect.objectContaining({
+            'Content-Type': 'application/json',
+            'X-Correlation-ID': expect.any(String)
+          }),
           body: JSON.stringify({ profile: mockProfile, step: 'profile' }),
         })
       );

@@ -1,21 +1,23 @@
 import math
 from typing import Dict, Any, Optional
 
+from statutory_parameters import TAX_2026, TAX_2026_SOURCES
+
 def _calculate_grundtarif(zve: float) -> float:
     """
     Progressive Tax Formula (Grundtarif 2026 under § 32a EStG).
     Calculates income tax based on the taxable income (zu versteuerndes Einkommen - zvE).
     """
     zve = math.floor(max(0.0, zve))
-    if zve <= 12348:
+    if zve <= TAX_2026.grundfreibetrag:
         return 0.0
-    elif zve <= 17799:
-        y = (zve - 12348) / 10000.0
+    elif zve <= TAX_2026.first_progression_upper:
+        y = (zve - TAX_2026.grundfreibetrag) / 10000.0
         return (914.51 * y + 1400.0) * y
-    elif zve <= 69878:
-        z = (zve - 17799) / 10000.0
+    elif zve <= TAX_2026.second_progression_upper:
+        z = (zve - TAX_2026.first_progression_upper) / 10000.0
         return (173.10 * z + 2397.0) * z + 1034.87
-    elif zve <= 277825:
+    elif zve <= TAX_2026.reichensteuer_threshold:
         return 0.42 * zve - 11135.63
     else:
         return 0.45 * zve - 19470.38
@@ -56,14 +58,17 @@ def calculate_german_tax(
     commute_days = min(max(0, commute_days), 230)
     actual_commute_days = max(0, commute_days - home_office_days)
     # 2026: €0.38 from the first distance kilometre (§ 9 EStG).
-    commute_allowance = commute_km * 0.38 * actual_commute_days
+    commute_allowance = commute_km * TAX_2026.commute_rate_per_km * actual_commute_days
     
-    home_office_allowance = min(home_office_days * 6.0, 1260.0)
+    home_office_allowance = min(
+        home_office_days * TAX_2026.home_office_daily_rate,
+        TAX_2026.home_office_annual_cap,
+    )
     work_equipment_pauschale = 110.0
     account_maintenance_pauschale = 16.0
     
     calculated_werbungskosten = commute_allowance + home_office_allowance + work_equipment_pauschale + account_maintenance_pauschale
-    werbungskosten_pauschale = 1230.0  # § 9a Nr. 1 EStG
+    werbungskosten_pauschale = TAX_2026.werbungskosten_pauschale  # § 9a Nr. 1 EStG
     effective_werbungskosten = max(werbungskosten_pauschale, calculated_werbungskosten)
     
     details['commute_allowance'] = round(commute_allowance, 2)
@@ -74,9 +79,6 @@ def calculate_german_tax(
     
     # 2. Statutory Social Security Contributions (2026 schedules). For a joint
     # assessment the contribution ceilings apply per employee, not per household.
-    BBG_KV_PV = 69750.0
-    BBG_RV_AV = 101400.0
-    
     # Statutory Rates (Employee Share)
     # 14.6% base plus 2.9% official average supplementary rate, shared equally.
     # Pflegeversicherung (outside Saxony): 1.8% employee base share, plus
@@ -91,12 +93,12 @@ def calculate_german_tax(
     if is_saxony:
         pv_rate += 0.005
     def employee_social_security(income: float, private_health: bool = False, annual_private_cost: float = 0.0) -> Dict[str, float]:
-        kv_gross = min(income, BBG_KV_PV)
-        health = annual_private_cost * 12.0 * 0.5 if private_health and annual_private_cost > 0 else kv_gross * 0.0875
+        kv_gross = min(income, TAX_2026.bbg_health_and_care)
+        health = annual_private_cost * 12.0 * 0.5 if private_health and annual_private_cost > 0 else kv_gross * TAX_2026.health_employee_rate
         care = kv_gross * pv_rate
-        rv_base = min(income, BBG_RV_AV)
-        pension = rv_base * 0.093
-        unemployment = rv_base * 0.013
+        rv_base = min(income, TAX_2026.bbg_pension_and_unemployment)
+        pension = rv_base * TAX_2026.pension_employee_rate
+        unemployment = rv_base * TAX_2026.unemployment_employee_rate
         return {"health": health, "care": care, "pension": pension, "unemployment": unemployment}
 
     primary_social = employee_social_security(primary_income, has_private_health, private_health_cost)
@@ -124,19 +126,22 @@ def calculate_german_tax(
     vorsorge_basis_health = kv_employee + pv_employee
     # Statutory pension contributions are treated as deductible retirement expenses (2026 cap €29,344).
     vorsorge_pension = (
-        min(primary_social["pension"] * 2.0, 29344.0) * 0.5
-        + min(spouse_social["pension"] * 2.0, 29344.0) * 0.5
+        min(primary_social["pension"] * 2.0, TAX_2026.pension_deduction_cap_per_person) * 0.5
+        + min(spouse_social["pension"] * 2.0, TAX_2026.pension_deduction_cap_per_person) * 0.5
     )
     total_vorsorge = vorsorge_basis_health + vorsorge_pension
     
     # Tax Class Adjustments
     class_allowance = 0.0
     if tax_class == 2:
-        class_allowance = 4260.0  # Entlastungsbetrag für Alleinerziehende (§ 24b EStG)
+        class_allowance = TAX_2026.single_parent_allowance  # § 24b EStG
         
     # Riester deduction (§ 10a EStG)
-    max_riester = min(float(riester_contribution), 2100.0)
-    riester_zulagen = 175.0 + (300.0 * num_children) if riester_contribution > 0 else 0.0
+    max_riester = min(float(riester_contribution), TAX_2026.riester_deduction_cap)
+    riester_zulagen = (
+        TAX_2026.riester_basic_allowance + TAX_2026.riester_child_allowance * num_children
+        if riester_contribution > 0 else 0.0
+    )
     
     total_deductions = effective_werbungskosten + total_vorsorge + additional_deductions + class_allowance + max_riester
     zve = max(0.0, gross_income - total_deductions)
@@ -175,8 +180,8 @@ def calculate_german_tax(
     details['riester_allowance_addback'] = round(riester_addback, 2)
 
     # Kinderfreibetrag vs Kindergeld (Günstigerprüfung § 31 EStG)
-    kindergeld_received = num_children * 259.0 * 12.0
-    kinderfreibetrag_total = num_children * 9756.0
+    kindergeld_received = num_children * TAX_2026.child_benefit_monthly * 12.0
+    kinderfreibetrag_total = num_children * TAX_2026.child_allowance_total
     tax_with_kinderfreibetrag = calc_tax(
         max(0.0, (zve if details.get('riester_benefit_used') == 'deduction' else zve + max_riester) - kinderfreibetrag_total),
         is_married
@@ -210,13 +215,17 @@ def calculate_german_tax(
 
     # 6. Solidaritätszuschlag 2026: assessed on tax liability before § 35a credits (§ 51a EStG, § 4 SolzG)
     soli_basis_tax = assessed_tax_pre_credits
-    soli_freigrenze = 40700.0 if (is_married or tax_class == 3) else 20350.0
+    soli_freigrenze = (
+        TAX_2026.soli_threshold_joint
+        if (is_married or tax_class == 3)
+        else TAX_2026.soli_threshold_single
+    )
     if soli_basis_tax <= soli_freigrenze:
         soli = 0.0
     else:
         # Milderungszone: 11.9% of excess over Freigrenze, capped at standard 5.5% of total tax
-        milderung_soli = (soli_basis_tax - soli_freigrenze) * 0.119
-        standard_soli = soli_basis_tax * 0.055
+        milderung_soli = (soli_basis_tax - soli_freigrenze) * TAX_2026.soli_taper_rate
+        standard_soli = soli_basis_tax * TAX_2026.soli_standard_rate
         soli = min(milderung_soli, standard_soli)
     details['solidarity_surcharge'] = round(soli, 2)
 
@@ -242,8 +251,10 @@ def calculate_german_tax(
         "marginal_tax_rate": round(marginal_tax_rate, 4),
         "details": details,
         "calculation_basis": {
-            "year": 2026,
+            "year": TAX_2026.year,
+            "parameter_version": TAX_2026.version,
             "tariff": "§ 32a EStG 2026 estimate",
+            "sources": list(TAX_2026_SOURCES),
             "limitations": [
                 "This is an annual assessment estimate, not a payroll withholding calculation or tax return.",
                 "Multiple income types, spouse income, loss carryforwards and individual special expenses require additional inputs.",

@@ -20,6 +20,7 @@ const StepInvestment = lazy(() => import('./components/StepInvestment'));
 const StepRetirement = lazy(() => import('./components/StepRetirement'));
 const AdvisorDrawer = lazy(() => import('./components/AdvisorDrawer'));
 const GDPRConsentModal = lazy(() => import('./components/GDPRConsentModal'));
+const AuditDossierModal = lazy(() => import('./components/AuditDossierModal'));
 
 const ErrorFallback = ({ error, resetError }) => (
   <div style={{
@@ -155,6 +156,7 @@ function App() {
   const logout = useAuthStore((state) => state.logout);
   const login = useAuthStore((state) => state.login);
   const [isGDPROpen, setIsGDPROpen] = useState(false);
+  const [isAuditDossierOpen, setIsAuditDossierOpen] = useState(false);
   const [hasLoadedAdvisor, setHasLoadedAdvisor] = useState(isAdvisorDrawerOpen);
   const [analysisState, setAnalysisState] = useState({ status: analysis ? 'success' : 'idle', error: null });
   const [analysisRetryKey, setAnalysisRetryKey] = useState(0);
@@ -298,6 +300,7 @@ function App() {
         setStep={setCurrentStep}
         onSubStepChange={setSubStepForCurrent}
         onOpenGDPR={() => setIsGDPROpen(true)}
+        onOpenAuditDossier={() => setIsAuditDossierOpen(true)}
         onOpenAdvisor={() => {
           setHasLoadedAdvisor(true);
           setIsAdvisorDrawerOpen(true);
@@ -438,6 +441,14 @@ function App() {
               onClose={() => setIsGDPROpen(false)}
               profile={profile}
               onResetData={handleResetData}
+            />
+          )}
+          {isAuditDossierOpen && (
+            <AuditDossierModal
+              isOpen={isAuditDossierOpen}
+              onClose={() => setIsAuditDossierOpen(false)}
+              profile={effectiveProfile}
+              analysis={analysis}
             />
           )}
         </Suspense>

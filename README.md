@@ -10,11 +10,11 @@
 The **AI Financial Consultant** is an educational household finance decision-support platform tailored to the German statutory system. Unlike consumer budgeting apps that rely on generic percentage rules or ungrounded AI chat completions, this system connects **income tax**, **social insurance**, **private wealth accumulation**, **protection needs**, and **statutory pension** into a unified, mathematically verifiable financial model.
 
 ### Key Engineering Principles
-- **Authoritative Server Truth**: All financial, actuarial, and scoring logic runs in pure, typed Python modules on the backend. The frontend never runs an independent or desynchronized scoring model.
+- **Server-Owned Planning Results**: Primary financial, actuarial, and scoring results run in Python modules on the backend. A small number of client-side preview/fallback estimates remain and are tracked in the [financial model register](docs/model-register.md).
 - **Strict API Boundary Contracts**: Runtime response schema validation guards against NaN/non-finite calculations, preventing corrupted chart states.
 - **Explicit Profile vs. Scenario Isolation**: What-if simulations are isolated in ephemeral override buffers. Hypothetical explorations never mutate persisted profile data without explicit confirmation.
 - **Defence-in-Depth Security**: Stateless access tokens paired with revocable, database-backed refresh token families with automatic reuse detection and HTTP-only cookies.
-- **Universal Accessibility**: Automated WCAG 2.1 AA compliance verified with Axe-core, semantic HTML, and full keyboard navigation.
+- **Accessibility Testing**: Automated axe checks, semantic HTML, keyboard tests, and responsive browser tests cover critical journeys. These checks reduce regressions but do not constitute a WCAG conformance audit.
 
 ---
 
@@ -36,7 +36,7 @@ The **AI Financial Consultant** is an educational household finance decision-sup
 │                 Zustand (Immer + Persist Middleware)                        │
 │                               │                                             │
 │                 Runtime Schema Validation (analysisSchema.js)               │
-│                 Axe-Core Automated WCAG 2.1 AA Test Suite                   │
+│                 Axe + keyboard accessibility regression tests               │
 └───────────────────────────────┬─────────────────────────────────────────────┘
                                 │ JSON REST API (HTTP-only Session Cookies)
                                 ▼
@@ -68,7 +68,7 @@ The **AI Financial Consultant** is an educational household finance decision-sup
 Every calculation is traceable to German legal code and actuarial industry standards:
 
 ### A. German Income Tax (§ 32a EStG — 2026 Baseline)
-- **Grundfreibetrag**: €11,784 basic tax-free allowance.
+- **Grundfreibetrag**: €12,348 basic tax-free allowance for the 2026 parameter set.
 - **Progressive Tariff Zones**: Implements the piecewise polynomial formula for Zone 2 (initial progressive zone) and Zone 3 (upper progressive zone) through Spitzensteuersatz (42%) and Reichensteuer (45%).
 - **Ehegattensplitting (§ 32a Abs. 5 EStG)**: Exact dual-bracket assessment with option for separate or joint filing.
 - **Solidaritätszuschlag (§ 32a Abs. 1 SolzG)**: Calculated with statutory zero-zone exemption thresholds (€18,130 single / €36,260 married).
@@ -92,13 +92,13 @@ Every calculation is traceable to German legal code and actuarial industry stand
 - **Vorabpauschale (§ 18 InvStG)**: Models baseline interest yields on accumulating ETFs against year-end performance.
 
 ### D. Statutory Pension & Rentenlücke (SGB VI)
-- **Entgeltpunkte (EP)**: Accurate points accumulation based on average wage ratio.
+- **Entgeltpunkte (EP)**: Estimated points accumulation based on the modeled average-wage ratio.
 - **Zugangsfaktor & Rentenwert**: Standard statutory pension formula (`EP × ZF × RAF × AR`).
 - **Inflation & Purchasing Power**: Models nominal pension growth vs. consumer inflation over 20–40 year accumulation and decumulation horizons.
 - **Company Pension (bAV)**: Subsidized corporate plans (§ 1a BetrAVG) modeled with mandatory 15% employer matching and deferred taxation.
 
-### E. Financial Health Audit (DIN 77230 Standard)
-Calculates an authoritative 100-point resilience score broken into 5 audited pillars:
+### E. Financial Health Heuristic (DIN 77230-Informed Workflow)
+Calculates an internal 100-point planning score across five pillars. It is not a DIN certification, conformity assessment, or substitute for a complete DIN 77230 analysis:
 1. **Emergency Liquidity**: 3–6 months essential commitments funded in liquid cash.
 2. **Cash-Flow Capacity**: 20% sustainable savings rate target after all fixed and variable costs.
 3. **Debt Sustainability**: Hard ceiling of 25% debt-service-to-net-income ratio.
@@ -168,7 +168,7 @@ A dedicated test (`backend/tests/benchmark_concurrency.py`) benchmarks concurren
 | `/api/analyze` | 20 | ~4.5 s | ~4.5 s | 0.0% | Non-starving worker threads |
 | `/api/health` | 5 | ~3.5 s | ~4.2 s | 0.0% | 100% Availability under load |
 
-*Note: On multi-core production deployments running under Gunicorn with Uvicorn worker processes (`WEB_CONCURRENCY=4`), CPU load distributes across multiple Python processes, reducing concurrent p50 latency to < 180 ms.*
+These figures are local benchmark observations, not production service-level objectives. Record deployment hardware, worker count, dataset, command, and commit SHA whenever publishing updated results.
 
 ---
 
@@ -237,20 +237,28 @@ npm run dev
 ### Running Test Suites
 
 ```bash
-# Backend unit, actuarial, and security tests (138 tests):
+# Backend unit, model-validation, integration, and security tests:
 cd backend
 pytest -v
+
+# Focused financial reference and convergence evidence:
+pytest tests/test_model_validation.py tests/test_cross_surface_consistency.py -v
 
 # Backend concurrency and latency benchmark:
 pytest tests/benchmark_concurrency.py -s
 
-# Frontend unit and accessibility tests (23 files, 183 tests):
+# Frontend unit and accessibility tests:
 cd frontend
 npx vitest run
 
 # Production build verification:
 npm run build
+
+# Critical Chromium user journeys:
+npx playwright test --workers=1
 ```
+
+The latest local run completed 203 backend tests, 198 frontend tests, and 12 Chromium browser tests. One PostgreSQL-specific test is skipped without `TEST_POSTGRES_URL`; CI supplies a PostgreSQL service. Counts are evidence from that run, not a substitute for reviewing coverage scope. Financial assumptions and remaining validation work are recorded in the [financial model register](docs/model-register.md).
 
 ---
 

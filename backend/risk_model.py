@@ -95,7 +95,7 @@ def evaluate_risk_profile(profile: Dict[str, Any], analysis: Dict[str, Any]) -> 
     composite_score = (capacity_score * 0.60) + (tolerance_score * 0.40)
     
     if composite_score >= 75.0 and len(anomalies) <= 1:
-        suitability_tier = "High-Growth Institutional Accumulator"
+        suitability_tier = "High-Growth Accumulator"
         recommended_equity_weight = 0.85
         strategy_id = "factor_tilt"
     elif composite_score >= 50.0:

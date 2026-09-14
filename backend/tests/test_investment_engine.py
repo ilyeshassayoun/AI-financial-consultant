@@ -6,6 +6,9 @@ and portfolio allocation integrity.
 import sys
 import os
 import math
+import random
+
+import pytest
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
 
@@ -18,6 +21,7 @@ from investment_engine import (
     PORTFOLIO_MODELS,
     CORRELATION_MATRIX,
     ASSET_ORDER,
+    MODEL_ASSUMPTION_VERSION,
 )
 
 
@@ -73,6 +77,11 @@ class TestCapitalGainsTax:
         tax, used = _apply_german_capital_gains_tax(500, 1000.0)
         expected_tax = 500 * 0.26375
         assert abs(tax - expected_tax) < 0.01
+
+    def test_allowance_usage_is_bounded(self):
+        tax, used = _apply_german_capital_gains_tax(500, 1500)
+        assert tax == pytest.approx(500 * 0.26375)
+        assert used == 1000.0
 
 
 class TestPortfolioModels:
@@ -162,6 +171,25 @@ class TestSimulateInvestment:
         """Max drawdown should be between 0 and 100%."""
         result = simulate_investment(0, 500, 20, 'high')
         assert 0 <= result['max_drawdown_pct'] <= 100
+
+    def test_model_metadata_discloses_scenario_assumptions(self):
+        result = simulate_investment(1000, 100, 5, 'medium', num_simulations=25, seed=7)
+        metadata = result['model_metadata']
+        assert metadata['assumption_version'] == MODEL_ASSUMPTION_VERSION
+        assert metadata['simulation_count'] == 25
+        assert metadata['seed'] == 7
+        assert len(metadata['limitations']) >= 3
+
+    def test_simulation_is_deterministic_without_mutating_global_rng(self):
+        random.seed(99)
+        expected_next_random = random.random()
+        random.seed(99)
+
+        first = simulate_investment(1000, 100, 5, 'medium', num_simulations=25, seed=11)
+        second = simulate_investment(1000, 100, 5, 'medium', num_simulations=25, seed=11)
+
+        assert first['projected_p50'] == second['projected_p50']
+        assert random.random() == expected_next_random
 
 
 if __name__ == '__main__':

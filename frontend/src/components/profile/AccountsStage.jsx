@@ -4,7 +4,7 @@ import {
   TrendingUp, Wallet, Layers, Building2, PieChart as PieIcon, Check 
 } from 'lucide-react';
 
-export const INSURANCE_HOLDINGS = [
+const INSURANCE_HOLDINGS = [
   { id: 'Liability', label: 'Personal Liability', statute: 'Full Civil Protection', icon: ShieldCheck },
   { id: 'BU', label: 'Income & Disability (BU)', statute: '80% Net Salary Shield', icon: Shield },
   { id: 'PKV', label: 'Private Health (PKV)', statute: 'Executive Care', icon: Activity },
@@ -12,7 +12,7 @@ export const INSURANCE_HOLDINGS = [
   { id: 'Contents', label: 'Home Contents & Cyber', statute: 'Valuables & Fraud Cover', icon: Key }
 ];
 
-export const ASSET_HOLDINGS = [
+const ASSET_HOLDINGS = [
   { id: 'etf', label: 'Global ETF Portfolio', desc: 'Low-cost core equities', icon: TrendingUp },
   { id: 'emergency_fund', label: 'Cash Emergency Fund', desc: '3-6 months liquidity reserve', icon: Wallet },
   { id: 'bav', label: 'Company Pension (bAV)', desc: 'Employer subsidized pension', icon: Layers },

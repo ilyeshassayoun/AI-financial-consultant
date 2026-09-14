@@ -12,6 +12,9 @@ import random
 from typing import Any, Dict, List
 
 
+MODEL_ID = "multi-strategy-investment-lab"
+MODEL_ASSUMPTION_VERSION = "advanced-investment-cma-illustrative-2026.1"
+
 ASSETS: Dict[str, Dict[str, Any]] = {
     "world_equity": {"label": "Developed-world equity", "return": .067, "vol": .155, "yield": .018, "color": "#10251a"},
     "em_equity": {"label": "Emerging-market equity", "return": .074, "vol": .205, "yield": .026, "color": "#b8964f"},
@@ -439,6 +442,8 @@ def build_investment_lab(profile: Dict[str, Any]) -> Dict[str, Any]:
             "real_estate": _real_estate_case(profile, years),
             "stress_matrix": [{"id": item["id"], "name": item["name"], **stresses[item["id"]]} for item in strategies],
             "methodology": {
+                "model_id": MODEL_ID,
+                "assumption_version": MODEL_ASSUMPTION_VERSION,
                 "simulations_per_strategy": 600, "seed": 9173,
                 "return_model": "Lognormal annual returns using fixed portfolio covariance assumptions and mid-year cash-flow timing",
                 "fee_model": "Profile management_fee is the all-in annual portfolio cost, deducted multiplicatively. Listed instrument TERs are examples, not additional charges.",
@@ -446,4 +451,10 @@ def build_investment_lab(profile: Dict[str, Any]) -> Dict[str, Any]:
                 "risk_model": "Drawdown uses a unitized index excluding deposits, sampled annually (not intra-year). Sortino uses simulated downside deviation below a 2% annual target; Sharpe uses model moments.",
                 "tax_model": "Illustrative German private-investor horizon-liquidation estimate using 2026 statutory baseline assumptions",
                 "basis": "Forward-looking nominal capital-market assumptions; results are distributions, not predictions.",
+                "value_basis": "Strategy percentiles are nominal EUR; real_p50 is discounted using expected_inflation; after_tax_terminal is an illustrative horizon-liquidation estimate.",
+                "limitations": [
+                    "Sampling stability does not validate the capital-market assumptions.",
+                    "Returns are sampled annually and do not capture intra-year drawdowns or changing regimes.",
+                    "Instrument names illustrate implementation candidates and are not personal recommendations.",
+                ],
             }}

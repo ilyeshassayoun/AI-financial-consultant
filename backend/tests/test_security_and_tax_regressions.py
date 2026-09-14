@@ -31,6 +31,27 @@ def test_production_requires_secure_session_cookies():
         settings.validate_deployment()
 
 
+def test_production_rejects_wildcard_cors():
+    settings = Settings(
+        APP_ENV="production",
+        JWT_SECRET_KEY="a" * 32,
+        COOKIE_SECURE=True,
+        CORS_ORIGINS="*",
+    )
+    with pytest.raises(RuntimeError, match="CORS_ORIGINS"):
+        settings.validate_deployment()
+
+
+def test_production_accepts_explicit_https_origin():
+    settings = Settings(
+        APP_ENV="production",
+        JWT_SECRET_KEY="a" * 32,
+        COOKIE_SECURE=True,
+        CORS_ORIGINS="https://finance.example",
+    )
+    settings.validate_deployment()
+
+
 def test_joint_tax_includes_spouse_income_and_separate_contribution_ceilings():
     sole_earner = calculate_german_tax(
         gross_income=60_000,
@@ -55,4 +76,3 @@ def test_chat_routes_require_an_authenticated_session():
     client = TestClient(app)
     response = client.post("/api/chat", json={"profile": {}, "messages": []})
     assert response.status_code == 401
-

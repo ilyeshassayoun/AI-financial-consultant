@@ -1,9 +1,9 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { cleanup, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import GoalsStage, { AVAILABLE_GOALS } from './GoalsStage';
+import GoalsStage from './GoalsStage';
 import TimelineStage from './TimelineStage';
-import AccountsStage, { INSURANCE_HOLDINGS, ASSET_HOLDINGS } from './AccountsStage';
+import AccountsStage from './AccountsStage';
 import FinancialHealthStage from './FinancialHealthStage';
 import ProfileJourneyNavigation from './ProfileJourneyNavigation';
 

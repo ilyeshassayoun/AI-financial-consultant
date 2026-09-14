@@ -1,0 +1,17 @@
+{
+  "source": "https://www.gesetze-im-internet.de/estg/__32a.html",
+  "effective_year": 2026,
+  "retrieved_on": "2026-09-14",
+  "scope": "Tariff-only reference values calculated directly from the published section 32a equations; excludes deductions, credits, surcharges and social insurance.",
+  "tolerance_eur": 0.000001,
+  "cases": [
+    {"name": "allowance ceiling", "taxable_income_eur": 12348, "expected_tariff_tax_eur": 0.0},
+    {"name": "first taxable euro", "taxable_income_eur": 12349, "expected_tariff_tax_eur": 0.14000915},
+    {"name": "end of first progression zone", "taxable_income_eur": 17799, "expected_tariff_tax_eur": 1034.87202349},
+    {"name": "start of second progression zone", "taxable_income_eur": 17800, "expected_tariff_tax_eur": 1035.10970173},
+    {"name": "end of second progression zone", "taxable_income_eur": 69878, "expected_tariff_tax_eur": 18213.06299917},
+    {"name": "start of 42 percent zone", "taxable_income_eur": 69879, "expected_tariff_tax_eur": 18213.55},
+    {"name": "end of 42 percent zone", "taxable_income_eur": 277825, "expected_tariff_tax_eur": 105550.87},
+    {"name": "start of 45 percent zone", "taxable_income_eur": 277826, "expected_tariff_tax_eur": 105551.32}
+  ]
+}

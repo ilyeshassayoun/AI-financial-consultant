@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Activity, AlertTriangle, ArrowLeft, ArrowRight, ArrowUpRight, ChartNoAxesCombined, Check, CircleDollarSign, Compass, FileText, Info, Layers3, Printer, Scale, ShieldCheck, Sparkles, Target, TrendingDown } from 'lucide-react';
 import { Area, AreaChart, Bar, BarChart, CartesianGrid, Cell, Legend, Pie, PieChart, ReferenceLine, ResponsiveContainer, Scatter, ScatterChart, Tooltip, XAxis, YAxis, ZAxis } from 'recharts';
-import HistoricalBacktestChart from './HistoricalBacktestChart';
+import StressTestFragilityLab from './StressTestFragilityLab';
 import PropertyView from './PropertyView';
 import { screenInvestment } from './investmentSuitability';
 import BrokerDepotSimulator from './BrokerDepotSimulator';
@@ -126,7 +126,7 @@ export default function InvestmentLaboratory({ profile, updateProfile, lab, subS
         <header className="investment-hero">
           <div>
             <span className="investment-eyebrow">Quantitative ETF Allocation · Core Quantitative Comparison</span>
-            <h1 id="investment-lab-title">Institutional Wealth Architecture</h1>
+            <h1 id="investment-lab-title">Investment Strategy Laboratory</h1>
             <p>{lab.methodology?.simulations_per_strategy ?? '—'}-draw Monte Carlo simulations with an all-in annual fee assumption and illustrative German horizon-liquidation tax estimates across five strategies.</p>
           </div>
           <div className="investment-readiness">
@@ -160,7 +160,7 @@ export default function InvestmentLaboratory({ profile, updateProfile, lab, subS
         {page === 0 && <GoalPage profile={profile} updateProfile={updateProfile} previewScenario={onPreviewScenario || updateProfile} selected={selected} requiredReturn={requiredReturn} requiredMonthly={requiredMonthly} optimizer={lab.goal_optimizer}/>} 
         {page === 1 && <RiskPage answers={answers} answer={answer} recommendation={recommendation}/>} 
         {page === 2 && <StrategyPage strategies={strategies || []} selected={selected} selectedId={lab.selected_strategy} recommendedId={recommendationId} updateProfile={updateProfile}/>} 
-        {page === 3 && <TestPage view={testView} setView={setTestView} selected={selected} comparison={comparison} target={lab.target_wealth} matrix={lab.stress_matrix || []}/>} 
+        {page === 3 && <TestPage view={testView} setView={setTestView} selected={selected} comparison={comparison} target={lab.target_wealth} matrix={lab.stress_matrix || []} profile={profile}/>}
         {page === 4 && <TaxPage tax={lab.tax_analysis || selected.tax || {}} selected={selected}/>}
         {page === 5 && <BuildPage view={buildView} setView={setBuildView} selected={selected} property={lab.real_estate || {}} profile={profile} updateProfile={updateProfile}/>} 
         {page === 6 && <DecisionPage selected={selected} profile={profile} policy={displayedPolicy} tax={lab.tax_analysis || {}} optimizer={lab.goal_optimizer || {}} onChangeStrategy={() => move(2)}/>}
@@ -294,8 +294,8 @@ function StrategyFrontier({ strategies, selectedId, recommendedId }) {
   return <article className="guide-frontier"><div className="lab-chart-title"><div><span>Forward-looking opportunity set</span><h2>Expected return versus modeled risk</h2></div><small>Bubble size = goal probability</small></div><div><ResponsiveContainer width="100%" height="100%"><ScatterChart margin={{top:14,right:16,bottom:12,left:0}}><CartesianGrid stroke="#e3e9e0" strokeDasharray="3 3"/><XAxis type="number" dataKey="risk" name="Risk" unit="%" domain={[4,17]} tick={{fontSize:12}} label={{value:'Annual volatility',position:'insideBottom',offset:-8,fontSize:12}}/><YAxis type="number" dataKey="return" name="Return" unit="%" domain={[3.5,7.5]} tick={{fontSize:12}} label={{value:'Expected return',angle:-90,position:'insideLeft',fontSize:12}}/><ZAxis type="number" dataKey="probability" range={[150,650]}/><Tooltip cursor={{strokeDasharray:'4 4'}} content={({active,payload}) => active && payload?.[0] ? <div className="frontier-tooltip"><strong>{payload[0].payload.name}</strong><span>Return {payload[0].payload.return.toFixed(1)}%</span><span>Risk {payload[0].payload.risk.toFixed(1)}%</span></div> : null}/><Scatter data={data} animationDuration={1200}>{data.map(item => <Cell key={item.id} fill={item.id===selectedId?'#173d29':item.id===recommendedId?'#c2a15c':'#91a497'} stroke={item.id===selectedId?'#c2a15c':'#fff'} strokeWidth={item.id===selectedId?4:2}/>)}</Scatter></ScatterChart></ResponsiveContainer></div><p>Higher expected return is not automatically superior. The mandate must survive the volatility and tail-loss budget shown here.</p></article>;
 }
 
-function TestPage({ view, setView, selected, comparison, target, matrix }) {
-  return <div><div className="guide-intro"><Activity/><div><h3>Test both the expected journey and the uncomfortable one.</h3><p>Switch between outcome distributions and crisis analogues before accepting the strategy.</p></div></div><ViewSwitch view={view} setView={setView} options={[["projection","Probability map"],["stress","Crisis laboratory"]]}/>{view === 'projection' ? <ProjectionView selected={selected} comparison={comparison} target={target}/> : <StressView matrix={matrix}/>}</div>;
+function TestPage({ view, setView, selected, comparison, target, matrix, profile }) {
+  return <div><div className="guide-intro"><Activity/><div><h3>Test both the expected journey and the uncomfortable one.</h3><p>Switch between outcome distributions and crisis analogues before accepting the strategy.</p></div></div><ViewSwitch view={view} setView={setView} options={[["projection","Probability map"],["stress","Crisis laboratory"]]}/>{view === 'projection' ? <ProjectionView selected={selected} comparison={comparison} target={target}/> : <StressView matrix={matrix} profile={profile}/>}</div>;
 }
 
 function TaxPage({ tax, selected }) {
@@ -347,13 +347,13 @@ function AllocationView({ selected, profile }) {
   </div>;
 }
 
-function StressView({ matrix }) {
+function StressView({ matrix, profile }) {
   const data = matrix.map(item => ({ ...item, gfc:Math.round(item.gfc*100), covid:Math.round(item.covid*100), rate_shock:Math.round(item.rate_shock*100), stagflation:Math.round(item.stagflation*100) }));
   return <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+    <StressTestFragilityLab profile={profile} initialMode="accumulation" />
     <div className="lab-stress">
       <article className="lab-chart-card lab-chart-card--wide"><div className="lab-chart-title"><div><span>Historical analogues</span><h2>How allocations behave when diversification is needed</h2></div><div className="scenario-badge">Illustrative shocks</div></div><div className="lab-chart lab-chart--stress"><ResponsiveContainer width="100%" height="100%"><BarChart data={data}><CartesianGrid vertical={false} stroke="#e8ece5"/><XAxis dataKey="name" tick={{fontSize:10}} interval={0} axisLine={false}/><YAxis unit="%" axisLine={false}/><Tooltip formatter={v => `${v}%`} contentStyle={{borderRadius:12}}/><Legend/><Bar dataKey="gfc" name="Global financial crisis" fill="#7f3838" radius={[4,4,0,0]} animationDuration={700}/><Bar dataKey="covid" name="Fast equity shock" fill="#b85d52" radius={[4,4,0,0]} animationDuration={850}/><Bar dataKey="rate_shock" name="Rate shock" fill="#c49a55" radius={[4,4,0,0]} animationDuration={1000}/><Bar dataKey="stagflation" name="Stagflation" fill="#7e8f78" radius={[4,4,0,0]} animationDuration={1150}/></BarChart></ResponsiveContainer></div></article>
       <aside className="lab-risk-notes"><TrendingDown/><h2>Drawdown capacity is a constraint</h2><p>A strategy is only suitable if the investor can remain invested through its plausible loss range. The lowest modeled decline is not automatically “best”: lower risk generally lowers expected terminal wealth.</p><div><strong>Rebalancing rule</strong><span>Review annually or at ±5 percentage-point drift.</span></div><div><strong>Liquidity rule</strong><span>Keep emergency reserves outside this portfolio.</span></div><div><strong>Decision rule</strong><span>Choose a strategy consistent with your capacity, goals and liquidity needs; a high backtest return is not a suitability test.</span></div></aside>
     </div>
-    <HistoricalBacktestChart />
   </div>;
 }

@@ -1,8 +1,10 @@
-import React, { useRef } from 'react';
-import { X, Award, Printer } from 'lucide-react';
+import React, { useState, useRef } from 'react';
+import { X, Award, Printer, ShieldCheck } from 'lucide-react';
 import { FocusTrap } from './FocusTrap';
+import AuditDossierModal from './AuditDossierModal';
 
-export default function ExecutiveMasterplanModal({ isOpen, onClose, analysis }) {
+export default function ExecutiveMasterplanModal({ isOpen, onClose, analysis, profile }) {
+  const [isDossierOpen, setIsDossierOpen] = useState(false);
   const modalRef = useRef(null);
 
   if (!isOpen) return null;
@@ -108,7 +110,7 @@ export default function ExecutiveMasterplanModal({ isOpen, onClose, analysis }) 
               </span>
             </div>
             <span style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', fontWeight: 600 }}>
-              Institutional Wealth Advisory • German Statutory Compliance (§ 32a EStG, SGB VI, § 20 InvStG, § 823 BGB)
+              Financial planning analysis • German statutory references (§ 32a EStG, SGB VI, § 20 InvStG, § 823 BGB)
             </span>
           </div>
         </div>
@@ -141,7 +143,7 @@ export default function ExecutiveMasterplanModal({ isOpen, onClose, analysis }) 
               </div>
             </div>
             <div>
-              <div style={{ fontSize: '1.1rem', fontWeight: 800, color: 'var(--text-primary)' }}>Institutional Grade</div>
+              <div style={{ fontSize: '1.1rem', fontWeight: 800, color: 'var(--text-primary)' }}>Versioned Planning Model</div>
               <div style={{ fontSize: '0.78rem', color: 'var(--text-secondary)' }}>Top 5% Solvency &amp; Protection</div>
             </div>
           </div>
@@ -239,13 +241,30 @@ export default function ExecutiveMasterplanModal({ isOpen, onClose, analysis }) 
         {/* Footer Actions */}
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingTop: '16px', borderTop: '1px solid var(--border-architectural)', flexWrap: 'wrap', gap: '10px' }}>
           <button type="button" className="btn-secondary" onClick={onClose}>Close Report</button>
-          <button type="button" className="btn-brand" onClick={() => window.print()}>
-            <Printer size={16} /> Export Certified PDF Audit Report
-          </button>
+          <div style={{ display: 'flex', gap: '10px' }}>
+            <button
+              type="button"
+              className="btn-secondary"
+              onClick={() => setIsDossierOpen(true)}
+              style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}
+            >
+              <ShieldCheck size={16} color="var(--maison-gold)" />
+              Verified Dossier (SHA-256)
+            </button>
+            <button type="button" className="btn-brand" onClick={() => window.print()}>
+              <Printer size={16} /> Export Certified PDF Audit Report
+            </button>
+          </div>
         </div>
 
       </div>
     </div>
+    <AuditDossierModal
+      isOpen={isDossierOpen}
+      onClose={() => setIsDossierOpen(false)}
+      profile={profile}
+      analysis={analysis}
+    />
     </>
   );
 }

@@ -8,6 +8,7 @@ import {
   Area, AreaChart, Bar, BarChart, CartesianGrid, Cell, Line, LineChart as ReLineChart,
   ResponsiveContainer, Tooltip, XAxis, YAxis
 } from 'recharts';
+import StressTestFragilityLab from './StressTestFragilityLab';
 import './StepRetirement.css';
 
 const pages = [
@@ -296,6 +297,9 @@ export default function StepRetirement({
               </div>
               <p className="ret-note">The simulation uses {lab.assumptions?.simulation_paths ? lab.assumptions.simulation_paths.toLocaleString() : '1,000'} seeded paths through age {lab.horizon?.longevity_age ?? 95}. Probability is model sensitivity, not a guarantee.</p>
             </article>
+          </div>
+          <div style={{ marginTop: '24px' }}>
+            <StressTestFragilityLab profile={profile} initialMode="decumulation" />
           </div>
         </>}
 

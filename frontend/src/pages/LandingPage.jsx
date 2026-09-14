@@ -266,7 +266,7 @@ export default function LandingPage({ onGetStarted }) {
           lineHeight: 1.7,
           fontWeight: 400
         }}>
-          Institutional financial modeling for German professionals and expatriates. 
+          Explainable financial planning models for German professionals and expatriates.
           Deterministic tax bracket arbitrage (§ 32a EStG), DRV pension gap liquidation, and 
           multi-scenario Monte Carlo ETF simulations — private, sovereign, and explainable.
         </p>
@@ -381,7 +381,7 @@ export default function LandingPage({ onGetStarted }) {
             textTransform: 'uppercase',
             marginBottom: 10 
           }}>
-            Institutional Wealth Modules
+            Financial Planning Modules
           </div>
           <h2 style={{ 
             fontFamily: 'var(--font-heading)',
@@ -509,7 +509,7 @@ export default function LandingPage({ onGetStarted }) {
               color: '#ffffff',
               margin: 0 
             }}>
-              Institutional Governance &amp; Privacy
+              Data Governance &amp; Privacy
             </h2>
             <p style={{ fontSize: 15, color: 'rgba(241, 245, 249, 0.6)', marginTop: 8 }}>
               Built for discerning clients who demand confidentiality, mathematical rigor, and fiduciary purity.

@@ -10,8 +10,43 @@ export class ApiError extends Error {
   }
 }
 
-async function requestJson(path, options) {
-  const response = await fetch(`${API_BASE}${path}`, options);
+/**
+ * Returns or generates a persistent distributed correlation ID for tracing.
+ */
+export function getCorrelationId() {
+  if (typeof window === 'undefined') return 'cid-test-correlation-id';
+  try {
+    let id = window.sessionStorage?.getItem('x-correlation-id');
+    if (!id) {
+      id = typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function'
+        ? crypto.randomUUID()
+        : 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
+            const r = (Math.random() * 16) | 0;
+            return (c === 'x' ? r : (r & 0x3) | 0x8).toString(16);
+          });
+      window.sessionStorage?.setItem('x-correlation-id', id);
+    }
+    return id;
+  } catch {
+    return 'cid-fallback-id';
+  }
+}
+
+function buildHeaders(customHeaders = {}) {
+  const correlationId = getCorrelationId();
+  return {
+    'Content-Type': 'application/json',
+    ...(correlationId ? { 'X-Correlation-ID': correlationId } : {}),
+    ...customHeaders
+  };
+}
+
+async function requestJson(path, options = {}) {
+  const headers = buildHeaders(options.headers);
+  const response = await fetch(`${API_BASE}${path}`, {
+    ...options,
+    headers
+  });
   const contentType = response.headers?.get?.('content-type') || '';
   let payload = null;
 
@@ -58,7 +93,6 @@ export async function fetchFullAnalysis(profile, signal) {
   const payload = await requestJson('/api/analyze', {
     method: 'POST',
     credentials: 'include',
-    headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(profile),
     signal
   });
@@ -70,7 +104,6 @@ export async function fetchConsultantInsight(profile, step, signal) {
     return await requestJson('/api/consultant/insight', {
       method: 'POST',
       credentials: 'include',
-      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ profile, step }),
       signal
     });
@@ -85,7 +118,6 @@ export async function fetchChatReply(profile, messages, signal) {
     return await requestJson('/api/chat', {
       method: 'POST',
       credentials: 'include',
-      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ profile, messages }),
       signal
     });
@@ -95,15 +127,53 @@ export async function fetchChatReply(profile, messages, signal) {
   }
 }
 
-export async function streamChatReply(profile, messages, onChunk, signal) {
+/**
+ * Fetch multi-asset historical regime stress testing simulation (/api/lab/stress-test).
+ */
+export async function fetchStressTest(payload, signal) {
+  return await requestJson('/api/lab/stress-test', {
+    method: 'POST',
+    credentials: 'include',
+    body: JSON.stringify(payload),
+    signal
+  });
+}
+
+/**
+ * Real-Time Streaming AI & Client Synchronization (SSE).
+ * Parses tokens and structured function events:
+ * - highlight_metric
+ * - delta_badge
+ * - patch_proposal / optimization_patch
+ * - statutory_citation
+ *
+ * @param {Object} profile
+ * @param {Array} messages
+ * @param {Function} onChunk - Receives raw token text chunks
+ * @param {Function|AbortSignal} [onEventOrSignal] - Structured event callback or AbortSignal
+ * @param {AbortSignal} [maybeSignal] - AbortSignal if onEvent callback is supplied
+ */
+export async function streamChatReply(profile, messages, onChunk, onEventOrSignal, maybeSignal) {
+  let onEvent = null;
+  let signal = null;
+
+  if (typeof onEventOrSignal === 'function') {
+    onEvent = onEventOrSignal;
+    signal = maybeSignal || null;
+  } else if (onEventOrSignal && typeof onEventOrSignal === 'object') {
+    signal = onEventOrSignal;
+  }
+
   try {
+    const headers = buildHeaders();
     const response = await fetch(`${API_BASE}/api/chat/stream`, {
       method: 'POST',
       credentials: 'include',
-      headers: { 'Content-Type': 'application/json' },
+      headers,
       body: JSON.stringify({ profile, messages }),
       signal
     });
+
     if (!response.ok) {
       // Fallback to non-streaming if stream is unsupported
       const nonStreamData = await fetchChatReply(profile, messages, signal);
@@ -126,17 +196,47 @@ export async function streamChatReply(profile, messages, onChunk, signal) {
 
       for (const line of lines) {
         const trimmed = line.trim();
-        if (trimmed.startsWith('data: ')) {
-          const payload = trimmed.slice(6);
-          if (payload === '[DONE]') return;
+        if (!trimmed) continue;
+
+        // Parse standard multi-line or single line SSE frame
+        const subLines = trimmed.split('\n');
+        let currentEventType = null;
+        let currentDataString = null;
+
+        for (const sub of subLines) {
+          const s = sub.trim();
+          if (s.startsWith('event:')) {
+            currentEventType = s.slice(6).trim();
+          } else if (s.startsWith('data:')) {
+            currentDataString = s.slice(5).trim();
+          }
+        }
+
+        if (currentDataString === '[DONE]') {
+          return;
+        }
+
+        if (currentDataString) {
           try {
-            const parsed = JSON.parse(payload);
-            if (parsed.token) {
-              onChunk(parsed.token);
+            const parsed = JSON.parse(currentDataString);
+            const eventName = currentEventType || parsed.event;
+            const eventData = parsed.data || parsed;
+
+            if (eventName === 'token' || parsed.token) {
+              const tokenText = parsed.token || eventData?.token || '';
+              if (tokenText) onChunk(tokenText);
+            } else if (eventName && ['highlight_metric', 'delta_badge', 'patch_proposal', 'optimization_patch', 'statutory_citation', 'done'].includes(eventName)) {
+              if (onEvent) {
+                onEvent({ event: eventName, data: eventData });
+              }
+            } else if (typeof parsed === 'string') {
+              onChunk(parsed);
+            } else if (onEvent && parsed.event) {
+              onEvent(parsed);
             }
           } catch {
             // Raw text fallback
-            onChunk(payload);
+            onChunk(currentDataString);
           }
         }
       }

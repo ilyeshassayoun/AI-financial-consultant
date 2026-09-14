@@ -21,6 +21,7 @@ class Settings(BaseSettings):
     FRONTEND_URL: str = "http://localhost:5173"
     DEBUG: bool = False
     COOKIE_SECURE: bool = False
+    READINESS_TIMEOUT_SECONDS: float = 1.0
 
     model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8", extra="ignore")
 
@@ -43,6 +44,10 @@ class Settings(BaseSettings):
             raise RuntimeError("JWT_SECRET_KEY must be a unique value of at least 32 characters in production")
         if self.is_production and not self.COOKIE_SECURE:
             raise RuntimeError("COOKIE_SECURE must be enabled in production")
+        if self.is_production and (
+            not self.cors_origins_list or "*" in self.cors_origins_list
+        ):
+            raise RuntimeError("CORS_ORIGINS must list explicit trusted origins in production")
 
 
 settings = Settings()

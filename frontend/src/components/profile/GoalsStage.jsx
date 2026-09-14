@@ -1,7 +1,7 @@
 import React from 'react';
 import { Target, Sun, Shield, Landmark, TrendingUp, Building2, Gem } from 'lucide-react';
 
-export const AVAILABLE_GOALS = [
+const AVAILABLE_GOALS = [
   { 
     id: 'freedom', 
     label: 'Financial Freedom & Early Retirement', 

@@ -16,3 +16,4 @@ class ProfileSnapshot(Base):
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
 
     user = relationship("User", back_populates="profiles")
+    events = relationship("ProfileEvent", back_populates="profile", cascade="all, delete-orphan", order_by="ProfileEvent.sequence_number")

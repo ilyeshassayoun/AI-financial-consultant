@@ -17,7 +17,7 @@ test.describe('End-to-End Wizard Workflow & Viewport Scaling', () => {
     await page.getByRole('button', { name: 'Build my financial plan' }).click();
 
     // Verify transition into Profile Step
-    await expect(page.getByRole('heading', { name: 'Financial Goals' })).toBeVisible({ timeout: 15000 });
+    await expect(page.getByRole('heading', { name: 'Financial Goals', exact: true })).toBeVisible({ timeout: 15000 });
   });
 
   test('navigates through wizard sections via TopNav on desktop (1440px)', async ({ page }) => {

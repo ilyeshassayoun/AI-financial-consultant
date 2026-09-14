@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
-import { Menu, X, ChevronRight, ShieldCheck, Bot } from 'lucide-react';
+import { Menu, X, ChevronRight, ShieldCheck, Bot, FileCheck } from 'lucide-react';
 import AuthNavControls from './AuthNavControls';
 import { steps } from './TopNav.constants';
 
-export default function TopNav({ currentStep, setStep, onOpenGDPR, onOpenAdvisor }) {
+export default function TopNav({ currentStep, setStep, onOpenGDPR, onOpenAdvisor, onOpenAuditDossier }) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const handleNavClick = (id) => {
@@ -151,6 +151,32 @@ export default function TopNav({ currentStep, setStep, onOpenGDPR, onOpenAdvisor
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px', minWidth: 0 }}>
           <AuthNavControls />
           
+          {/* Cryptographic Audit Dossier Trigger */}
+          {onOpenAuditDossier && (
+            <button
+              type="button"
+              aria-label="Open Cryptographic Audit Dossier"
+              onClick={onOpenAuditDossier}
+              style={{
+                background: 'var(--bg-card-subtle)',
+                border: '1px solid var(--border-architectural)',
+                color: 'var(--text-primary)',
+                padding: '6px 10px',
+                borderRadius: '8px',
+                cursor: 'pointer',
+                fontSize: '0.74rem',
+                fontWeight: 700,
+                display: 'flex',
+                alignItems: 'center',
+                gap: '5px',
+                transition: 'all 0.2s ease'
+              }}
+            >
+              <FileCheck size={13} color="var(--maison-gold)" />
+              <span className="hide-on-mobile">Audit Dossier</span>
+            </button>
+          )}
+
           {/* GDPR Privacy Modal Trigger */}
           {onOpenGDPR && (
             <button

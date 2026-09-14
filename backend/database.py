@@ -72,3 +72,18 @@ async def init_db() -> None:
     engine = get_engine()
     async with engine.connect() as conn:
         await conn.execute(text("SELECT 1"))
+
+
+def get_db_pool_stats() -> dict[str, int]:
+    try:
+        engine = get_engine()
+        sync_engine = getattr(engine, "sync_engine", engine)
+        pool = getattr(sync_engine, "pool", None)
+        if pool is not None:
+            active = pool.checkedout() if hasattr(pool, "checkedout") else 0
+            idle = pool.checkedin() if hasattr(pool, "checkedin") else 0
+            overflow = pool.overflow() if hasattr(pool, "overflow") else 0
+            return {"active": int(active), "idle": int(idle), "overflow": int(overflow)}
+    except Exception:
+        pass
+    return {"active": 0, "idle": 0, "overflow": 0}

@@ -2,6 +2,11 @@ import random
 import math
 from typing import Dict, List, Any, Tuple
 
+MODEL_ASSUMPTION_VERSION = "investment-cma-illustrative-2026.1"
+MODEL_ID = "household-investment-projection"
+BASISZINS_2026 = 0.025
+CAPITAL_GAINS_TAX_WITH_SOLI = 0.26375
+
 ASSET_CLASSES: Dict[str, Dict[str, Any]] = {
     "global_equity": {
         "name": "Global Equities (MSCI World)",
@@ -49,7 +54,7 @@ ASSET_CLASSES: Dict[str, Dict[str, Any]] = {
 
 PORTFOLIO_MODELS: Dict[str, Dict[str, Any]] = {
     "low": {
-        "label": "Conservative Wealth Preservation",
+        "label": "Conservative Planning Scenario",
         "allocation": {
             "eu_bonds": 0.45,
             "corporate_bonds": 0.20,
@@ -59,7 +64,7 @@ PORTFOLIO_MODELS: Dict[str, Dict[str, Any]] = {
         },
     },
     "medium": {
-        "label": "Balanced Core-Satellite Growth",
+        "label": "Balanced Planning Scenario",
         "allocation": {
             "global_equity": 0.40,
             "eu_equity": 0.10,
@@ -71,7 +76,7 @@ PORTFOLIO_MODELS: Dict[str, Dict[str, Any]] = {
         },
     },
     "high": {
-        "label": "High-Alpha Aggressive Accumulator",
+        "label": "Growth Planning Scenario",
         "allocation": {
             "global_equity": 0.50,
             "eu_equity": 0.15,
@@ -119,20 +124,24 @@ def _apply_german_capital_gains_tax(gains: float, used_allowance: float = 0.0) -
     Returns (tax_owed, new_total_allowance_used).
     """
     SPARERPAUSCHBETRAG = 1000.0
-    TAX_RATE = 0.26375
-    
-    remaining_allowance = max(0.0, SPARERPAUSCHBETRAG - used_allowance)
+    gains = max(0.0, float(gains))
+    used_allowance = min(SPARERPAUSCHBETRAG, max(0.0, float(used_allowance)))
+    remaining_allowance = SPARERPAUSCHBETRAG - used_allowance
     taxable_gains = max(0.0, gains - remaining_allowance)
     allowance_used = min(gains, remaining_allowance)
     
-    tax = taxable_gains * TAX_RATE
+    tax = taxable_gains * CAPITAL_GAINS_TAX_WITH_SOLI
     new_used = used_allowance + allowance_used
     return tax, new_used
 
-def _generate_correlated_returns(L: List[List[float]], asset_params: List[Tuple[float, float]]) -> List[float]:
+def _generate_correlated_returns(
+    L: List[List[float]],
+    asset_params: List[Tuple[float, float]],
+    rng: random.Random,
+) -> List[float]:
     """Generates one vector of correlated annual returns for all assets via Geometric Brownian Motion."""
     n = len(asset_params)
-    z = [random.gauss(0.0, 1.0) for _ in range(n)]
+    z = [rng.gauss(0.0, 1.0) for _ in range(n)]
     correlated_z = [sum(L[i][k] * z[k] for k in range(i + 1)) for i in range(n)]
     
     returns = []
@@ -153,16 +162,41 @@ def simulate_investment_growth(
     target_wealth: float = 0.0
 ) -> Dict[str, Any]:
     """
-    Institutional Monte Carlo Multi-Asset Investment & Tax-Drag Engine.
+    Illustrative Monte Carlo multi-asset investment and tax-drag model.
     Simulates stochastic correlated market trajectories, percentile fan curves,
     Vorabpauschale (§ 18 InvStG), Teilfreistellung (§ 20 InvStG), and Active vs. Passive cost drag.
     """
-    if seed is not None:
-        random.seed(seed)
+    initial_amount = float(initial_amount)
+    monthly_contribution = float(monthly_contribution)
+    inflation_rate = float(inflation_rate)
+    management_fee = float(management_fee)
+    target_wealth = float(target_wealth)
+    years = int(years)
+    num_simulations = int(num_simulations)
+    seed = int(seed)
 
-    initial_amount = max(0.0, float(initial_amount))
-    monthly_contribution = max(0.0, float(monthly_contribution))
-    years = max(1, int(years))
+    finite_inputs = {
+        "initial_amount": initial_amount,
+        "monthly_contribution": monthly_contribution,
+        "inflation_rate": inflation_rate,
+        "management_fee": management_fee,
+        "target_wealth": target_wealth,
+    }
+    for name, value in finite_inputs.items():
+        if not math.isfinite(value):
+            raise ValueError(f"{name} must be finite")
+    if initial_amount < 0 or monthly_contribution < 0 or target_wealth < 0:
+        raise ValueError("capital, contributions and target wealth must be non-negative")
+    if not 1 <= years <= 100:
+        raise ValueError("years must be between 1 and 100")
+    if not 10 <= num_simulations <= 100_000:
+        raise ValueError("num_simulations must be between 10 and 100000")
+    if not -0.20 <= inflation_rate <= 0.50:
+        raise ValueError("inflation_rate must be between -0.20 and 0.50")
+    if not 0.0 <= management_fee <= 0.10:
+        raise ValueError("management_fee must be between 0 and 0.10")
+
+    rng = random.Random(seed)
     
     if risk_profile not in PORTFOLIO_MODELS:
         risk_profile = "medium"
@@ -184,8 +218,8 @@ def simulate_investment_growth(
     real_final_values = []
     max_drawdowns = []
     
-    # 2026 German statutory parameters (§ 18 InvStG)
-    BASISZINS_2026 = 0.025
+    # Illustrative 2026 input for § 18 InvStG modeling. The model register
+    # tracks the open work needed before treating this as a verified tax input.
     equity_weight = sum(weights[i] for i, k in enumerate(ASSET_ORDER) if "equity" in k)
     teilfreistellung = 0.30 * equity_weight
     
@@ -196,7 +230,7 @@ def simulate_investment_growth(
         max_dd = 0.0
         
         for yr in range(1, years + 1):
-            asset_returns = _generate_correlated_returns(L, asset_params)
+            asset_returns = _generate_correlated_returns(L, asset_params, rng)
             blended_gross_return = sum(weights[i] * asset_returns[i] for i in range(len(weights)))
             blended_net_return = blended_gross_return - management_fee
             
@@ -206,9 +240,12 @@ def simulate_investment_growth(
             actual_growth = max(0.0, start_val * max(0.0, blended_net_return))
             vorabpauschale = min(basisertrag, actual_growth)
             taxable_vorab = max(0.0, vorabpauschale * (1.0 - teilfreistellung))
-            tax_drag = taxable_vorab * 0.26375
+            tax_drag = taxable_vorab * CAPITAL_GAINS_TAX_WITH_SOLI
             
-            realized_return = blended_net_return - (tax_drag / start_val if start_val > 0 else 0.0)
+            realized_return = max(
+                -1.0,
+                blended_net_return - (tax_drag / start_val if start_val > 0 else 0.0),
+            )
             
             portfolio_val = (portfolio_val + annual_contribution * 0.5) * (1.0 + realized_return) + annual_contribution * 0.5
             portfolio_val = max(0.0, portfolio_val)
@@ -296,6 +333,23 @@ def simulate_investment_growth(
     monthly_swr_3_5pct = (p50 * 0.035) / 12.0
 
     return {
+        "model_metadata": {
+            "model_id": MODEL_ID,
+            "assumption_version": MODEL_ASSUMPTION_VERSION,
+            "seed": seed,
+            "simulation_count": num_simulations,
+            "return_basis": "illustrative nominal capital-market assumptions",
+            "value_basis": {
+                "projected_percentiles": "nominal EUR after the modeled annual fee and simplified advance-lump-sum tax drag",
+                "real_percentiles": f"EUR purchasing power discounted at {inflation_rate:.4f} annual inflation",
+            },
+            "cash_flow_timing": "annual contributions approximated as half at the start and half at the end of each model year",
+            "limitations": [
+                "Expected returns, volatility and correlations are scenarios, not forecasts.",
+                "Tax drag is simplified and does not replace a transaction-level German tax calculation.",
+                "Fund tracking difference, spreads, custody costs and investor-specific taxes are excluded.",
+            ],
+        },
         "portfolio_label": label,
         "risk_profile": risk_profile,
         "years": years,
@@ -331,4 +385,3 @@ def simulate_investment_growth(
 
 # Backwards-compatible alias
 simulate_investment = simulate_investment_growth
-

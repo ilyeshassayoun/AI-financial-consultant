@@ -46,7 +46,7 @@ test.describe('Welcome Step', () => {
     await page.getByRole('button', { name: 'Open navigation menu' }).click();
     await expect(page.getByRole('button', { name: 'Open AI Concierge' })).toBeVisible();
     await page.getByRole('button', { name: 'Open AI Concierge' }).click();
-    await expect(page.getByRole('dialog', { name: 'AI Support Desk' })).toBeVisible({ timeout: 15000 });
+    await expect(page.getByRole('dialog', { name: 'AI Wealth Concierge Advisory Drawer' })).toBeVisible({ timeout: 15000 });
   });
 
   test('investment analysis failure offers a retry', async ({ page }) => {
@@ -66,7 +66,7 @@ test.describe('Profile Step - Financial Goals (after navigation)', () => {
     await page.goto('/');
     await page.waitForLoadState('domcontentloaded');
     await page.getByRole('button', { name: 'Build my financial plan' }).click();
-    await expect(page.getByRole('heading', { name: 'Financial Goals' })).toBeVisible({ timeout: 30000 });
+    await expect(page.getByRole('heading', { name: 'Financial Goals', exact: true })).toBeVisible({ timeout: 30000 });
   });
 
   test('should display 6 goal cards', async ({ page }) => {

@@ -1,5 +1,5 @@
 """
-Unit tests for the German tax calculator (2024).
+Unit tests for the German tax calculator (2026).
 Tests the progressive polynomial formula, all 6 Steuerklassen,
 Kinderfreibetrag vs Kindergeld Günstigerprüfung, Pendlerpauschale,
 and social security calculations.
@@ -12,30 +12,31 @@ import math
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
 
 from tax_calculator import _calculate_grundtarif, calculate_german_tax, calculate_tax
+from statutory_parameters import TAX_2026, TAX_2026_SOURCES
 
 
 class TestGrundtarif:
-    """Tests for the 2024 progressive tax formula (§ 32a EStG)."""
+    """Tests for the 2026 progressive tax formula (§ 32a EStG)."""
 
     def test_zone_0_grundfreibetrag(self):
-        """Income up to 11,604€ is completely tax-free (Grundfreibetrag)."""
+        """Income through the configured 2026 Grundfreibetrag is tax-free."""
         assert _calculate_grundtarif(0) == 0.0
         assert _calculate_grundtarif(5000) == 0.0
-        assert _calculate_grundtarif(12348) == 0.0
+        assert _calculate_grundtarif(TAX_2026.grundfreibetrag) == 0.0
 
     def test_zone_1_entry(self):
         """Tax starts at 14% marginal rate just above the Grundfreibetrag."""
-        tax = _calculate_grundtarif(12349)
+        tax = _calculate_grundtarif(TAX_2026.grundfreibetrag + 1)
         assert tax > 0.0
         assert tax < 5.0  # Should be very small
 
     def test_zone_1_to_zone_2_boundary(self):
-        """Verify the boundary between Zone 1 and Zone 2 at 17,005€."""
-        tax = _calculate_grundtarif(17799)
+        """Verify the boundary between the two progression zones."""
+        tax = _calculate_grundtarif(TAX_2026.first_progression_upper)
         assert tax > 0.0
         # Zone 1 formula: y = (17005-11604)/10000 = 0.5401
         # tax = (922.98 * 0.5401 + 1400) * 0.5401
-        expected_y = (17799 - 12348) / 10000
+        expected_y = (TAX_2026.first_progression_upper - TAX_2026.grundfreibetrag) / 10000
         expected = (914.51 * expected_y + 1400) * expected_y
         assert abs(tax - expected) < 1.0
 
@@ -198,6 +199,14 @@ class TestAdapterFunction:
         full = calculate_german_tax(50000, tax_class=1, is_married=False, church_tax=False)
         adapter = calculate_tax(50000, tax_class=1, is_married=False, church_tax=False)
         assert abs(full['net_income'] - adapter['net_income']) < 0.01
+
+    def test_result_discloses_parameter_version_and_sources(self):
+        result = calculate_german_tax(50000)
+        basis = result['calculation_basis']
+        assert basis['year'] == TAX_2026.year
+        assert basis['parameter_version'] == TAX_2026.version
+        assert basis['sources'] == list(TAX_2026_SOURCES)
+        assert all(source.startswith('https://www.bundesfinanzministerium.de/') for source in basis['sources'])
 
 
 if __name__ == '__main__':

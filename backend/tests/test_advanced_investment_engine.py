@@ -4,7 +4,14 @@ import sys
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
-from advanced_investment_engine import ASSETS, STRATEGIES, _portfolio_moments, build_investment_lab
+from advanced_investment_engine import (
+    ASSETS,
+    MODEL_ASSUMPTION_VERSION,
+    MODEL_ID,
+    STRATEGIES,
+    _portfolio_moments,
+    build_investment_lab,
+)
 
 
 BASE = {"initial_amount": 10000, "monthly_investment": 700, "investment_years": 20, "expected_inflation": .02, "target_wealth": 400000}
@@ -85,3 +92,11 @@ def test_investment_policy_gates_low_liquidity_and_expensive_debt():
     policy = lab["investment_policy"]
     assert policy["execution_status"] == "gated"
     assert len(policy["suitability_flags"]) == 2
+
+
+def test_methodology_distinguishes_strategy_lab_from_household_projection():
+    methodology = build_investment_lab(BASE)["methodology"]
+    assert methodology["model_id"] == MODEL_ID
+    assert methodology["assumption_version"] == MODEL_ASSUMPTION_VERSION
+    assert "nominal EUR" in methodology["value_basis"]
+    assert len(methodology["limitations"]) >= 3

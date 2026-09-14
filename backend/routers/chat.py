@@ -42,8 +42,13 @@ async def chat_stream_endpoint(request: Request, chat_request: ChatRequest) -> t
     context = _chat_context(chat_request.profile, analysis)
 
     return StreamingResponse(
-        stream_financial_advice(chat_request.messages, context),
-        media_type="text/event-stream"
+        stream_financial_advice(chat_request.messages, context, profile=chat_request.profile),
+        media_type="text/event-stream",
+        headers={
+            "Cache-Control": "no-cache, no-transform",
+            "Connection": "keep-alive",
+            "X-Accel-Buffering": "no",
+        }
     )
 
 

@@ -7,21 +7,23 @@ from typing import Optional, Any
 
 from fastapi import Depends, FastAPI, Header, HTTPException, Request
 from fastapi.exceptions import RequestValidationError
+import time
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.gzip import GZipMiddleware
-from fastapi.responses import JSONResponse, FileResponse
+from fastapi.responses import JSONResponse, FileResponse, PlainTextResponse
 from fastapi.staticfiles import StaticFiles
-from slowapi import _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
 
 from analysis import run_full_analysis as _run_full_analysis
-from routers import tax, investment, insurance, retirement, chat, health
+from routers import tax, investment, insurance, retirement, chat, health, stress_test, audit
 from routers import auth as auth_router
 from routers import profiles as profiles_router
 from schemas import ClientProfile, FullAnalysisResponse
 from config import settings
 from database import init_db
-from rate_limit import limiter
+from rate_limit import limiter, rate_limit_exceeded_handler, inject_rate_limit_headers
+from observability import CorrelationIdMiddleware, registry
+
 
 logger = structlog.get_logger(__name__)
 @asynccontextmanager
@@ -46,7 +48,9 @@ app = FastAPI(
 )
 
 app.state.limiter = limiter
-app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)  # type: ignore
+app.add_exception_handler(RateLimitExceeded, rate_limit_exceeded_handler)  # type: ignore
+
+app.add_middleware(CorrelationIdMiddleware)
 
 # Safe CORS configuration
 origins = settings.cors_origins_list
@@ -91,8 +95,21 @@ async def add_delivery_headers(request: Request, call_next):
     )
     if cache_control:
         response.headers["Cache-Control"] = cache_control
+
+    # Enterprise OWASP Security Headers
+    response.headers.setdefault(
+        "Content-Security-Policy",
+        "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self' data:; connect-src 'self' https:; frame-ancestors 'none'; base-uri 'self'; form-action 'self'",
+    )
+    response.headers.setdefault("Strict-Transport-Security", "max-age=31536000; includeSubDomains; preload")
     response.headers.setdefault("X-Content-Type-Options", "nosniff")
+    response.headers.setdefault("X-Frame-Options", "DENY")
     response.headers.setdefault("Referrer-Policy", "strict-origin-when-cross-origin")
+    response.headers.setdefault("Permissions-Policy", "camera=(), microphone=(), geolocation=(), payment=()")
+
+    # RFC Rate Limiting Headers
+    inject_rate_limit_headers(response)
+
     return response
 
 
@@ -136,6 +153,18 @@ app.include_router(retirement.router)
 app.include_router(chat.router, dependencies=[Depends(require_llm_access)])
 app.include_router(auth_router.router)
 app.include_router(profiles_router.router)
+app.include_router(stress_test.router)
+app.include_router(audit.router)
+
+
+@app.get("/metrics", tags=["observability"], response_class=PlainTextResponse)
+def metrics_endpoint() -> PlainTextResponse:
+    """Expose Prometheus OpenMetrics scraped text."""
+    metrics_text = registry.generate_metrics_text()
+    return PlainTextResponse(
+        content=metrics_text,
+        media_type="text/plain; version=0.0.4; charset=utf-8",
+    )
 
 
 @app.post("/api/analyze", response_model=FullAnalysisResponse)
@@ -143,7 +172,13 @@ app.include_router(profiles_router.router)
 def analyze_profile(request: Request, profile: ClientProfile) -> dict[str, Any]:
     # FastAPI executes synchronous endpoints in its worker thread pool, keeping
     # Monte Carlo calculations from blocking health checks and other requests.
-    return _run_full_analysis(profile)
+    t0 = time.monotonic()
+    result = _run_full_analysis(profile)
+    duration = time.monotonic() - t0
+    registry.observe_analysis_duration(duration, step="full", status="success")
+    strategy_key = profile.investment_strategy or "global_core"
+    registry.inc_simulations(count=1000, strategy=strategy_key, scenario="baseline")
+    return result
 
 
 # Mount frontend static distribution if built
