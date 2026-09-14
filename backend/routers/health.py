@@ -16,7 +16,9 @@ router = APIRouter(prefix="/api", tags=["health"])
 
 
 @router.get("/health/live")
+@router.head("/health/live", include_in_schema=False)
 @router.get("/health")
+@router.head("/health", include_in_schema=False)
 def live_check() -> typing.Any:
     """Kubernetes liveness probe (< 5ms) — verifies event loop and application process."""
     from main import app
@@ -30,7 +32,9 @@ def live_check() -> typing.Any:
 
 
 @router.get("/health/ready")
+@router.head("/health/ready", include_in_schema=False)
 @router.get("/ready")
+@router.head("/ready", include_in_schema=False)
 async def readiness_check() -> typing.Any:
     """Verify that required dependencies can serve application traffic."""
     from main import app

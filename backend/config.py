@@ -11,7 +11,7 @@ class Settings(BaseSettings):
     RATE_LIMIT_ANALYZE: str = "10/minute"
     RATE_LIMIT_CHAT: str = "20/minute"
     RATE_LIMIT_AUTH: str = "10/minute"
-    DATABASE_URL: str = "postgresql+asyncpg://postgres:postgres@localhost:5432/financial_consultant"
+    DATABASE_URL: str = ""
     JWT_SECRET_KEY: str = "change-me-in-production-use-a-long-random-string"
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
     REFRESH_TOKEN_EXPIRE_DAYS: int = 30

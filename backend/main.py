@@ -136,9 +136,21 @@ def require_llm_access(x_api_key: Optional[str] = Header(default=None)) -> None:
 
 
 @app.get("/health", tags=["health"])
+@app.head("/health", include_in_schema=False)
 def root_health_check() -> dict[str, Any]:
     return {
         "status": "ok",
+        "service": "financial-advisory-api",
+        "version": app.version,
+        "model_year": 2026,
+    }
+
+
+@app.get("/health/live", tags=["health"])
+@app.head("/health/live", include_in_schema=False)
+def root_live_check() -> dict[str, Any]:
+    return {
+        "status": "alive",
         "service": "financial-advisory-api",
         "version": app.version,
         "model_year": 2026,

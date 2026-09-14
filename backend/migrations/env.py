@@ -15,7 +15,14 @@ config = context.config
 if config.config_file_name:
     fileConfig(config.config_file_name)
 
-config.set_main_option("sqlalchemy.url", settings.DATABASE_URL.replace("%", "%%"))
+database_url = settings.DATABASE_URL or ""
+if database_url.startswith("postgresql://"):
+    database_url = database_url.replace("postgresql://", "postgresql+asyncpg://", 1)
+elif database_url.startswith("sqlite://") and not database_url.startswith("sqlite+"):
+    database_url = database_url.replace("sqlite://", "sqlite+aiosqlite://", 1)
+
+if database_url:
+    config.set_main_option("sqlalchemy.url", database_url.replace("%", "%%"))
 target_metadata = Base.metadata
 
 
@@ -48,7 +55,9 @@ async def run_async_migrations() -> None:
     await connectable.dispose()
 
 
-if context.is_offline_mode():
+if not database_url:
+    pass
+elif context.is_offline_mode():
     run_migrations_offline()
 else:
     asyncio.run(run_async_migrations())

@@ -1,4 +1,4 @@
-﻿# Multi-stage production container: React Frontend + FastAPI Backend
+# Multi-stage production container: React Frontend + FastAPI Backend
 # Stage 1: Build Frontend Assets
 FROM node:22-alpine AS frontend-builder
 WORKDIR /app/frontend
@@ -21,6 +21,7 @@ RUN pip install --no-cache-dir -r ./backend/requirements.txt
 
 # Copy backend application source
 COPY backend/ ./backend/
+RUN sed -i 's/\r$//' ./backend/entrypoint.sh && chmod +x ./backend/entrypoint.sh
 
 # Copy built frontend distribution from builder stage
 COPY --from=frontend-builder /app/frontend/dist ./frontend/dist
@@ -33,5 +34,5 @@ EXPOSE 8000
 
 WORKDIR /app/backend
 
-# Run with dynamic PORT provided by Railway / cloud host
-CMD ["sh", "-c", "alembic -c alembic.ini upgrade head && uvicorn main:app --host 0.0.0.0 --port ${PORT:-8000} --workers 2 --log-level info"]
+# Run with resilient entrypoint supporting dynamic PORT on Railway
+CMD ["/bin/sh", "entrypoint.sh"]
