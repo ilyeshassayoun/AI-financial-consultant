@@ -3,22 +3,28 @@
   bottom: max(24px, env(safe-area-inset-bottom));
   right: max(24px, env(safe-area-inset-right));
   z-index: 1500;
-  height: 42px;
-  padding: 0 16px 0 12px;
+  width: 46px;
+  height: 46px;
+  padding: 0;
   border-radius: 24px;
   display: inline-flex;
   align-items: center;
   gap: 8px;
+  justify-content: center;
+  overflow: hidden;
   background: linear-gradient(135deg, var(--maison-pine-deep) 0%, var(--maison-obsidian) 100%);
   color: #ffffff;
   border: 1.2px solid var(--maison-gold);
   cursor: pointer;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4), 0 0 14px rgba(197, 160, 89, 0.25);
-  transition: all 0.24s var(--ease-luxury);
+  transition: width 0.28s var(--ease-luxury), padding 0.28s var(--ease-luxury), transform 0.24s var(--ease-luxury), box-shadow 0.24s var(--ease-luxury);
   backdrop-filter: blur(10px);
 }
 
 .floatingButton:hover {
+  width: 156px;
+  padding: 0 15px 0 12px;
+  justify-content: flex-start;
   transform: translateY(-2px) scale(1.03);
   box-shadow: 0 8px 30px rgba(0, 0, 0, 0.5), 0 0 24px rgba(197, 160, 89, 0.4);
   border-color: var(--maison-gold-border);
@@ -30,11 +36,39 @@
   letter-spacing: 0.01em;
   color: #ffffff;
   white-space: nowrap;
+  max-width: 0;
+  opacity: 0;
+  overflow: hidden;
+  transform: translateX(4px);
+  transition: max-width .28s var(--ease-luxury), opacity .18s ease, transform .28s var(--ease-luxury);
 }
 
 .sparkleIcon {
-  opacity: 0.85;
-  transition: transform 0.2s ease;
+  flex: 0 0 auto;
+  width: 0;
+  opacity: 0;
+  transition: width .28s var(--ease-luxury), opacity .18s ease, transform 0.2s ease;
+}
+
+.floatingButton:hover .label,
+.floatingButton:focus-visible .label {
+  max-width: 92px;
+  opacity: 1;
+  transform: translateX(0);
+}
+
+.floatingButton:hover .sparkleIcon,
+.floatingButton:focus-visible .sparkleIcon {
+  width: 12px;
+  opacity: .85;
+}
+
+.floatingButton:focus-visible {
+  width: 156px;
+  padding: 0 15px 0 12px;
+  justify-content: flex-start;
+  outline: 3px solid color-mix(in srgb, var(--maison-gold) 45%, transparent);
+  outline-offset: 3px;
 }
 
 .floatingButton:hover .sparkleIcon {
@@ -57,21 +91,6 @@
   border-radius: 50%;
   background: var(--accent-emerald, #059669);
   box-shadow: 0 0 6px var(--accent-emerald, #059669);
-}
-
-@media (min-width: 641px) and (max-width: 1100px) {
-  .floatingButton {
-    width: 46px;
-    height: 46px;
-    padding: 0;
-    justify-content: center;
-    border-radius: 50%;
-  }
-
-  .label,
-  .sparkleIcon {
-    display: none;
-  }
 }
 
 @media (max-width: 640px) {
