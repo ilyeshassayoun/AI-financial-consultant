@@ -54,45 +54,42 @@ describe('apiService', () => {
       expect(result).toEqual(mockAnalysis);
     });
 
-    it('returns null on HTTP error', async () => {
+    it('throws a structured error on HTTP failure', async () => {
       mockFetch.mockResolvedValueOnce({
         ok: false,
         status: 500,
       });
 
-      const consoleSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
-      const { fetchFullAnalysis } = await import('../services/apiService');
-      const result = await fetchFullAnalysis(mockProfile, { signal: { aborted: false } });
+      const { ApiError, fetchFullAnalysis } = await import('../services/apiService');
+      const request = fetchFullAnalysis(mockProfile);
 
-      expect(result).toBeNull();
-      expect(consoleSpy).toHaveBeenCalled();
-      consoleSpy.mockRestore();
+      await expect(request).rejects.toMatchObject({ name: 'ApiError', status: 500 });
+      await request.catch((error) => expect(error).toBeInstanceOf(ApiError));
     });
 
-    it('returns null on network error', async () => {
+    it('preserves network failures for the UI to classify', async () => {
       mockFetch.mockRejectedValueOnce(new Error('Network error'));
 
-      const consoleSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
       const { fetchFullAnalysis } = await import('../services/apiService');
-      const result = await fetchFullAnalysis(mockProfile, { signal: { aborted: false } });
-
-      expect(result).toBeNull();
-      expect(consoleSpy).toHaveBeenCalled();
-      consoleSpy.mockRestore();
+      await expect(fetchFullAnalysis(mockProfile)).rejects.toThrow('Network error');
     });
 
-    it('returns null when request is aborted', async () => {
+    it('propagates request cancellation without converting it into an offline error', async () => {
       const abortError = new Error('Aborted');
       abortError.name = 'AbortError';
       mockFetch.mockRejectedValueOnce(abortError);
 
-      const consoleSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
       const { fetchFullAnalysis } = await import('../services/apiService');
-      const result = await fetchFullAnalysis(mockProfile, { signal: { aborted: true } });
+      await expect(fetchFullAnalysis(mockProfile, { aborted: true })).rejects.toMatchObject({ name: 'AbortError' });
+    });
 
-      expect(result).toBeNull();
-      expect(consoleSpy).not.toHaveBeenCalled();
-      consoleSpy.mockRestore();
+    it('maps validation, rate-limit, availability, and network failures to actionable copy', async () => {
+      const { ApiError, getAnalysisErrorMessage } = await import('../services/apiService');
+
+      expect(getAnalysisErrorMessage(new ApiError('invalid', 422))).toMatch(/profile values/i);
+      expect(getAnalysisErrorMessage(new ApiError('slow down', 429))).toMatch(/too many requests/i);
+      expect(getAnalysisErrorMessage(new ApiError('starting', 503))).toMatch(/still starting/i);
+      expect(getAnalysisErrorMessage(new TypeError('Failed to fetch'))).toMatch(/connection/i);
     });
   });
 

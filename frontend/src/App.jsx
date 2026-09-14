@@ -2,15 +2,13 @@ import { lazy, Suspense, useEffect, useCallback, useMemo, useRef, useState } fro
 import { useInRouterContext, useNavigate, useLocation } from 'react-router-dom';
 import './App.css';
 import TopNav from './components/TopNav';
-import AdvisorDrawer from './components/AdvisorDrawer';
 import FloatingAdvisorButton from './components/FloatingAdvisorButton';
 import { PageTransition } from './components/PageTransition';
 import ErrorBoundary from './components/ErrorBoundary';
 import SkipLinks from './components/SkipLinks';
-import GDPRConsentModal from './components/GDPRConsentModal';
 import { useProfileStore, safeLocalStorage } from './stores/profileStore';
 import { useAuthStore } from './stores/authStore';
-import { fetchFullAnalysis } from './services/apiService';
+import { fetchFullAnalysis, getAnalysisErrorMessage } from './services/apiService';
 import { getCurrentSession, logoutSession } from './services/authService';
 
 const StepWelcome = lazy(() => import('./components/StepWelcome'));
@@ -19,6 +17,8 @@ const StepTax = lazy(() => import('./components/StepTax'));
 const StepInsurance = lazy(() => import('./components/StepInsurance'));
 const StepInvestment = lazy(() => import('./components/StepInvestment'));
 const StepRetirement = lazy(() => import('./components/StepRetirement'));
+const AdvisorDrawer = lazy(() => import('./components/AdvisorDrawer'));
+const GDPRConsentModal = lazy(() => import('./components/GDPRConsentModal'));
 
 const ErrorFallback = ({ error, resetError }) => (
   <div style={{
@@ -150,6 +150,7 @@ function App() {
   const logout = useAuthStore((state) => state.logout);
   const login = useAuthStore((state) => state.login);
   const [isGDPROpen, setIsGDPROpen] = useState(false);
+  const [hasLoadedAdvisor, setHasLoadedAdvisor] = useState(isAdvisorDrawerOpen);
   const [analysisState, setAnalysisState] = useState({ status: analysis ? 'success' : 'idle', error: null });
   const [analysisRetryKey, setAnalysisRetryKey] = useState(0);
   const profileRef = useRef(profile);
@@ -207,37 +208,44 @@ function App() {
 
   const handleOpenChat = useCallback((query) => {
     setInitialChatMessage(query || '');
+    setHasLoadedAdvisor(true);
     setIsAdvisorDrawerOpen(true);
   }, [setInitialChatMessage, setIsAdvisorDrawerOpen]);
 
+  const shouldRunAnalysis = currentStep !== 'welcome';
+
   useEffect(() => {
+    if (!shouldRunAnalysis) return undefined;
+
     let isCancelled = false;
     const controller = new AbortController();
     const profileForRequest = profileRef.current;
-    const timer = setTimeout(async () => {
+    const runAnalysis = async () => {
       setAnalysisState({ status: 'loading', error: null });
-      const data = await fetchFullAnalysis(profileForRequest, controller.signal);
-      if (isCancelled) return;
-      if (profileRef.current !== profileForRequest) {
-        setAnalysisState({ status: 'stale', error: null });
-        return;
-      }
-      if (data) {
+      try {
+        const data = await fetchFullAnalysis(profileForRequest, controller.signal);
+        if (!data) throw new Error('The analysis service returned no data.');
+        if (isCancelled) return;
+        if (profileRef.current !== profileForRequest) {
+          setAnalysisState({ status: 'stale', error: null });
+          return;
+        }
         setAnalysis(data);
         setAnalysisState({ status: 'success', error: null });
-      } else {
+      } catch (error) {
+        if (isCancelled || error?.name === 'AbortError') return;
         setAnalysisState({
           status: 'error',
-          error: 'The analysis service could not be reached. Your inputs remain saved locally, so you can retry without re-entering them.'
+          error: getAnalysisErrorMessage(error)
         });
       }
-    }, 350);
+    };
+    runAnalysis();
     return () => {
       isCancelled = true;
-      clearTimeout(timer);
       controller.abort();
     };
-  }, [setAnalysis, analysisRetryKey]);
+  }, [setAnalysis, analysisRetryKey, shouldRunAnalysis]);
 
   const retryAnalysis = useCallback(() => {
     setAnalysisState({ status: 'loading', error: null });
@@ -387,26 +395,37 @@ function App() {
       <ErrorBoundary fallback={() => null}>
         <FloatingAdvisorButton
           isOpen={isAdvisorDrawerOpen}
-          onClick={() => setIsAdvisorDrawerOpen(prev => !prev)}
+          onClick={() => {
+            if (!isAdvisorDrawerOpen) setHasLoadedAdvisor(true);
+            setIsAdvisorDrawerOpen(prev => !prev);
+          }}
         />
-        <AdvisorDrawer
-          isOpen={isAdvisorDrawerOpen}
-          onClose={() => setIsAdvisorDrawerOpen(false)}
-          profile={profile}
-          analysis={analysis}
-          currentStep={currentStep}
-          initialMessage={initialChatMessage}
-          onApplyPatch={handleApplyPatch}
-        />
+        <Suspense fallback={null}>
+          {hasLoadedAdvisor && (
+            <AdvisorDrawer
+              isOpen={isAdvisorDrawerOpen}
+              onClose={() => setIsAdvisorDrawerOpen(false)}
+              profile={profile}
+              analysis={analysis}
+              currentStep={currentStep}
+              initialMessage={initialChatMessage}
+              onApplyPatch={handleApplyPatch}
+            />
+          )}
+        </Suspense>
       </ErrorBoundary>
 
       <ErrorBoundary fallback={() => null}>
-        <GDPRConsentModal
-          isOpen={isGDPROpen}
-          onClose={() => setIsGDPROpen(false)}
-          profile={profile}
-          onResetData={handleResetData}
-        />
+        <Suspense fallback={null}>
+          {isGDPROpen && (
+            <GDPRConsentModal
+              isOpen={isGDPROpen}
+              onClose={() => setIsGDPROpen(false)}
+              profile={profile}
+              onResetData={handleResetData}
+            />
+          )}
+        </Suspense>
       </ErrorBoundary>
     </div>
   );

@@ -9,7 +9,9 @@ export default defineConfig({
     VitePWA({
       registerType: 'autoUpdate',
       devOptions: {
-        enabled: true
+        // A development service worker caches stale chunks between UI iterations.
+        // Production keeps the auto-updating offline shell.
+        enabled: false
       },
       manifest: {
         name: 'AI Financial Consultant',

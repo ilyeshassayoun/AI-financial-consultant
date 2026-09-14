@@ -52,7 +52,7 @@ class InsuranceLabResponse(BaseModel):
     readiness: Literal["gated", "ready"]
     missing_essential: List[str]
     implementation: List[str]
-    model: Dict[str, str]
+    model: Dict[str, Any]
     assumptions: List[str]
     sources: List[Dict[str, str]]
 
@@ -66,6 +66,6 @@ class InsuranceStepResponse(BaseModel):
     readiness: Literal["gated", "ready"]
     missing_essential: List[str]
     implementation: List[str]
-    model: Dict[str, str]
+    model: Dict[str, Any]
     assumptions: List[str]
     sources: List[Dict[str, str]]

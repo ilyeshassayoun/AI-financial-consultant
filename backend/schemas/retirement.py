@@ -71,7 +71,7 @@ class RetirementLabResponse(BaseModel):
     limitations: List[str]
     sources: List[Dict[str, str]]
     actions: List[str]
-    model: Dict[str, str]
+    model: Dict[str, Any]
     horizon: Dict[str, Any]
 
 
@@ -91,7 +91,7 @@ class RetirementStepResponse(BaseModel):
     limitations: List[str]
     sources: List[Dict[str, str]]
     actions: List[str]
-    model: Dict[str, str]
+    model: Dict[str, Any]
     horizon: Dict[str, Any]
 
 
@@ -112,3 +112,31 @@ class OptimizationResponse(BaseModel):
     retirement_actions: List[Dict[str, Any]]
     insurance_actions: List[Dict[str, Any]]
     summary: OptimizerSummary
+
+
+class RetirementProjectionResponse(BaseModel):
+    """Legacy pension projection returned alongside the richer retirement lab."""
+
+    model_config = ConfigDict(allow_inf_nan=False, extra="allow")
+    current_age: int
+    retirement_age: int
+    years_until_retirement: int
+    entgeltpunkte_total: float
+    entgeltpunkte_per_year: float
+    zugangsfaktor: float
+    early_late_penalty_pct: float
+    state_pension_monthly_gross: float
+    state_pension_monthly: float
+    state_pension_monthly_real: float
+    state_pension_monthly_real_gross: Optional[float] = None
+    bav_pension_monthly: float
+    private_pension_monthly: float
+    riester_pension_monthly: float
+    total_retirement_income_monthly: float
+    target_retirement_income_monthly: float
+    pension_gap_monthly: float
+    replacement_ratio: float
+    solvency_score: float
+    required_monthly_savings_to_close_gap: float
+    private_nest_egg_projected: float
+    calculation_basis: Dict[str, Any]

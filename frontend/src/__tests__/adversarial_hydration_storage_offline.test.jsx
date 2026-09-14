@@ -285,6 +285,19 @@ describe('Adversarial Stress Test: State Hydration, Storage Recovery & Offline R
   // 3. Rapid Sequential Tab Transitions & Step Changes
   // =========================================================================
   describe('3. Rapid Tab Transitions & Route Synchronization Stress Tests', () => {
+    it('does not run the expensive analysis engine before the user starts the plan', async () => {
+      const analysisSpy = vi.spyOn(apiService, 'fetchFullAnalysis').mockResolvedValue(null);
+
+      render(
+        <MemoryRouter initialEntries={['/welcome']}>
+          <App />
+        </MemoryRouter>
+      );
+
+      await act(async () => Promise.resolve());
+      expect(analysisSpy).not.toHaveBeenCalled();
+    });
+
     it('executes rapid sequential tab transitions with zero unhandled exceptions or ErrorBoundary crashes', async () => {
       vi.spyOn(apiService, 'fetchFullAnalysis').mockResolvedValue(null);
 

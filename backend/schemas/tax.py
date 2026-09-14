@@ -23,7 +23,7 @@ class TaxDetail(BaseModel):
     kindergeld_received: float
     kinderfreibetrag_savings: float
     kindergeld_addback: float
-    calculation_basis: Dict[str, Any]
+    calculation_basis: Optional[Dict[str, Any]] = None
 
 
 class TaxResponse(BaseModel):

@@ -8,6 +8,7 @@ from typing import Optional, Any
 from fastapi import Depends, FastAPI, Header, HTTPException, Request
 from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.middleware.gzip import GZipMiddleware
 from fastapi.responses import JSONResponse, FileResponse
 from fastapi.staticfiles import StaticFiles
 from slowapi import _rate_limit_exceeded_handler
@@ -17,7 +18,7 @@ from analysis import run_full_analysis as _run_full_analysis
 from routers import tax, investment, insurance, retirement, chat, health
 from routers import auth as auth_router
 from routers import profiles as profiles_router
-from schemas import ClientProfile
+from schemas import ClientProfile, FullAnalysisResponse
 from config import settings
 from database import init_db
 from rate_limit import limiter
@@ -58,6 +59,29 @@ app.add_middleware(
     allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS", "HEAD"],
     allow_headers=["*"],
 )
+app.add_middleware(GZipMiddleware, minimum_size=1000, compresslevel=5)
+
+
+def _cache_control_for_path(path: str, content_type: str = "") -> str | None:
+    if path.startswith("/assets/"):
+        return "public, max-age=31536000, immutable"
+    if path in {"/sw.js", "/registerSW.js", "/manifest.webmanifest"} or content_type.startswith("text/html"):
+        return "no-cache, no-store, must-revalidate"
+    return None
+
+
+@app.middleware("http")
+async def add_delivery_headers(request: Request, call_next):
+    response = await call_next(request)
+    cache_control = _cache_control_for_path(
+        request.url.path,
+        response.headers.get("content-type", ""),
+    )
+    if cache_control:
+        response.headers["Cache-Control"] = cache_control
+    response.headers.setdefault("X-Content-Type-Options", "nosniff")
+    response.headers.setdefault("Referrer-Policy", "strict-origin-when-cross-origin")
+    return response
 
 
 def _json_safe(value: Any) -> Any:
@@ -102,9 +126,11 @@ app.include_router(auth_router.router)
 app.include_router(profiles_router.router)
 
 
-@app.post("/api/analyze")
+@app.post("/api/analyze", response_model=FullAnalysisResponse)
 @limiter.limit(settings.RATE_LIMIT_ANALYZE)
-async def analyze_profile(request: Request, profile: ClientProfile) -> dict[str, Any]:
+def analyze_profile(request: Request, profile: ClientProfile) -> dict[str, Any]:
+    # FastAPI executes synchronous endpoints in its worker thread pool, keeping
+    # Monte Carlo calculations from blocking health checks and other requests.
     return _run_full_analysis(profile)
 
 
