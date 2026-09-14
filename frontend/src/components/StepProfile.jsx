@@ -8,7 +8,6 @@ import {
   FinancialHealthStage, 
   ProfileJourneyNavigation 
 } from './profile';
-import TimeTravelScrubBar from './TimeTravelScrubBar';
 import './StepProfile.css';
 
 export default function StepProfile({ 
@@ -169,10 +168,6 @@ export default function StepProfile({
           />
         </details>
       )}
-
-      <div style={{ maxWidth: '1000px', margin: '20px auto 0', width: '100%' }}>
-        <TimeTravelScrubBar />
-      </div>
     </>
   );
 }
