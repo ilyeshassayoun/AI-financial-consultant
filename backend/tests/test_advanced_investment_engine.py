@@ -70,6 +70,20 @@ def test_tax_aware_terminal_value_is_explainable_and_below_gross():
     assert tax["estimated_liquidation_tax"] >= 0
     assert tax["saver_allowance"] == 1000
     assert len(tax["assumptions"]) >= 3
+    assert tax["taxable_gain_before_allowance"] - tax["allowance_used"] == tax["taxable_gain_after_allowance"]
+    assert tax["gross_gain"] == tax["modeled_nontaxable_gain"] + tax["taxable_gain_before_allowance"]
+    scenarios = {item["id"]: item for item in tax["sensitivity_scenarios"]}
+    assert scenarios["no_allowance"]["after_tax_terminal"] <= scenarios["profile"]["after_tax_terminal"]
+
+
+def test_implementation_plan_reconciles_weights_and_cash_flows():
+    lab = build_investment_lab(BASE)
+    plan = lab["implementation_plan"]
+    assert plan["weight_total"] == 1
+    assert sum(item["weight"] for item in plan["orders"]) == 1
+    assert sum(item["monthly_amount"] for item in plan["orders"]) == BASE["monthly_investment"]
+    assert sum(item["initial_amount"] for item in plan["orders"]) == BASE["initial_amount"]
+    assert all(item["isin"] and item["ticker"] for item in plan["orders"])
 
 
 def test_married_allowance_does_not_reduce_after_tax_value():
@@ -92,6 +106,7 @@ def test_investment_policy_gates_low_liquidity_and_expensive_debt():
     policy = lab["investment_policy"]
     assert policy["execution_status"] == "gated"
     assert len(policy["suitability_flags"]) == 2
+    assert {flag["resolution_code"] for flag in policy["suitability_flags"]} == {"cash_flow"}
 
 
 def test_methodology_distinguishes_strategy_lab_from_household_projection():

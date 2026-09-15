@@ -45,12 +45,13 @@ const guideSteps = [
   ['decision', 'Policy statement', 'Commit to the rules']
 ];
 
-export default function InvestmentLaboratory({ profile, updateProfile, lab, subStep: controlledPage, setSubStep: setControlledPage, nextStep, prevStep, analysisStatus, analysisError, onRetryAnalysis, onPreviewScenario }) {
+export default function InvestmentLaboratory({ profile, updateProfile, lab, subStep: controlledPage, setSubStep: setControlledPage, nextStep, prevStep, analysisStatus, analysisError, onRetryAnalysis, onPreviewScenario, onReviewProfile }) {
   const guideTopRef = useRef(null);
   const page = Math.max(0, Math.min(guideSteps.length - 1, Number(controlledPage || 0)));
   const setPage = setControlledPage || (() => {});
   const [testView, setTestView] = useState('projection');
   const [buildView, setBuildView] = useState('allocation');
+  const [policyAcknowledgement, setPolicyAcknowledgement] = useState({ version:'', checked:false });
   const answers = {
     priority: profile.investment_priority ?? 'balanced',
     lossTolerance: profile.investment_loss_tolerance ?? profile.risk_profile ?? 'medium',
@@ -72,10 +73,11 @@ export default function InvestmentLaboratory({ profile, updateProfile, lab, subS
     suitability_flags: [...(lab?.investment_policy?.suitability_flags || []),
       { title: 'Current suitability review', detail: localGate }],
   } : lab?.investment_policy || {};
-
+  const policyVersion = `${selected?.id || 'none'}:${(displayedPolicy.suitability_flags || []).map(flag => `${flag.title}:${flag.detail}`).join('|')}`;
+  const policyAcknowledged = policyAcknowledgement.version === policyVersion && policyAcknowledgement.checked;
 
   useEffect(() => {
-    guideTopRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    guideTopRef.current?.scrollIntoView({ behavior: 'auto', block: 'start' });
   }, [page]);
 
   if (!selected && analysisStatus === 'error') {
@@ -162,8 +164,8 @@ export default function InvestmentLaboratory({ profile, updateProfile, lab, subS
         {page === 2 && <StrategyPage strategies={strategies || []} selected={selected} selectedId={lab.selected_strategy} recommendedId={recommendationId} updateProfile={updateProfile}/>} 
         {page === 3 && <TestPage view={testView} setView={setTestView} selected={selected} comparison={comparison} target={lab.target_wealth} matrix={lab.stress_matrix || []} profile={profile}/>}
         {page === 4 && <TaxPage tax={lab.tax_analysis || selected.tax || {}} selected={selected}/>}
-        {page === 5 && <BuildPage view={buildView} setView={setBuildView} selected={selected} property={lab.real_estate || {}} profile={profile} updateProfile={updateProfile}/>} 
-        {page === 6 && <DecisionPage selected={selected} profile={profile} policy={displayedPolicy} tax={lab.tax_analysis || {}} optimizer={lab.goal_optimizer || {}} onChangeStrategy={() => move(2)}/>}
+        {page === 5 && <BuildPage view={buildView} setView={setBuildView} selected={selected} property={lab.real_estate || {}} implementationPlan={lab.implementation_plan || {}} profile={profile} updateProfile={updateProfile}/>}
+        {page === 6 && <DecisionPage selected={selected} profile={profile} policy={displayedPolicy} tax={lab.tax_analysis || {}} optimizer={lab.goal_optimizer || {}} acknowledged={policyAcknowledged} setAcknowledged={checked => setPolicyAcknowledgement({ version:policyVersion, checked })} onChangeStrategy={() => move(2)} onReviewRisk={() => move(1)} onReviewProfile={onReviewProfile}/>}
       </div>
 
       <footer className="investment-footer-nav">
@@ -183,8 +185,8 @@ export default function InvestmentLaboratory({ profile, updateProfile, lab, subS
             {page === 1 ? (recommendationId ? 'Apply match & continue' : 'Continue without applying a match') : 'Continue'} <ArrowRight size={17} />
           </button>
         ) : (
-          <button type="button" className="investment-primary-button" onClick={nextStep}>
-            Proceed to Solvency &amp; Retirement <ArrowRight size={17} />
+          <button type="button" className="investment-primary-button" onClick={nextStep} disabled={!policyAcknowledged}>
+            {policyAcknowledged ? 'Proceed to Solvency & Retirement' : 'Acknowledge policy to continue'} <ArrowRight size={17} />
           </button>
         )}
       </footer>
@@ -299,37 +301,44 @@ function TestPage({ view, setView, selected, comparison, target, matrix, profile
 }
 
 function TaxPage({ tax, selected }) {
+  const scenarios = tax.sensitivity_scenarios?.length ? tax.sensitivity_scenarios : [{ id:'profile', label:'Current profile', description:'Uses the current profile assumptions.', after_tax_terminal:tax.after_tax_terminal, estimated_liquidation_tax:tax.estimated_liquidation_tax, saver_allowance:tax.saver_allowance, capital_tax_rate:tax.capital_tax_rate }];
+  const [scenarioId, setScenarioId] = useState('profile');
+  const scenario = scenarios.find(item => item.id === scenarioId) || scenarios[0];
+  const scenarioEffectiveDrag = tax.gross_gain ? Number(scenario.estimated_liquidation_tax || 0) / Number(tax.gross_gain) : 0;
   const chartData = [
     { name:'Contributions', value:tax.cost_basis || 0, color:'#7892a1' },
     { name:'Gross median', value:tax.gross_terminal || selected.p50, color:'#173d29' },
-    { name:'After tax', value:tax.after_tax_terminal || selected.p50, color:'#c2a15c' }
+    { name:'After tax', value:scenario.after_tax_terminal || selected.p50, color:'#c2a15c' }
   ];
   return <div className="guide-tax">
     <div className="guide-intro"><CircleDollarSign/><div><h3>Optimize after-tax wealth—not the headline return.</h3><p>This page estimates a full liquidation at the planning horizon and separates cost basis, taxable gains, exemptions and tax drag.</p></div></div>
-    <div className="tax-outcome-grid"><article className="tax-chart"><div className="lab-chart-title"><div><span>Tax outcome bridge</span><h2>Gross versus estimated after-tax capital</h2></div></div><div><ResponsiveContainer width="100%" height="100%"><BarChart data={chartData} margin={{top:12,right:8,bottom:0,left:8}}><CartesianGrid vertical={false} stroke="#e5eae3"/><XAxis dataKey="name" tick={{fontSize:12}} axisLine={false} tickLine={false}/><YAxis tickFormatter={value => `€${Math.round(value/1000)}k`} tick={{fontSize:12}} axisLine={false} tickLine={false}/><Tooltip formatter={value => money(value)} contentStyle={{borderRadius:12}}/><Bar dataKey="value" radius={[8,8,0,0]} animationDuration={1100}>{chartData.map(item => <Cell key={item.name} fill={item.color}/>)}</Bar></BarChart></ResponsiveContainer></div></article>
-      <article className="tax-verdict"><span>Estimated horizon result</span><h3>{money(tax.after_tax_terminal)}</h3><p>after tax versus {money(tax.gross_terminal)} gross median capital</p><div><section><small>Estimated tax drag</small><strong>{money(tax.tax_drag)}</strong></section><section><small>Taxable gain share</small><strong>{pct(tax.taxable_gain_share)}</strong></section><section><small>Saver allowance</small><strong>{money(tax.saver_allowance)}</strong></section><section><small>Modeled tax rate</small><strong>{pct(tax.capital_tax_rate,2)}</strong></section></div></article>
+    <div className="tax-scenario-switch" aria-label="Tax sensitivity assumptions">{scenarios.map(item => <button type="button" key={item.id} className={scenario.id === item.id ? 'is-active' : ''} onClick={() => setScenarioId(item.id)}><strong>{item.label}</strong><small>{item.description}</small></button>)}</div>
+    <div className="tax-outcome-grid" key={scenario.id}><article className="tax-chart"><div className="lab-chart-title"><div><span>Tax outcome bridge</span><h2>Gross versus estimated after-tax capital</h2></div></div><div><ResponsiveContainer width="100%" height="100%"><BarChart data={chartData} margin={{top:12,right:8,bottom:0,left:8}}><CartesianGrid vertical={false} stroke="#e5eae3"/><XAxis dataKey="name" tick={{fontSize:12}} axisLine={false} tickLine={false}/><YAxis tickFormatter={value => `€${Math.round(value/1000)}k`} tick={{fontSize:12}} axisLine={false} tickLine={false}/><Tooltip formatter={value => money(value)} contentStyle={{borderRadius:12}}/><Bar dataKey="value" radius={[8,8,0,0]} animationDuration={360}>{chartData.map(item => <Cell key={item.name} fill={item.color}/>)}</Bar></BarChart></ResponsiveContainer></div></article>
+      <article className="tax-verdict"><span>{scenario.label}</span><h3>{money(scenario.after_tax_terminal)}</h3><p>after tax versus {money(tax.gross_terminal)} gross median capital</p><div><section><small>Estimated liquidation tax</small><strong>{money(scenario.estimated_liquidation_tax)}</strong></section><section><small>Effective tax drag on gain</small><strong>{pct(scenarioEffectiveDrag,2)}</strong></section><section><small>Saver allowance</small><strong>{money(scenario.saver_allowance)}</strong></section><section><small>Modeled tax rate</small><strong>{pct(scenario.capital_tax_rate,2)}</strong></section></div></article>
     </div>
+    <div className="tax-bridge" aria-label="Tax calculation bridge"><article><span>01</span><small>Cost basis</small><strong>{money(tax.cost_basis)}</strong></article><article><span>02</span><small>Gross modeled gain</small><strong>{money(tax.gross_gain)}</strong></article><article><span>03</span><small>Modeled exempt gain</small><strong>{money(tax.modeled_nontaxable_gain)}</strong></article><article><span>04</span><small>Taxable after allowance</small><strong>{money(Math.max(0, (tax.taxable_gain_before_allowance || 0) - (scenario.saver_allowance || 0)))}</strong></article></div>
     <div className="tax-policy-grid"><article><span>01</span><FileText/><strong>Use the allowance deliberately</strong><p>The model uses a {money(tax.saver_allowance)} saver allowance for the selected assessment mode. Place the exemption order where taxable distributions or advance lump sums arise.</p></article><article><span>02</span><Layers3/><strong>Preserve fund exemptions</strong><p>The estimate applies a 30% partial exemption to qualifying equity-fund gains. Verify that every selected fund actually qualifies.</p></article><article><span>03</span><Scale/><strong>Control realization</strong><p>Coordinate sales with loss pots, allowances and rebalancing. A portfolio decision should not be driven by tax alone.</p></article></div>
     <details className="tax-methodology"><summary>Specialist assumptions and model limitations</summary><div>{(tax.assumptions || []).map(item => <p key={item}><Info size={14}/>{item}</p>)}</div></details>
   </div>;
 }
 
-function BuildPage({ view, setView, selected, property, profile, updateProfile }) {
-  return <div><div className="guide-intro"><Layers3/><div><h3>Translate the strategy into investable building blocks.</h3><p>Review the fund shortlist and compare liquid diversification with a concentrated leveraged property case.</p></div></div><ViewSwitch view={view} setView={setView} options={[["allocation","ETF implementation"],["property","Property alternative"]]}/>{view === 'allocation' ? <AllocationView selected={selected} profile={profile}/> : <PropertyView property={property} selected={selected} profile={profile} updateProfile={updateProfile}/>}</div>;
+function BuildPage({ view, setView, selected, property, implementationPlan, profile, updateProfile }) {
+  return <div><div className="guide-intro"><Layers3/><div><h3>Translate the strategy into investable building blocks.</h3><p>Review reconciled order amounts, verify provider criteria and compare liquid diversification with a concentrated leveraged property case.</p></div></div><ViewSwitch view={view} setView={setView} options={[["allocation","ETF implementation"],["property","Property alternative"]]}/>{view === 'allocation' ? <AllocationView selected={selected} implementationPlan={implementationPlan}/> : <PropertyView property={property} selected={selected} profile={profile} updateProfile={updateProfile}/>}</div>;
 }
 
 function ViewSwitch({ view, setView, options }) {
   return <nav className="investment-lab__tabs" aria-label="Page analysis views">{options.map(([id, label]) => <button type="button" key={id} className={view === id ? 'is-active' : ''} onClick={() => setView(id)}>{label}</button>)}</nav>;
 }
 
-function DecisionPage({ selected, profile, policy, tax, optimizer, onChangeStrategy }) {
+function DecisionPage({ selected, profile, policy, tax, optimizer, acknowledged, setAcknowledged, onChangeStrategy, onReviewRisk, onReviewProfile }) {
   const printPolicy = () => window.print();
+  const resolve = flag => (flag.resolution_code === 'cash_flow' ? onReviewProfile : onReviewRisk)?.();
   return <div className="guide-decision"><section className="ips-document" id="investment-policy-statement"><header className="ips-header"><div><span>Investment Policy Statement</span><h3>{selected.name}</h3><p>Personal investment mandate · educational planning draft</p></div><div className={`ips-status is-${policy.execution_status || 'review'}`}><small>Execution status</small><strong>{policy.execution_status === 'gated' ? 'Resolve suitability gates' : 'Eligible for final review'}</strong></div></header>
-    {(policy.suitability_flags || []).length > 0 && <div className="ips-gates"><h4><AlertTriangle size={18}/>Suitability gates before investing</h4>{policy.suitability_flags.map(flag => <article key={flag.title}><strong>{flag.title}</strong><p>{flag.detail}</p></article>)}</div>}
+    {(policy.suitability_flags || []).length > 0 && <div className="ips-gates"><h4><AlertTriangle size={18}/>Suitability gates before investing</h4>{policy.suitability_flags.map(flag => <article key={flag.title}><div><strong>{flag.title}</strong><p>{flag.detail}</p></div><button type="button" onClick={() => resolve(flag)}>{flag.resolution_code === 'cash_flow' ? 'Review cash flow' : 'Review risk capacity'}<ArrowRight size={14}/></button></article>)}</div>}
     <div className="ips-objective"><span>Primary objective</span><strong>{policy.objective || `Fund ${money(profile.target_wealth)} over ${profile.investment_years} years.`}</strong><p>{optimizer.headline}</p></div>
     <div className="ips-section-grid"><article><span>01 · Funding policy</span><h4>{money(profile.initial_amount)} initial + {money(profile.monthly_investment)}/month</h4><p>Automate contributions only after the emergency-reserve and debt gates are satisfied.</p></article><article><span>02 · Risk policy</span><h4>{pct(selected.expected_volatility)} modeled volatility</h4><p>Adverse P10 {money(selected.p10)} · median drawdown -{pct(selected.median_max_drawdown)}.</p></article><article><span>03 · Strategic allocation</span><div className="ips-allocation">{selected.allocation.map(item => <div key={item.key}><i style={{background:item.color}}/><span>{item.name}</span><strong>{pct(item.weight,0)}</strong></div>)}</div></article><article><span>04 · Tax policy</span><h4>{money(tax.after_tax_terminal)} after-tax median</h4><p>{policy.tax_policy}</p></article><article><span>05 · Rebalancing policy</span><h4>Annual review · ±5% bands</h4><p>{policy.rebalancing_rule}</p></article><article><span>06 · Monitoring policy</span><h4>Review material life changes</h4><p>{policy.monitoring_rule}</p></article></div>
     <div className="ips-implementation"><h4>Illustrative instruments for review</h4>{selected.instruments.map(item => <div key={item.isin}><strong>{item.ticker}</strong><span>{item.name}</span><small>{item.isin} · TER {pct(item.ter,2)}</small></div>)}</div>
-    <footer className="ips-signoff"><div><span>Investor acknowledgement</span><i/></div><div><span>Review date</span><i/></div><p>This policy documents decision rules; it does not guarantee outcomes or replace regulated personal tax or investment advice.</p></footer></section>
+    <footer className="ips-signoff"><label className={acknowledged ? 'is-acknowledged' : ''}><input type="checkbox" checked={acknowledged} onChange={event => setAcknowledged(event.target.checked)}/><Check size={17}/><span>I reviewed the assumptions, risks and any open suitability gates.</span></label><div><span>Review date</span><strong>{new Intl.DateTimeFormat('de-DE').format(new Date())}</strong></div><p>This policy documents decision rules; it does not guarantee outcomes or replace regulated personal tax or investment advice.</p></footer></section>
     <div className="ips-actions"><button type="button" onClick={onChangeStrategy}>Change strategy</button><button type="button" className="ips-print" onClick={printPolicy}><Printer size={16}/>Print / Save PDF</button></div></div>;
 }
 
@@ -337,13 +346,13 @@ function ProjectionView({ selected, comparison, target }) {
   return <div className="lab-projection"><article className="lab-chart-card lab-chart-card--wide"><div className="lab-chart-title"><div><span>Wealth cone</span><h2>Range of simulated outcomes</h2></div><div className="lab-legend"><i className="p90"/>Optimistic <i className="p50"/>Median <i className="p10"/>Adverse</div></div><div className="lab-chart"><ResponsiveContainer width="100%" height="100%"><AreaChart data={selected.timeline} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}><defs><linearGradient id="range90" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stopColor="#bda05f" stopOpacity=".36"/><stop offset="1" stopColor="#bda05f" stopOpacity=".02"/></linearGradient><linearGradient id="range50" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stopColor="#173d29" stopOpacity=".5"/><stop offset="1" stopColor="#173d29" stopOpacity=".03"/></linearGradient></defs><CartesianGrid vertical={false} stroke="#e8ece5" strokeDasharray="3 3"/><XAxis dataKey="year" tickLine={false} axisLine={false}/><YAxis tickFormatter={v => `€${Math.round(v/1000)}k`} tickLine={false} axisLine={false} width={55}/><Tooltip formatter={(v,n) => [money(v),n]} contentStyle={{ borderRadius: 12, border: '1px solid #dce3d8' }}/><Area type="monotone" dataKey="p90" name="Optimistic P90" stroke="#bda05f" fill="url(#range90)" animationDuration={900}/><Area type="monotone" dataKey="p50" name="Median P50" stroke="#173d29" strokeWidth={3} fill="url(#range50)" animationDuration={1000}/><Area type="monotone" dataKey="p10" name="Adverse P10" stroke="#b85d52" strokeDasharray="5 5" fill="transparent" animationDuration={1100}/><Area type="monotone" dataKey="contributions" name="Deposits" stroke="#8a988d" fill="transparent" strokeWidth={1.5}/></AreaChart></ResponsiveContainer></div><div className="lab-target-line"><Target size={15}/>Goal {money(target)} · probability {pct(selected.probability_target,0)}</div></article><article className="lab-chart-card"><div className="lab-chart-title"><div><span>Core Quantitative Comparison</span><h2>Median vs adverse result</h2></div></div><div className="lab-chart"><ResponsiveContainer width="100%" height="100%"><BarChart data={comparison} layout="vertical" margin={{ left: 10, right: 10 }}><CartesianGrid horizontal={false} stroke="#e8ece5"/><XAxis type="number" tickFormatter={v => `€${Math.round(v/1000)}k`} axisLine={false}/><YAxis dataKey="name" type="category" width={92} tick={{ fontSize: 10 }} axisLine={false}/><Tooltip formatter={v => money(v)} contentStyle={{ borderRadius:12 }}/><Bar dataKey="median" name="Median" fill="#173d29" radius={[0,5,5,0]} animationDuration={900}/><Bar dataKey="adverse" name="Adverse" fill="#c7a866" radius={[0,5,5,0]} animationDuration={1100}/></BarChart></ResponsiveContainer></div></article></div>;
 }
 
-function AllocationView({ selected, profile }) {
+function AllocationView({ selected, implementationPlan }) {
   return <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
     <div className="lab-allocation">
       <article className="lab-chart-card"><div className="lab-chart-title"><div><span>Risk budget</span><h2>What actually drives the portfolio</h2></div></div><div className="lab-donut-wrapper"><ResponsiveContainer width="100%" height="100%"><PieChart><Pie data={selected.allocation} dataKey="weight" nameKey="name" innerRadius={66} outerRadius={98} paddingAngle={2} animationDuration={900}>{selected.allocation.map(item => <Cell key={item.key} fill={item.color}/>)}</Pie><Tooltip formatter={v => pct(v,0)}/></PieChart></ResponsiveContainer><div className="lab-donut-center"><strong>{pct(selected.expected_volatility)}</strong><span>model volatility</span></div></div><ul className="lab-allocation-list">{selected.allocation.map(item => <li key={item.key}><i style={{ background:item.color }}/><span>{item.name}</span><strong>{pct(item.weight,0)}</strong></li>)}</ul></article>
       <article className="lab-instruments"><div className="lab-chart-title"><div><span>Implementation shortlist</span><h2>Named instruments and their jobs</h2></div><ShieldCheck/></div>{selected.instruments.map(item => <div className="lab-instrument" key={item.isin}><div className="lab-instrument__ticker">{item.ticker}</div><div><strong>{item.name}</strong><span>{item.isin} · TER {pct(item.ter,2)}</span><p>{item.role}</p><small>Risk: {item.risk}</small></div><ArrowUpRight/></div>)}</article>
     </div>
-    <BrokerDepotSimulator monthlyContribution={profile?.monthly_investment} initialAmount={profile?.initial_amount} selectedStrategy={selected} />
+    <BrokerDepotSimulator implementationPlan={implementationPlan} selectedStrategy={selected} />
   </div>;
 }
 

@@ -397,6 +397,11 @@ function App() {
                 analysisError={analysisState.error}
                 onRetryAnalysis={retryAnalysis}
                 onPreviewScenario={handleApplyPatch}
+                onReviewProfile={() => {
+                  setSubStepMap(prev => ({ ...(prev || {}), profile: 2 }));
+                  setCurrentStep('profile');
+                  window.scrollTo({ top: 0, behavior: 'auto' });
+                }}
                 onApplyPatch={handleApplyPatch}
                 onOpenChat={handleOpenChat}
               />

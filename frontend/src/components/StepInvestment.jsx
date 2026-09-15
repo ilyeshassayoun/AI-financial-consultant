@@ -12,6 +12,7 @@ export default function StepInvestment({
   analysisError,
   onRetryAnalysis,
   onPreviewScenario,
+  onReviewProfile,
 }) {
   return (
     <div className="investment-route animate-fade-in-up">
@@ -27,6 +28,7 @@ export default function StepInvestment({
         analysisError={analysisError}
         onRetryAnalysis={onRetryAnalysis}
         onPreviewScenario={onPreviewScenario}
+        onReviewProfile={onReviewProfile}
       />
     </div>
   );

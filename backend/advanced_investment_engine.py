@@ -44,6 +44,17 @@ STRATEGIES: Dict[str, Dict[str, Any]] = {
     "real_asset_income": {"name": "Real-Asset Income", "subtitle": "Income and inflation sensitivity", "weights": {"world_equity": .40, "global_bonds": .20, "listed_property": .25, "gold": .10, "cash": .05}, "instruments": ["eunl", "euna", "iwdp", "4gld"], "why": "Adds listed property and gold for investors seeking income and real-asset diversification."},
 }
 
+# Product-level weights are an illustrative implementation of each strategic
+# allocation. They are deliberately separate from the asset-class weights so
+# the API can state where an instrument is only a practical sleeve proxy.
+IMPLEMENTATION_WEIGHTS: Dict[str, Dict[str, float]] = {
+    "global_core": {"vwce": 1.00},
+    "balanced_60_40": {"eunl": .60, "euna": .40},
+    "factor_tilt": {"eunl": .65, "zprv": .35},
+    "all_weather": {"eunl": .35, "euna": .50, "4gld": .15},
+    "real_asset_income": {"eunl": .40, "euna": .25, "iwdp": .25, "4gld": .10},
+}
+
 TAXABLE_GAIN_SHARE = {
     "world_equity": .70,
     "em_equity": .70,
@@ -232,19 +243,55 @@ def _tax_analysis(strategy: Dict[str, Any], profile: Dict[str, Any], initial: fl
     jointly_assessed = profile.get("is_married", False) and profile.get("joint_assessment", False)
     allowance = 2000.0 if jointly_assessed else 1000.0
     capital_tax_rate = .27995 if profile.get("church_tax", False) else .26375
-    taxable_gain = max(0.0, gross_gain * taxable_share - allowance)
+    taxable_gain_before_allowance = gross_gain * taxable_share
+    allowance_used = min(allowance, taxable_gain_before_allowance)
+    taxable_gain = max(0.0, taxable_gain_before_allowance - allowance_used)
     estimated_tax = taxable_gain * capital_tax_rate
     after_tax = max(0.0, gross_terminal - estimated_tax)
+
+    def scenario(scenario_id: str, label: str, scenario_allowance: float,
+                 scenario_rate: float, description: str) -> Dict[str, Any]:
+        base = max(0.0, taxable_gain_before_allowance - scenario_allowance)
+        tax = base * scenario_rate
+        return {
+            "id": scenario_id,
+            "label": label,
+            "description": description,
+            "saver_allowance": round(scenario_allowance),
+            "capital_tax_rate": round(scenario_rate, 5),
+            "estimated_liquidation_tax": round(tax),
+            "after_tax_terminal": round(max(0.0, gross_terminal - tax)),
+        }
+
+    sensitivity_scenarios = [
+        scenario("profile", "Current profile", allowance, capital_tax_rate,
+                 "Uses the assessment and church-tax settings in the financial profile."),
+        scenario("no_allowance", "Allowance used elsewhere", 0.0, capital_tax_rate,
+                 "Shows the horizon result if no saver allowance remains for this portfolio."),
+        scenario("church_tax", "Church-tax sensitivity", allowance, .27995,
+                 "Illustrates a 9% church-tax jurisdiction; confirm the applicable rate."),
+    ]
+    if allowance < 2000:
+        sensitivity_scenarios.append(
+            scenario("joint_allowance", "Joint allowance sensitivity", 2000.0, capital_tax_rate,
+                     "Illustrative only; use this only if joint assessment is legally available.")
+        )
     return {
         "gross_terminal": round(gross_terminal),
         "cost_basis": round(contributions),
         "gross_gain": round(gross_gain),
         "taxable_gain_share": round(taxable_share, 4),
+        "taxable_gain_before_allowance": round(taxable_gain_before_allowance),
+        "modeled_nontaxable_gain": round(gross_gain - taxable_gain_before_allowance),
         "saver_allowance": round(allowance),
+        "allowance_used": round(allowance_used),
+        "taxable_gain_after_allowance": round(taxable_gain),
         "capital_tax_rate": round(capital_tax_rate, 5),
         "estimated_liquidation_tax": round(estimated_tax),
         "after_tax_terminal": round(after_tax),
         "tax_drag": round(gross_terminal - after_tax),
+        "effective_tax_drag_rate": round(estimated_tax / gross_gain, 5) if gross_gain else 0.0,
+        "sensitivity_scenarios": sensitivity_scenarios,
         "assumptions": [
             "25% capital-income tax plus 5.5% solidarity surcharge; church-tax case assumes a 9% church-tax jurisdiction.",
             "The €2,000 married saver allowance assumes joint assessment; otherwise the individual allowance is used.",
@@ -307,21 +354,21 @@ def _investment_policy(profile: Dict[str, Any], selected: Dict[str, Any], optimi
     debt = float(profile.get("unsecured_debt", 0) or 0)
     flags = []
     if profile.get("investment_liquidity") == "short" or int(profile.get("investment_years", 20)) <= 3:
-        flags.append({"level": "gate", "title": "Short-term capital requirement",
+        flags.append({"level": "gate", "resolution_code": "risk_capacity", "title": "Short-term capital requirement",
                       "detail": "No growth-portfolio match is suitable for automatic implementation when capital is needed within three years."})
     loss_tolerance = profile.get("investment_loss_tolerance") or profile.get("risk_profile", "medium")
     if loss_tolerance == "low" or profile.get("investment_priority") == "stability":
-        flags.append({"level": "gate", "title": "Capital-preservation review required",
+        flags.append({"level": "gate", "resolution_code": "risk_capacity", "title": "Capital-preservation review required",
                       "detail": "These growth portfolios cannot guarantee capital stability or a 10% loss limit."})
     max_vol = {"low": .06, "medium": .12, "high": 1.0}.get(loss_tolerance, .12)
     if selected.get("expected_volatility", 0) > max_vol:
-        flags.append({"level": "gate", "title": "Strategy volatility exceeds stated risk tolerance",
+        flags.append({"level": "gate", "resolution_code": "risk_capacity", "title": "Strategy volatility exceeds stated risk tolerance",
                       "detail": f"The selected strategy has {selected.get('expected_volatility', 0) * 100:.1f}% modeled volatility, "
                                  f"which exceeds the {max_vol * 100:.0f}% ceiling implied by the stated loss tolerance."})
     if reserve_months < 3:
-        flags.append({"level": "gate", "title": "Liquidity reserve below policy minimum", "detail": f"{reserve_months:.1f} months funded versus a 3-month minimum."})
+        flags.append({"level": "gate", "resolution_code": "cash_flow", "title": "Liquidity reserve below policy minimum", "detail": f"{reserve_months:.1f} months funded versus a 3-month minimum."})
     if debt > 0 and debt_rate > .06:
-        flags.append({"level": "gate", "title": "High-cost unsecured debt", "detail": f"Debt costing {debt_rate * 100:.1f}% should generally be prioritized before additional market risk."})
+        flags.append({"level": "gate", "resolution_code": "cash_flow", "title": "High-cost unsecured debt", "detail": f"Debt costing {debt_rate * 100:.1f}% should generally be prioritized before additional market risk."})
     return {
         "objective": f"Fund a €{float(profile.get('target_wealth', 0)):,.0f} target over {int(profile.get('investment_years', 20))} years.",
         "strategy": selected["name"],
@@ -332,6 +379,32 @@ def _investment_policy(profile: Dict[str, Any], selected: Dict[str, Any], optimi
         "rebalancing_rule": "Review annually and rebalance when an allocation drifts by ±5 percentage points.",
         "tax_policy": "Use the saver allowance deliberately, prefer tax-efficient fund wrappers, and verify advance lump-sum and loss-pot treatment annually.",
         "monitoring_rule": "Review after a material goal, income, family, tax-law or liquidity change; ignore ordinary market noise.",
+    }
+
+
+def _implementation_plan(strategy: Dict[str, Any], initial: float, monthly: float) -> Dict[str, Any]:
+    """Build a reconciled, provider-neutral order blueprint for the UI."""
+    weights = IMPLEMENTATION_WEIGHTS[strategy["id"]]
+    orders = []
+    for instrument_id, weight in weights.items():
+        instrument = INSTRUMENTS[instrument_id]
+        orders.append({
+            **instrument,
+            "weight": weight,
+            "initial_amount": round(initial * weight, 2),
+            "monthly_amount": round(monthly * weight, 2),
+        })
+    weighted_ter = sum(item["weight"] * item["ter"] for item in orders)
+    return {
+        "orders": orders,
+        "weight_total": round(sum(item["weight"] for item in orders), 4),
+        "initial_total": round(initial, 2),
+        "monthly_total": round(monthly, 2),
+        "annual_contribution": round(monthly * 12, 2),
+        "weighted_ter": round(weighted_ter, 5),
+        "rebalance_band": .05,
+        "review_cadence": "Annual, or when a sleeve drifts by 5 percentage points",
+        "disclaimer": "Illustrative order blueprint, not an order. Verify instrument eligibility, current fees, replication, tax treatment and savings-plan availability with the chosen provider.",
     }
 
 
@@ -429,6 +502,7 @@ def build_investment_lab(profile: Dict[str, Any]) -> Dict[str, Any]:
     selected = next(item for item in strategies if item["id"] == selected_id)
     optimizer = _goal_optimizer(selected, strategies, initial, monthly, years, target)
     policy = _investment_policy(profile, selected, optimizer)
+    implementation = _implementation_plan(selected, initial, monthly)
     stresses = {
         "global_core": {"gfc": -.43, "covid": -.28, "rate_shock": -.16, "stagflation": -.22},
         "balanced_60_40": {"gfc": -.25, "covid": -.17, "rate_shock": -.18, "stagflation": -.14},
@@ -439,6 +513,7 @@ def build_investment_lab(profile: Dict[str, Any]) -> Dict[str, Any]:
     return {"selected_strategy": selected_id, "strategies": strategies, "selected": selected,
             "target_wealth": round(target), "goal_optimizer": optimizer,
             "tax_analysis": selected["tax"], "investment_policy": policy,
+            "implementation_plan": implementation,
             "real_estate": _real_estate_case(profile, years),
             "stress_matrix": [{"id": item["id"], "name": item["name"], **stresses[item["id"]]} for item in strategies],
             "methodology": {

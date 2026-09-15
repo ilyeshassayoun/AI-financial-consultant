@@ -99,9 +99,12 @@ class StrategyDetail(BaseModel):
 class InvestmentLabResponse(BaseModel):
     model_config = ConfigDict(allow_inf_nan=False, extra="allow")
     strategies: List[StrategyDetail]
+    selected: StrategyDetail
     selected_strategy: str
     target_wealth: float
     tax_analysis: Dict[str, Any]
+    investment_policy: Dict[str, Any]
+    implementation_plan: Dict[str, Any]
     real_estate: Dict[str, Any]
     goal_optimizer: Dict[str, Any]
     stress_matrix: List[Dict[str, Any]]
