@@ -10,4 +10,16 @@
 @media(max-width:800px){.ret-journey{gap:18px}.ret-hero{align-items:stretch;flex-direction:column;padding-top:12px}.ret-steps{grid-template-columns:repeat(2,1fr)}.ret-metrics,.ret-two-column,.ret-withdraw-grid,.ret-policy-grid,.ret-policy-assumptions,.ret-signoff{grid-template-columns:1fr}.ret-chart{height:320px}.ret-policy-header{flex-direction:column}.ret-print-button{width:100%}}
 @media(max-width:480px){.ret-steps{grid-template-columns:1fr}.ret-panel,.ret-metric,.ret-withdraw-grid article{padding:18px}.ret-footer>span{display:none}.ret-chart{height:300px}.ret-stat-list>div{align-items:flex-start;flex-direction:column}.ret-stat-list strong{text-align:left}}
 @media(prefers-reduced-motion:reduce){.ret-page{animation:none}.ret-steps button,.ret-primary-button,.ret-secondary-button,.ret-print-button{transition:none}}
-@media print{body *{visibility:hidden}.ret-policy,.ret-policy *{visibility:visible}.ret-policy{border:0;left:0;position:absolute;top:0;width:100%}.ret-print-button{display:none}}
+.ret-journey { font-family: var(--font-body); font-size: 1rem; line-height: 1.65; scroll-margin-top: 96px; }
+.ret-page { min-height: 0; animation-duration: .16s; }
+.ret-panel h2, .ret-policy-grid h3 { font-family: var(--font-body); letter-spacing: 0; }
+.ret-policy-grid h3 { font-size: .9rem; text-transform: none; }
+.ret-field small, .ret-metric small, .ret-policy-assumptions span, .ret-scope > div { font-size: .9rem; }
+.ret-stat-list .is-emphasis strong { color: #fff; }
+.ret-policy-header > div { min-width: 0; }
+.ret-policy-header h2 { font-size: clamp(1.5rem, 3vw, 2rem); }
+.ret-footer { gap: 12px; flex-wrap: wrap; padding-bottom: 64px; }
+.ret-footer button { min-height: 48px; }
+.ret-signoff { display: none; }
+@media(max-width:480px) { .ret-footer button { width: 100%; } .ret-policy { padding: 20px; } }
+@media print{body *{visibility:hidden}.ret-policy,.ret-policy *{visibility:visible}.ret-policy{border:0;left:0;position:absolute;top:0;width:100%}.ret-print-button{display:none}.ret-signoff{display:grid}}

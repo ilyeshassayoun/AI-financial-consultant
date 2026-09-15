@@ -63,4 +63,26 @@ test.describe('End-to-End Wizard Workflow & Viewport Scaling', () => {
     await expect(page.getByRole('alert')).toBeVisible({ timeout: 15000 });
     await expect(page.getByRole('button', { name: 'Retry analysis' })).toBeVisible();
   });
+
+  test('keeps a direct retirement link and completes every internal step', async ({ page }) => {
+    await page.route('**/api/lab/stress-test', route => route.fulfill({ json: {
+      description: 'Historical server response', max_drawdown_pct: -.2,
+      max_drawdown_real_pct: -.25, recovery_horizon_years: 3, trough_month: 12,
+      trajectory: [{ year: 2008, month: 12, nominal_value: 80000, real_value: 75000, drawdown: -.2, drawdown_real: -.25 }],
+      srr_metrics: { survival_probability: .84, safe_withdrawal_rate_calibrated: .033 },
+    } }));
+    await page.goto('/pension');
+    await expect(page.getByRole('heading', { name: /Design retirement income/ })).toBeVisible();
+    await expect(page).toHaveURL(/\/pension$/);
+    for (let step = 0; step < 4; step++) {
+      await page.getByRole('button', { name: 'Continue', exact: true }).click();
+    }
+    await expect(page.getByText('Historical server response', { exact: false })).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Section Encountered an Issue' })).toHaveCount(0);
+    await page.getByRole('button', { name: 'Continue', exact: true }).click();
+    await page.setViewportSize({ width: 360, height: 800 });
+    await expect.poll(() => page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+    await page.getByRole('button', { name: 'Review full financial plan' }).click();
+    await expect(page.getByRole('button', { name: 'Close modal' })).toBeVisible();
+  });
 });

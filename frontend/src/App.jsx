@@ -106,6 +106,7 @@ function RouteSync({ currentStep, setCurrentStep }) {
   const location = useLocation();
   const navigate = useNavigate();
   const lastPathname = useRef(null);
+  const pendingRouteStep = useRef(null);
 
   // A single effect avoids two independent synchronization effects racing.
   // If the pathname changed first (deep link, back/forward), URL wins. If the
@@ -115,8 +116,15 @@ function RouteSync({ currentStep, setCurrentStep }) {
     const mappedStep = PATH_TO_STEP[rawPath];
     if (lastPathname.current !== rawPath) {
       lastPathname.current = rawPath;
+      pendingRouteStep.current = mappedStep && mappedStep !== currentStep ? mappedStep : null;
       if (mappedStep && mappedStep !== currentStep) setCurrentStep(mappedStep);
       return;
+    }
+    // Wait for the URL-driven store update to render before allowing state to
+    // navigate. StrictMode can replay this effect with the old stored step.
+    if (pendingRouteStep.current) {
+      if (currentStep !== pendingRouteStep.current) return;
+      pendingRouteStep.current = null;
     }
     if (mappedStep !== currentStep) {
       const targetPath = STEP_TO_PATH[currentStep] || '/';
@@ -225,6 +233,10 @@ function App() {
   }, [setInitialChatMessage, setIsAdvisorDrawerOpen]);
 
   const shouldRunAnalysis = currentStep !== 'welcome';
+
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: 'instant' });
+  }, [currentStep]);
 
   useEffect(() => {
     if (!shouldRunAnalysis) return undefined;
@@ -391,6 +403,7 @@ function App() {
             )}
             {currentStep === 'pension' && (
               <StepRetirement
+                onReviewPlan={() => setIsAuditDossierOpen(true)}
                 profile={effectiveProfile}
                 updateProfile={updateProfile}
                 nextStep={nextStep}

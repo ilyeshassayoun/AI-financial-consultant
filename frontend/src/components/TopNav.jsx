@@ -107,7 +107,7 @@ export default function TopNav({ currentStep, setStep, onOpenGDPR, onOpenAdvisor
                 className={isActive ? 'is-active' : undefined}
                 onClick={() => handleNavClick(step.id)}
               >
-                <span>{step.label}</span>
+                <span>{SHORT_LABELS[step.id] || step.label}</span>
                 <ChevronRight aria-hidden="true" />
               </button>
             );

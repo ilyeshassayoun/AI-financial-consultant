@@ -17,7 +17,7 @@ const pages = [
   ['DRV record', 'Audit pension points and access factor', FileCheck2],
   ['Timing', 'Compare retirement-age scenarios', CalendarClock],
   ['Withdrawals', 'Test longevity and sequence risk', LineChart],
-  ['Policy', 'Commit to savings and review rules', ShieldCheck]
+  ['Your retirement plan', 'Review your savings target and next actions', ShieldCheck]
 ];
 const colors = ['#173d30', '#b38343', '#597c69', '#9aa99f'];
 const money = value => new Intl.NumberFormat('de-DE', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 }).format(Number(value || 0));
@@ -54,7 +54,8 @@ export default function StepRetirement({
   setSubStep: setControlledPage,
   analysisStatus,
   analysisError,
-  onRetryAnalysis
+  onRetryAnalysis,
+  onReviewPlan
 }) {
   const topRef = useRef(null);
   const page = Math.max(0, Math.min(pages.length - 1, Number(controlledPage || 0)));
@@ -62,8 +63,7 @@ export default function StepRetirement({
   const lab = analysis?.retirement_lab;
 
   useEffect(() => {
-    const reduced = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
-    topRef.current?.scrollIntoView({ behavior: reduced ? 'auto' : 'smooth', block: 'start' });
+    topRef.current?.scrollIntoView({ behavior: 'instant', block: 'start' });
   }, [page]);
 
   if (!lab) {
@@ -345,8 +345,8 @@ export default function StepRetirement({
             Continue <ArrowRight size={17} />
           </button>
         ) : (
-          <button type="button" className="ret-primary-button" onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })} style={{ minHeight: '44px' }}>
-            Complete Advisory Plan <TrendingUp size={17} />
+          <button type="button" className="ret-primary-button" onClick={onReviewPlan} style={{ minHeight: '44px' }}>
+            Review full financial plan <TrendingUp size={17} />
           </button>
         )}
       </footer>

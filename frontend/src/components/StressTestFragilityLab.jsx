@@ -225,21 +225,42 @@ export default function StressTestFragilityLab({
   // Attempt API fetch with offline fallback
   useEffect(() => {
     let active = true;
+    const controller = new AbortController();
 
     const payload = {
       scenario: selectedScenario,
       strategy: strategyKey,
       initial_capital: initialCapital,
-      monthly_cashflow: monthlyCashflow,
+      monthly_cashflow: isDecumulation ? -(initialCapital * withdrawalRate / 12) : monthlyCashflow,
       horizon_years: 6,
       is_decumulation: isDecumulation,
       withdrawal_rate: withdrawalRate
     };
 
-    fetchStressTest(payload)
+    const timer = setTimeout(() => fetchStressTest(payload, controller.signal)
       .then((data) => {
         if (active && data) {
-          setResponse({ key: requestKey, data, source: 'server' });
+          const survival = data.srr_metrics?.survival_probability;
+          if (!Array.isArray(data.trajectory) || !Number.isFinite(survival)) {
+            throw new Error('Incomplete stress-test response');
+          }
+          setResponse({ key: requestKey, source: 'server', data: {
+            ...data,
+            dynamics: data.description,
+            real_max_drawdown_pct: data.max_drawdown_real_pct,
+            trough_duration_months: data.trough_month ?? '—',
+            calibrated_swr: data.srr_metrics.safe_withdrawal_rate_calibrated,
+            survival_probability: survival,
+            trajectory: data.trajectory.map(point => ({ ...point,
+              step: `${point.year}-${String(point.month).padStart(2, '0')}`,
+              drawdown: point.drawdown * 100,
+              real_drawdown: point.drawdown_real * 100,
+            })),
+            srr_survival_curve: [{
+              rate_label: `${((isDecumulation ? withdrawalRate : Math.abs(monthlyCashflow) * 12 / initialCapital) * 100).toFixed(1)}%`,
+              survival_probability: survival * 100,
+            }],
+          } });
         }
       })
       .catch(() => {
@@ -255,9 +276,9 @@ export default function StressTestFragilityLab({
           });
           setResponse({ key: requestKey, data: fallbackResult, source: 'local' });
         }
-      });
+      }), 300);
 
-    return () => { active = false; };
+    return () => { active = false; clearTimeout(timer); controller.abort(); };
   }, [selectedScenario, strategyKey, initialCapital, monthlyCashflow, isDecumulation, withdrawalRate, requestKey]);
 
   const hasCurrentResponse = response.key === requestKey;
@@ -427,7 +448,7 @@ export default function StressTestFragilityLab({
             {stressResult.recovery_horizon_years} yrs
           </div>
           <small style={{ fontSize: '0.68rem', color: 'var(--text-secondary, #64748b)' }}>
-            Trough Duration: {stressResult.trough_duration_months} months
+            Trough month: {stressResult.trough_month ?? stressResult.trough_duration_months}
           </small>
         </article>
 
@@ -580,10 +601,10 @@ export default function StressTestFragilityLab({
         <div style={{ borderRadius: '12px', border: '1px solid var(--border-architectural, #e2e8f0)', padding: '16px', background: 'var(--bg-card, #ffffff)' }}>
           <div style={{ marginBottom: '14px' }}>
             <h3 style={{ margin: 0, fontSize: '0.92rem', fontWeight: 700, color: 'var(--text-primary, #0f172a)' }}>
-              Decumulation Survival Probabilities Across SWR
+              Withdrawal resilience
             </h3>
             <span style={{ fontSize: '0.7rem', color: 'var(--text-secondary, #64748b)' }}>
-              30-year portfolio survival under Guyton-Klinger capital preservation guardrails
+              {resultSource === 'server' ? '30-year model result at the tested withdrawal rate. Adjust the rate to compare.' : 'Illustrative local approximation across withdrawal rates.'}
             </span>
           </div>
 
