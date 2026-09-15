@@ -1,5 +1,10 @@
 // Production defaults to the same origin; Vite proxies /api during development.
-const API_BASE = (import.meta.env.VITE_API_URL || '').replace(/\/$/, '');
+// A tiny public runtime config lets static deployments point at the existing API
+// without rebuilding the JavaScript bundle or exposing secrets.
+const runtimeApiBase = typeof window !== 'undefined'
+  ? window.__FINANCIAL_ADVISORY_CONFIG__?.apiBaseUrl
+  : '';
+const API_BASE = (runtimeApiBase || import.meta.env.VITE_API_URL || '').replace(/\/$/, '');
 
 export class ApiError extends Error {
   constructor(message, status = 0, detail = null) {

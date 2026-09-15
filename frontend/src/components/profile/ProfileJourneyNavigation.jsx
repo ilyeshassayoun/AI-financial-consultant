@@ -9,6 +9,7 @@ export default function ProfileJourneyNavigation({
   stageDescriptions = [],
   cockpitCopy = [],
   score = null,
+  cockpitMetrics = [],
   setSubStep,
   nextStep,
   prevStep,
@@ -60,9 +61,9 @@ export default function ProfileJourneyNavigation({
         aria-label="Live household signal"
       >
         <div className="profile-cockpit__copy">
-          <span>Live household signal</span>
+          <span>Live plan signal</span>
           <h2>{cockpitCopy[subStep]}</h2>
-          <p>{stageDescriptions[subStep]}. Recommendations update as your answers change.</p>
+          <p>{stageDescriptions[subStep]}. Recommendations update automatically.</p>
           {onOpenChat && (
             <button type="button" className="profile-cockpit__ask" onClick={() => onOpenChat(cockpitCopy[subStep])}>
               Ask the adviser <ArrowRight size={14} />
@@ -70,14 +71,18 @@ export default function ProfileJourneyNavigation({
           )}
         </div>
         <motion.div
-          className="profile-cockpit__score"
-          style={{ '--profile-score': `${Math.max(0, Math.min(100, score ?? 0)) * 3.6}deg` }}
-          initial={reduceMotion ? false : { opacity: 0, scale: 0.88, rotate: -8 }}
-          animate={{ opacity: 1, scale: 1, rotate: 0 }}
-          transition={{ duration: 0.65, delay: 0.24, ease: [0.16, 1, 0.3, 1] }}
+          className="profile-cockpit__metrics"
+          initial={reduceMotion ? false : { opacity: 0, x: 16 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ duration: 0.48, delay: 0.2, ease: [0.16, 1, 0.3, 1] }}
           aria-label={score === null ? 'Plan readiness pending analysis' : `Plan readiness score ${score} out of 100`}
         >
-          <div><strong>{score ?? '—'}</strong><span>Plan readiness</span></div>
+          {cockpitMetrics.map((metric) => (
+            <div key={metric.label}>
+              <strong>{metric.value}</strong>
+              <span>{metric.label}</span>
+            </div>
+          ))}
         </motion.div>
       </motion.section>
 

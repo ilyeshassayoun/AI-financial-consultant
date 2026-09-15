@@ -13,8 +13,16 @@ test.describe('Welcome Step', () => {
   });
 
   test('should load welcome page with CTA', async ({ page }) => {
-    await expect(page.getByRole('heading', { level: 1 })).toHaveText(/A clearer plan\s*for your money\./);
+    await expect(page.getByRole('heading', { level: 1 })).toHaveText(/A clearer plan for every financial decision\./);
     await expect(page.getByRole('button', { name: 'Build my financial plan' })).toBeVisible();
+  });
+
+  test('keeps the executive landing page fluid on a narrow phone', async ({ page }) => {
+    await page.setViewportSize({ width: 360, height: 800 });
+
+    await expect(page.locator('.welcome-snapshot')).toBeVisible();
+    await expect(page.locator('.welcome-outcome-card')).toHaveCount(4);
+    await expect.poll(() => page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
   });
 
   test('explains the four planning outcomes', async ({ page }) => {

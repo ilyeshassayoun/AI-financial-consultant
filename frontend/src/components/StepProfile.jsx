@@ -68,6 +68,17 @@ export default function StepProfile({
     ? Math.round(Math.max(0, Math.min(20, scoreComponents[key])) * 5)
     : null;
   const hasLiquidity = componentScore('liquidity') !== null && componentScore('liquidity') >= 80;
+  const householdKpis = advisoryPlan?.household_kpis || {};
+  const monthlyCapacity = Number(
+    householdKpis.free_cash_flow_after_investing ?? householdKpis.monthly_surplus
+  );
+  const formattedMonthlyCapacity = Number.isFinite(monthlyCapacity)
+    ? new Intl.NumberFormat('de-DE', {
+        style: 'currency',
+        currency: 'EUR',
+        maximumFractionDigits: 0,
+      }).format(Math.max(0, monthlyCapacity))
+    : '—';
 
   const cockpitCopy = [
     'Start with the outcome, then make every euro support it.',
@@ -114,6 +125,11 @@ export default function StepProfile({
         stageDescriptions={stageDescriptions}
         cockpitCopy={cockpitCopy}
         score={score}
+        cockpitMetrics={[
+          { value: score === null ? '—' : `${Math.round(score)}%`, label: 'plan readiness' },
+          { value: formattedMonthlyCapacity, label: 'monthly capacity' },
+          { value: `${workingYearsRemaining} yr`, label: 'time horizon' },
+        ]}
         setSubStep={setSubStep}
         nextStep={nextStep}
         prevStep={prevStep}
