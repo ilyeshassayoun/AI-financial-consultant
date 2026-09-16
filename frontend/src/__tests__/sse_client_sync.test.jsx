@@ -158,4 +158,24 @@ describe('SSE Client Synchronization & Real-Time AI Streaming (R2)', () => {
     expect(mockOnApplyPatch).toHaveBeenCalledWith({ monthly_investment: 750 });
     expect(screen.getByText(/applied to profile/i)).toBeInTheDocument();
   });
+
+  it('shows an honest recovery message when both chat transports fail', async () => {
+    vi.spyOn(apiService, 'streamChatReply').mockRejectedValue(new Error('backend unavailable'));
+
+    render(
+      <AdvisorDrawer
+        isOpen={true}
+        onClose={vi.fn()}
+        profile={mockProfile}
+        analysis={mockAnalysis}
+      />
+    );
+
+    const input = screen.getByPlaceholderText(/Ask about your financial plan/i);
+    fireEvent.change(input, { target: { value: 'Explain my investment plan' } });
+    fireEvent.submit(input.closest('form'));
+
+    expect(await screen.findByText(/Concierge temporarily unavailable/i)).toBeInTheDocument();
+    expect(screen.getByText(/no recommendation has been inferred/i)).toBeInTheDocument();
+  });
 });

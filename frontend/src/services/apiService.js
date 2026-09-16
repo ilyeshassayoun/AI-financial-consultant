@@ -184,8 +184,9 @@ export async function streamChatReply(profile, messages, onChunk, onEventOrSigna
       const nonStreamData = await fetchChatReply(profile, messages, signal);
       if (nonStreamData?.reply) {
         onChunk(nonStreamData.reply);
+        return;
       }
-      return;
+      throw new ApiError('The advisory service did not return a usable response.', response.status);
     }
 
     const reader = response.body.getReader();
@@ -248,9 +249,14 @@ export async function streamChatReply(profile, messages, onChunk, onEventOrSigna
     }
   } catch (err) {
     if (err.name !== 'AbortError') {
+      if (err instanceof ApiError) throw err;
       console.warn('[API] Stream interrupted, attempting standard reply:', err);
       const fallback = await fetchChatReply(profile, messages, signal);
-      if (fallback?.reply) onChunk(fallback.reply);
+      if (fallback?.reply) {
+        onChunk(fallback.reply);
+        return;
+      }
+      throw err;
     }
   }
 }

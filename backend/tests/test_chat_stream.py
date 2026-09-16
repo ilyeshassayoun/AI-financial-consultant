@@ -5,35 +5,26 @@ streaming, interleaved structured function events, and deterministic offline fal
 """
 
 import json
-import pytest
 from fastapi.testclient import TestClient
 from main import app
-from schemas import ClientProfile, ChatRequest
-from llm_service import ChatMessage
-from dependencies import require_llm_access
-from config import settings
 
 client = TestClient(app)
 
 
-@pytest.fixture(autouse=True)
-def override_llm_auth():
-    app.dependency_overrides[require_llm_access] = lambda: object()
-    yield
-    app.dependency_overrides.pop(require_llm_access, None)
+def test_chat_stream_is_available_to_guest_sessions(monkeypatch):
+    """The visible concierge must provide local guidance without a login or paid-model call."""
+    monkeypatch.setenv("GROQ_API_KEY", "must-not-be-used-by-guests")
+    payload = {
+        "profile": {"income": 50000},
+        "messages": [{"role": "user", "content": "How do I start investing?"}],
+    }
 
+    response = client.post("/api/chat/stream", json=payload)
 
-def test_chat_stream_unauthorized_when_key_invalid():
-    """Verify missing/invalid X-API-Key returns HTTP 401 when LLM_ACCESS_KEY is enforced."""
-    orig = settings.LLM_ACCESS_KEY
-    try:
-        settings.LLM_ACCESS_KEY = "test-secret-key-999"
-        app.dependency_overrides.pop(require_llm_access, None)
-        resp = client.post("/api/chat/stream", json={"profile": {"income": 50000}, "messages": []})
-        assert resp.status_code == 401
-    finally:
-        settings.LLM_ACCESS_KEY = orig
-        app.dependency_overrides[require_llm_access] = lambda: object()
+    assert response.status_code == 200
+    assert "Model-grounded explanation" in response.text
+    assert "Investments:" in response.text
+    assert "data: [DONE]" in response.text
 
 
 def test_chat_stream_headers_and_anti_buffering():
@@ -63,8 +54,8 @@ def test_chat_stream_headers_and_anti_buffering():
         assert response.headers.get("connection") == "keep-alive"
 
 
-def test_chat_stream_emits_tokens_and_structured_function_events():
-    """Verify stream yields tokens interleaved with structured UI events (highlight_metric, delta_badge, patch_proposal)."""
+def test_chat_stream_emits_tokens_citations_and_completion():
+    """Guest streams contain grounded text and sources, without fabricated optimization events."""
     payload = {
         "profile": {
             "income": 70000,
@@ -114,23 +105,10 @@ def test_chat_stream_emits_tokens_and_structured_function_events():
     assert has_done_marker, "Stream must terminate with [DONE] marker"
 
     event_types = [ev["event"] for ev in events_received]
-    assert "highlight_metric" in event_types, "Stream must emit highlight_metric event"
     assert "statutory_citation" in event_types, "Stream must emit statutory_citation event"
-    assert "patch_proposal" in event_types, "Stream must emit patch_proposal event"
-    assert "delta_badge" in event_types, "Stream must emit delta_badge event"
     assert "done" in event_types, "Stream must emit done summary event"
-
-    # Validate highlight_metric payload
-    hl_event = next(ev for ev in events_received if ev["event"] == "highlight_metric")
-    data = hl_event.get("data", hl_event)
-    assert data["target"] == "pension_gap"
-    assert data["severity"] in ("warning", "info", "danger")
-
-    # Validate patch_proposal payload
-    patch_event = next(ev for ev in events_received if ev["event"] == "patch_proposal")
-    patch_data = patch_event.get("data", patch_event)
-    assert "patch" in patch_data
-    assert "impact" in patch_data
+    assert "patch_proposal" not in event_types
+    assert "delta_badge" not in event_types
 
 
 def test_chat_stream_offline_deterministic_fallback():
@@ -153,7 +131,6 @@ def test_chat_stream_offline_deterministic_fallback():
         assert "text/event-stream" in resp.headers["content-type"]
         body = resp.text
         assert "data: [DONE]" in body
-        assert "highlight_metric" in body
         assert "statutory_citation" in body
     finally:
         if orig_key is not None:

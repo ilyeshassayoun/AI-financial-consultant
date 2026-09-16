@@ -1,15 +1,29 @@
 import typing
-from fastapi import APIRouter, Depends, Request
+from fastapi import APIRouter, Request
 from fastapi.responses import StreamingResponse
 from starlette.concurrency import run_in_threadpool
 from analysis import run_full_analysis as _run_full_analysis
 from llm_service import generate_financial_advice, generate_step_ai_consultation, stream_financial_advice
 from schemas import ClientProfile, ChatRequest, ConsultantInsightRequest, ChatResponse
-from dependencies import require_llm_access
+from core.security import verify_token
 from config import settings
 from rate_limit import limiter
 
 router = APIRouter(prefix="/api", tags=["chat"])
+
+
+def _has_valid_client_session(request: Request) -> bool:
+    """Allow paid external-model access only for a valid signed-in session.
+
+    The deterministic advisor remains available to guests.  This check deliberately
+    avoids a database lookup: it only decides which response engine may be used and
+    never grants access to stored client data.
+    """
+    authorization = request.headers.get("authorization", "")
+    token = authorization[7:].strip() if authorization.lower().startswith("bearer ") else None
+    token = token or request.cookies.get("access_token")
+    payload = verify_token(token or "", expected_type="access")
+    return bool(payload and payload.get("sub"))
 
 
 def _chat_context(profile: ClientProfile, analysis: dict) -> str:
@@ -26,7 +40,7 @@ def _chat_context(profile: ClientProfile, analysis: dict) -> str:
     ])
 
 
-@router.post("/consultant/insight", dependencies=[Depends(require_llm_access)])
+@router.post("/consultant/insight")
 @limiter.limit(settings.RATE_LIMIT_CHAT)
 async def consultant_insight(request: Request, payload: ConsultantInsightRequest) -> typing.Any:
     analysis = await run_in_threadpool(_run_full_analysis, payload.profile)
@@ -35,14 +49,19 @@ async def consultant_insight(request: Request, payload: ConsultantInsightRequest
     return {"insight": insight, "analysis": analysis}
 
 
-@router.post("/chat/stream", dependencies=[Depends(require_llm_access)])
+@router.post("/chat/stream")
 @limiter.limit(settings.RATE_LIMIT_CHAT)
 async def chat_stream_endpoint(request: Request, chat_request: ChatRequest) -> typing.Any:
     analysis = await run_in_threadpool(_run_full_analysis, chat_request.profile)
     context = _chat_context(chat_request.profile, analysis)
 
     return StreamingResponse(
-        stream_financial_advice(chat_request.messages, context, profile=chat_request.profile),
+        stream_financial_advice(
+            chat_request.messages,
+            context,
+            profile=chat_request.profile,
+            allow_external_llm=_has_valid_client_session(request),
+        ),
         media_type="text/event-stream",
         headers={
             "Cache-Control": "no-cache, no-transform",
@@ -52,9 +71,15 @@ async def chat_stream_endpoint(request: Request, chat_request: ChatRequest) -> t
     )
 
 
-@router.post("/chat", response_model=ChatResponse, dependencies=[Depends(require_llm_access)])
+@router.post("/chat", response_model=ChatResponse)
 @limiter.limit(settings.RATE_LIMIT_CHAT)
 async def chat_endpoint(request: Request, chat_request: ChatRequest) -> ChatResponse:
     analysis = await run_in_threadpool(_run_full_analysis, chat_request.profile)
     context = _chat_context(chat_request.profile, analysis)
-    return ChatResponse(reply=await generate_financial_advice(chat_request.messages, context))
+    return ChatResponse(
+        reply=await generate_financial_advice(
+            chat_request.messages,
+            context,
+            allow_external_llm=_has_valid_client_session(request),
+        )
+    )

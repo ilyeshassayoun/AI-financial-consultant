@@ -202,14 +202,74 @@ def generate_step_ai_consultation(step: str, profile: dict, analysis: dict) -> d
 from knowledge_base import retrieve_statutory_context
 
 
-async def generate_financial_advice(messages: List[ChatMessage], context: str) -> str:
+_OFFICIAL_STATUTE_URLS = {
+    "estg_32a": "https://www.gesetze-im-internet.de/estg/__32a.html",
+    "estg_9": "https://www.gesetze-im-internet.de/estg/__9.html",
+    "estg_10": "https://www.gesetze-im-internet.de/estg/__10.html",
+    "invstg_20": "https://www.gesetze-im-internet.de/invstg_2018/__20.html",
+    "invstg_18": "https://www.gesetze-im-internet.de/invstg_2018/__18.html",
+    "sgb_vi": "https://www.gesetze-im-internet.de/sgb_6/",
+    "bgb_823": "https://www.gesetze-im-internet.de/bgb/__823.html",
+    "betravg_1a": "https://www.gesetze-im-internet.de/betravg/__1a.html",
+    "sgb_v_jaeg": "https://www.gesetze-im-internet.de/sgb_5/__6.html",
+}
+
+
+def _official_statute_url(provision: dict[str, Any]) -> str:
+    return _OFFICIAL_STATUTE_URLS.get(
+        str(provision.get("id", "")),
+        "https://www.gesetze-im-internet.de/",
+    )
+
+
+def _deterministic_advisory_reply(question: str, context: str, statutory_notes: str) -> str:
+    """Build a grounded explanation without inventing figures or recommendations."""
+    topic = question.casefold()
+    context_lines = [line.strip() for line in context.splitlines() if line.strip()]
+    topic_prefixes: list[str] = []
+
+    if any(term in topic for term in ("tax", "estg", "deduct", "commute", "home office")):
+        topic_prefixes.append("Tax:")
+    if any(term in topic for term in ("invest", "etf", "portfolio", "return", "fee", "wealth")):
+        topic_prefixes.append("Investments:")
+    if any(term in topic for term in ("pension", "retire", "renten", "drv", "withdraw")):
+        topic_prefixes.append("Retirement:")
+    if any(term in topic for term in ("income", "salary", "family", "profile")):
+        topic_prefixes.append("Client:")
+
+    selected_lines = [
+        line for line in context_lines
+        if any(line.startswith(prefix) for prefix in topic_prefixes)
+    ]
+    if not selected_lines:
+        selected_lines = context_lines[1:5] or context_lines
+
+    modeled_facts = "\n".join(f"- {line}" for line in selected_lines)
+    return (
+        "### Model-grounded explanation\n\n"
+        f"You asked: *\"{question}\"*\n\n"
+        "The current plan contains these relevant modeled results:\n"
+        f"{modeled_facts}\n\n"
+        "These are planning estimates based on the profile inputs, not guaranteed outcomes. "
+        "Use the relevant specialist page to compare assumptions before changing the plan.\n\n"
+        f"**Relevant statutory context**\n{statutory_notes}\n\n"
+        "For an individual tax, insurance, or investment recommendation, verify the inputs "
+        "with an appropriately regulated professional."
+    )
+
+
+async def generate_financial_advice(
+    messages: List[ChatMessage],
+    context: str,
+    allow_external_llm: bool = True,
+) -> str:
     """
     Generates intelligent financial advice using an LLM if API key is provided,
     augmented with statutory German legal knowledge (RAG),
     or falls back to an expert, multi-paragraph actuarial consulting synthesis.
     Uses async httpx to avoid blocking the FastAPI event loop.
     """
-    api_key = os.environ.get("GROQ_API_KEY", "")
+    api_key = os.environ.get("GROQ_API_KEY", "") if allow_external_llm else ""
     last_user_msg = messages[-1].content if messages else "Overall financial strategy"
     
     # RAG: Retrieve matching statutory provisions
@@ -217,14 +277,7 @@ async def generate_financial_advice(messages: List[ChatMessage], context: str) -
     statutory_notes = "\n".join([f"• [{item['statute']} - {item['title']}]: {item['content']}" for item in statutory_provisions]) if statutory_provisions else "Standard German statutory framework applies."
     
     if not api_key:
-        return (
-            "### Ilyes advisory assistant unavailable\n\n"
-            f"Your question was received: *\"{last_user_msg}\"*. The deterministic tax, "
-            "insurance, investment and retirement calculations remain available in their "
-            "specialist pages. Configure `GROQ_API_KEY` to enable an explanatory response. "
-            "No product recommendation or statutory entitlement has been inferred by this fallback.\n\n"
-            f"**Relevant Statutory References:**\n{statutory_notes}"
-        )
+        return _deterministic_advisory_reply(last_user_msg, context, statutory_notes)
         
     url = "https://api.groq.com/openai/v1/chat/completions"
     headers = {
@@ -260,18 +313,14 @@ async def generate_financial_advice(messages: List[ChatMessage], context: str) -
         return str(data["choices"][0]["message"]["content"])
     except Exception as exc:
         logger.warning("LLM provider unavailable (%s)", type(exc).__name__)
-        return (
-            "### Ilyes advisory assistant temporarily unavailable\n\n"
-            "The calculation results on the specialist pages are unaffected. No external-model "
-            "response is shown because its claims could not be validated. Please retry later.\n\n"
-            f"**Statutory References for this topic:**\n{statutory_notes}"
-        )
+        return _deterministic_advisory_reply(last_user_msg, context, statutory_notes)
 
 
 async def stream_financial_advice(
     messages: List[ChatMessage],
     context: str,
     profile: Optional[Any] = None,
+    allow_external_llm: bool = True,
 ) -> AsyncGenerator[str, None]:
     """
     Server-Sent Events (SSE) streaming generator for real-time typewriter LLM delivery
@@ -280,7 +329,7 @@ async def stream_financial_advice(
     import json
     import time
     start_time = time.monotonic()
-    api_key = os.environ.get("GROQ_API_KEY", "")
+    api_key = os.environ.get("GROQ_API_KEY", "") if allow_external_llm else ""
     last_user_msg = messages[-1].content if messages else "Overall financial strategy"
     statutory_provisions = retrieve_statutory_context(last_user_msg, top_k=2)
     statutory_notes = "\n".join([f"• [{item['statute']} - {item['title']}]: {item['content']}" for item in statutory_provisions]) if statutory_provisions else "Standard German statutory framework applies."
@@ -290,15 +339,14 @@ async def stream_financial_advice(
         data_body = {"event": event_name, "data": payload, **payload}
         return f"event: {event_name}\ndata: {json.dumps(data_body)}\n\n"
 
-    # Pre-emit structured analytical events based on context
-    # 1. Statutory citation
+    # Pre-emit the source relevant to the user's question.
     if statutory_provisions:
         first_statute = statutory_provisions[0]
         yield _format_event("statutory_citation", {
             "statute": first_statute.get("statute", "§ 32a EStG"),
             "clause": "Abs. 1",
             "title": first_statute.get("title", "Einkommensteuertarif"),
-            "official_url": "https://www.gesetze-im-internet.de/estg/__32a.html",
+            "official_url": _official_statute_url(first_statute),
         })
     else:
         yield _format_event("statutory_citation", {
@@ -308,57 +356,20 @@ async def stream_financial_advice(
             "official_url": "https://www.gesetze-im-internet.de/estg/__32a.html",
         })
 
-    # 2. Highlight metric
-    yield _format_event("highlight_metric", {
-        "target": "pension_gap",
-        "metric_path": "retirement.pension_gap_monthly",
-        "severity": "warning",
-        "duration_ms": 4000,
-        "tooltip": "Statutory Rentenlücke detected under statutory DRV forecast",
-    })
-
     token_count = 0
 
     if not api_key:
-        fallback_text = (
-            f"### ✦ Ilyes AI Wealth Advisory\n\n"
-            f"Regarding *\"{last_user_msg}\"*, deterministic calculations indicate optimal allocation under German statutory frameworks.\n\n"
-            f"**Statutory Citations:**\n{statutory_notes}\n\n"
-            f"Optimization proposal generated for retirement gap reduction."
-        )
+        fallback_text = _deterministic_advisory_reply(last_user_msg, context, statutory_notes)
         words = fallback_text.split(" ")
-        for i, word in enumerate(words):
+        for word in words:
             token_count += 1
             yield f"event: token\ndata: {json.dumps({'token': word + ' '})}\n\n"
-            # Emit delta badge midway
-            if i == len(words) // 2:
-                yield _format_event("delta_badge", {
-                    "target": "effective_tax_rate",
-                    "old_value": "34.2%",
-                    "new_value": "31.8%",
-                    "delta": "-2.4%",
-                    "direction": "positive",
-                    "reason": "Vorsorgeaufwendungen allowance applied",
-                })
-
-        # Emit patch proposal
-        yield _format_event("patch_proposal", {
-            "proposal_id": "opt-renten-etf-close-gap",
-            "title": "Close Rentenlücke via ETF Funding",
-            "description": "Increase monthly ETF investment by €200/mo to close statutory pension gap.",
-            "patch": {"monthly_investment": 750},
-            "impact": {
-                "pension_gap_reduction": 642,
-                "replacement_ratio_delta": 0.18,
-                "health_score_delta": 8,
-            },
-        })
 
         elapsed_ms = int((time.monotonic() - start_time) * 1000)
         yield _format_event("done", {
             "tokens": token_count,
             "citations_count": 1,
-            "patches_proposed": 1,
+            "patches_proposed": 0,
             "execution_time_ms": elapsed_ms,
         })
         yield "data: [DONE]\n\n"
@@ -372,7 +383,9 @@ async def stream_financial_advice(
     system_message = {
         "role": "system",
         "content": (
-            f"You are Ilyes AI Private Wealth Concierge. Explain German household finance with statutory precision.\n\n"
+            "You explain an educational German household-finance model. The deterministic context is authoritative: "
+            "do not recalculate its figures, invent numbers, imply certification, or promise outcomes. Distinguish "
+            "estimates from verified facts and recommend a qualified professional for individual advice.\n\n"
             f"Context:\n{context}\n\nStatutory Law References:\n{statutory_notes}"
         ),
     }
@@ -402,23 +415,11 @@ async def stream_financial_advice(
                         except Exception:
                             continue
 
-        yield _format_event("delta_badge", {
-            "target": "effective_tax_rate",
-            "old_value": "34.2%",
-            "new_value": "31.8%",
-            "delta": "-2.4%",
-        })
-        yield _format_event("patch_proposal", {
-            "proposal_id": "opt-renten-etf-close-gap",
-            "title": "Close Rentenlücke via ETF Funding",
-            "patch": {"monthly_investment": 750},
-            "impact": {"pension_gap_reduction": 642, "replacement_ratio_delta": 0.18, "health_score_delta": 8},
-        })
         elapsed_ms = int((time.monotonic() - start_time) * 1000)
         yield _format_event("done", {
             "tokens": token_count,
             "citations_count": 1,
-            "patches_proposed": 1,
+            "patches_proposed": 0,
             "execution_time_ms": elapsed_ms,
         })
         yield "data: [DONE]\n\n"

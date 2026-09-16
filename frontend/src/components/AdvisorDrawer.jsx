@@ -198,7 +198,7 @@ export default function AdvisorDrawer({
         console.error(err);
         setMessages([...updatedMessages, { 
           role: 'assistant', 
-          content: '### ✦ Ilyes AI Advisory Note\n\nUnable to reach backend API endpoint. The offline actuarial rules engine recommends verifying your core **Privathaftpflicht (€50M)** and **Occupational Disability BU (80% Net)** shields while claiming all **§ 9 EStG Werbungskosten**.' 
+          content: '### Concierge temporarily unavailable\n\nYour financial calculations are still available on each specialist page. Please check your connection and retry shortly; no recommendation has been inferred while the service is unavailable.'
         }]);
       }
     } finally {
@@ -348,10 +348,10 @@ export default function AdvisorDrawer({
             </div>
             <div>
               <h2 style={{ margin: 0, fontSize: '1rem', fontWeight: 700, fontFamily: 'var(--font-serif, Georgia, serif)', color: 'var(--text-primary, #0f172a)' }}>
-                AI Wealth Concierge
+                Financial Plan Concierge
               </h2>
               <span style={{ fontSize: '0.72rem', color: 'var(--text-secondary, #64748b)' }}>
-                Real-Time SSE Advisory · DIN 77230 Certified
+                Model-grounded explanations · Live responses
               </span>
             </div>
           </div>

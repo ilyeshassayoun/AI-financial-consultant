@@ -1,11 +1,10 @@
-import hmac
 import math
 import os
 import structlog
 from contextlib import asynccontextmanager
-from typing import Optional, Any
+from typing import Any
 
-from fastapi import Depends, FastAPI, Header, HTTPException, Request
+from fastapi import FastAPI, HTTPException, Request
 from fastapi.exceptions import RequestValidationError
 import time
 from fastapi.middleware.cors import CORSMiddleware
@@ -128,13 +127,6 @@ async def validation_error_handler(request: Request, exc: RequestValidationError
     return JSONResponse(status_code=422, content={"detail": _json_safe(exc.errors())})
 
 
-def require_llm_access(x_api_key: Optional[str] = Header(default=None)) -> None:
-    if settings.LLM_ACCESS_KEY and (
-        not x_api_key or not hmac.compare_digest(x_api_key, settings.LLM_ACCESS_KEY)
-    ):
-        raise HTTPException(status_code=401, detail="Valid X-API-Key required for AI routes")
-
-
 @app.get("/health", tags=["health"])
 @app.head("/health", include_in_schema=False)
 def root_health_check() -> dict[str, Any]:
@@ -162,7 +154,7 @@ app.include_router(tax.router)
 app.include_router(investment.router)
 app.include_router(insurance.router)
 app.include_router(retirement.router)
-app.include_router(chat.router, dependencies=[Depends(require_llm_access)])
+app.include_router(chat.router)
 app.include_router(auth_router.router)
 app.include_router(profiles_router.router)
 app.include_router(stress_test.router)
