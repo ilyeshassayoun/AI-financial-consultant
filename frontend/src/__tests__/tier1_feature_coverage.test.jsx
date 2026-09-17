@@ -150,7 +150,7 @@ describe('Tier 1: Feature Coverage — Navigation, Routes & Layout', () => {
         />
       );
 
-      expect(screen.getByText(/Build a defensible tax position from verified facts/i)).toBeInTheDocument();
+      expect(screen.getByText(/Build a defensible tax position from documented inputs/i)).toBeInTheDocument();
     });
 
     it('renders StepInvestment asset allocation lab when analysis is supplied', () => {

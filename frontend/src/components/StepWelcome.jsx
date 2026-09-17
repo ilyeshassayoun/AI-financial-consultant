@@ -41,7 +41,7 @@ const PILLARS = [
   },
 ];
 
-export default function StepWelcome({ nextStep }) {
+export default function StepWelcome({ nextStep, hasSavedProgress = false }) {
   return (
     <div className="welcome-shell">
       <FadeInUp delay={0.08}>
@@ -61,10 +61,10 @@ export default function StepWelcome({ nextStep }) {
 
             <div className="welcome-hero__actions">
               <button type="button" className="welcome-primary-action" onClick={nextStep}>
-                Build my financial plan
+                {hasSavedProgress ? 'Continue my financial plan' : 'Build my financial plan'}
                 <ArrowRight aria-hidden="true" />
               </button>
-              <span className="welcome-duration">8–10 minutes · No product commissions</span>
+              <span className="welcome-duration">{hasSavedProgress ? 'Resume where you left off' : '8–10 minutes'} · No product commissions</span>
             </div>
           </div>
 

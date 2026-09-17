@@ -1,4 +1,6 @@
 from typing import Any
+import hashlib
+import json
 from tax_calculator import calculate_german_tax
 from investment_engine import simulate_investment
 from mock_insurance_data import get_insurance_recommendation
@@ -74,6 +76,9 @@ def run_full_analysis(profile: ClientProfile) -> dict[str, Any]:
     )
 
     profile_dict = profile.model_dump()
+    profile_fingerprint = hashlib.sha256(
+        json.dumps(profile_dict, sort_keys=True, separators=(",", ":"), default=str).encode("utf-8")
+    ).hexdigest()
     tax_result = {
         "gross_income": tax_info.get("gross_income", profile.income),
         "tax_amount": tax_info.get("tax_amount", 0),
@@ -102,7 +107,12 @@ def run_full_analysis(profile: ClientProfile) -> dict[str, Any]:
         "target_retirement_income_monthly": retirement_lab["target"]["real_monthly"],
         "pension_gap_monthly": retirement_lab["totals"]["real_gap"],
         "replacement_ratio": retirement_lab["totals"]["funded_ratio"],
-        "required_monthly_savings_to_close_gap": retirement_lab["savings_gap"]["required_monthly_total"],
+        # "to close gap" means the incremental amount from today's plan. Keep
+        # total and incremental values explicit so clients and patches cannot
+        # accidentally add the current contribution twice.
+        "required_monthly_savings_to_close_gap": retirement_lab["savings_gap"]["additional_monthly"],
+        "additional_monthly_savings_required": retirement_lab["savings_gap"]["additional_monthly"],
+        "required_monthly_savings_total": retirement_lab["savings_gap"]["required_monthly_total"],
         "private_nest_egg_projected": retirement_lab["private_capital"]["net"],
     }
 
@@ -135,7 +145,11 @@ def run_full_analysis(profile: ClientProfile) -> dict[str, Any]:
         "optimization": optimizer_info,
         "advisory_plan": advisory_plan,
         "model_metadata": {
+            "analysis_version": "household-analysis-2026.3",
             "planning_year": 2026,
+            "profile_fingerprint": profile_fingerprint,
+            "input_provenance": "self-reported",
+            "independent_model_review": False,
             "investment_projection_simulations": 250,
             "investment_lab_simulations_per_strategy": investment_lab["methodology"]["simulations_per_strategy"],
             "investment_lab_seed": investment_lab["methodology"]["seed"],

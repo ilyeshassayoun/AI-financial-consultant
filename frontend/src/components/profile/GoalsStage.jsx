@@ -21,7 +21,7 @@ const AVAILABLE_GOALS = [
     label: 'Tax Optimization & Deductions', 
     desc: 'Claim commuter & remote work home-office deductions', 
     icon: Landmark,
-    badge: 'Use verified inputs'
+    badge: 'Use recorded inputs'
   },
   { 
     id: 'etf_wealth', 

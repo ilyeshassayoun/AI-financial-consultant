@@ -29,7 +29,7 @@ const features = [
   {
     icon: Bot,
     title: 'AI Financial Planning Assistant',
-    description: 'Real-time streaming advisory desk grounded in German statutory law. Every calculation cites its exact legal basis — explainable and verified.',
+    description: 'Real-time planning guidance grounded in the app’s deterministic analysis. Key statutory references and model assumptions remain visible.',
     badge: 'RAG-Grounded',
     metric: 'Instant Insights'
   },
@@ -61,7 +61,7 @@ const trustPillars = [
   {
     icon: CheckCircle2,
     title: 'GDPR Art. 17 Compliance',
-    desc: 'One-click full cryptographic purge of all locally stored audit session profiles with zero trace retention.'
+    desc: 'Clear locally stored planning data from this browser with one explicit action.'
   },
 ];
 
@@ -318,7 +318,7 @@ export default function LandingPage({ onGetStarted }) {
         }}>
           <span>✦ Zero Sales Commission</span>
           <span>✦ 100% Client-Side Privacy</span>
-          <span>✦ DIN 77230 Actuarial Standards</span>
+          <span>✦ DIN-informed household workflow</span>
         </div>
       </section>
 

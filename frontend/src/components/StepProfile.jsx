@@ -77,8 +77,11 @@ export default function StepProfile({
         style: 'currency',
         currency: 'EUR',
         maximumFractionDigits: 0,
-      }).format(Math.max(0, monthlyCapacity))
+      }).format(monthlyCapacity)
     : '—';
+
+  const planFeasible = advisoryPlan?.plan_feasible === true;
+  const priorityAction = advisoryPlan?.action_plan?.find((item) => item.priority === 1);
 
   const cockpitCopy = [
     'Start with the outcome, then make every euro support it.',
@@ -86,7 +89,15 @@ export default function StepProfile({
     'Cash flow is the engine of every recommendation that follows.',
     hasLiquidity ? 'Your liquidity base is ready for the next decision.' : 'Cash resilience needs attention before risk-taking increases.',
     'Existing protection and assets prevent duplicate recommendations.',
-    score === null ? 'Complete the inputs to calculate your household resilience.' : score >= 80 ? 'Your foundation is strong; the plan can now focus on optimization.' : 'The audit has found a small number of high-impact priorities.'
+    score === null
+      ? 'Complete the inputs to calculate your household resilience.'
+      : !planFeasible
+        ? 'Your current monthly plan exceeds the capacity available after household commitments.'
+        : priorityAction
+          ? `Resolve the foundation priority first: ${priorityAction.title}.`
+          : score >= 80
+            ? 'Modeled resilience is strong across the five planning signals.'
+            : 'The model has found a small number of high-impact priorities.'
   ];
 
   const clientGoals = Array.isArray(safeProfile.goals) ? safeProfile.goals : ['freedom', 'etf_wealth'];
@@ -126,7 +137,7 @@ export default function StepProfile({
         cockpitCopy={cockpitCopy}
         score={score}
         cockpitMetrics={[
-          { value: score === null ? '—' : `${Math.round(score)}%`, label: 'plan readiness' },
+          { value: score === null ? '—' : `${Math.round(score)}%`, label: 'model resilience' },
           { value: formattedMonthlyCapacity, label: 'monthly capacity' },
           { value: `${workingYearsRemaining} yr`, label: 'time horizon' },
         ]}

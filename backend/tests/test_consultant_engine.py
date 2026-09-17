@@ -58,6 +58,11 @@ def test_ai_step_consultation_generation():
     investment_insight = generate_step_ai_consultation("invest", profile_dict, analysis)
     assert "600 paths per strategy" in investment_insight["verdict"]
 
+    pension_insight = generate_step_ai_consultation("pension", profile_dict, analysis)
+    bridge = next(action for action in pension_insight["recommended_actions"] if action["id"] == "increase_savings_gap")
+    assert bridge["patch"]["monthly_investment"] == round(analysis["retirement"]["required_monthly_savings_total"])
+    assert analysis["retirement"]["required_monthly_savings_to_close_gap"] == analysis["retirement"]["additional_monthly_savings_required"]
+
 def test_api_analyze_endpoint():
     payload = {
         "age": 30,

@@ -70,3 +70,35 @@ def test_nominal_bu_benefit_does_not_count_as_adequate_income_protection():
     assert plan["protection_needs"]["bu_gap_monthly"] > 1000
     assert plan["score_components"]["protection"] < 5
     assert "protect-income" in [action["id"] for action in plan["action_plan"]]
+
+
+def test_negative_cash_flow_is_never_reported_as_feasible():
+    profile, tax, investment, retirement = _inputs(
+        monthly_investment=1500,
+        housing_cost=1400,
+        living_cost=900,
+        mobility_cost=300,
+        leisure_cost=350,
+        subscriptions_cost=100,
+        travel_cost=200,
+    )
+    tax["net_income"] = 36000
+    plan = build_advisory_plan(profile, tax, investment, retirement)
+
+    assert plan["household_kpis"]["free_cash_flow_after_investing"] < 0
+    assert plan["household_kpis"]["current_plan_feasible"] is False
+    assert plan["plan_feasible"] is False
+
+
+def test_debt_action_uses_contract_rate_and_only_additional_payment():
+    profile, tax, investment, retirement = _inputs(
+        unsecured_debt=10000,
+        unsecured_debt_rate=.10,
+        monthly_debt_payment=250,
+    )
+    plan = build_advisory_plan(profile, tax, investment, retirement)
+    action = next(item for item in plan["action_plan"] if item["id"] == "repay-debt")
+
+    assert "10.0%" in action["rationale"]
+    assert "after tax" not in action["rationale"]
+    assert action["monthly_commitment"] < 250

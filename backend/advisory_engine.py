@@ -44,8 +44,9 @@ def build_advisory_plan(
     debt_payment = float(profile.get("monthly_debt_payment", 0) or 0)
     monthly_investment = float(profile.get("monthly_investment", 0) or 0)
     total_income = net_monthly + secondary_income
-    free_cash_flow = total_income - essential_costs - discretionary_costs - debt_payment - monthly_investment
-    savings_capacity = max(0.0, total_income - essential_costs - discretionary_costs - debt_payment)
+    available_before_planned_investing = total_income - essential_costs - discretionary_costs - debt_payment
+    free_cash_flow = available_before_planned_investing - monthly_investment
+    savings_capacity = max(0.0, available_before_planned_investing)
     savings_rate = savings_capacity / total_income if total_income else 0
     debt_service_ratio = debt_payment / total_income if total_income else 0
 
@@ -61,7 +62,10 @@ def build_advisory_plan(
     debt_rate = float(profile.get("unsecured_debt_rate", 0.08) or 0)
     debt_years = int(profile.get("debt_payoff_years", 5) or 5)
     required_debt_payment = _monthly_payment(unsecured_debt, debt_rate, debt_years)
-    guaranteed_return = debt_rate * (1 - float(tax.get("effective_tax_rate", 0)))
+    # Paying down consumer debt avoids the contractual interest rate. Applying
+    # the household's income-tax rate here understated that benefit and implied
+    # a tax treatment that is not generally available for private debt.
+    debt_avoidance_rate = debt_rate
 
     age = int(profile.get("age", 30))
     retirement_age = int(profile.get("retirement_age", 67))
@@ -108,10 +112,11 @@ def build_advisory_plan(
             reserve_monthly, 1, "0–12 months", f"Reach €{reserve_target:,.0f} in instant-access cash", "Liquidity",
         )
     if unsecured_debt > 0 and debt_rate >= 0.06:
+        additional_debt_payment = max(0.0, required_debt_payment - debt_payment)
         add_action(
             "repay-debt", "Accelerate expensive unsecured debt",
-            f"Repayment produces a risk-free economic return near {guaranteed_return*100:.1f}% after tax.",
-            max(required_debt_payment, debt_payment), 1, f"Within {debt_years} years", "Unsecured balance reaches €0", "Debt",
+            f"Repayment avoids interest near {debt_avoidance_rate*100:.1f}% before any case-specific tax effects.",
+            additional_debt_payment, 1, f"Within {debt_years} years", "Unsecured balance reaches €0", "Debt",
         )
     if bu_gap > 50:
         add_action(
@@ -134,8 +139,10 @@ def build_advisory_plan(
         )
 
     actions.sort(key=lambda item: (item["priority"], item["category"]))
-    capacity_after_priority_ones = savings_capacity - sum(a["monthly_commitment"] for a in actions if a["priority"] == 1)
-    plan_feasible = capacity_after_priority_ones >= -25
+    priority_one_commitment = sum(a["monthly_commitment"] for a in actions if a["priority"] == 1)
+    capacity_after_priority_ones = free_cash_flow - priority_one_commitment
+    current_plan_feasible = free_cash_flow >= -25
+    plan_feasible = current_plan_feasible and capacity_after_priority_ones >= -25
     if not plan_feasible:
         for action in actions:
             if action["priority"] > 1:
@@ -157,6 +164,9 @@ def build_advisory_plan(
             "net_monthly_income": _money(total_income),
             "essential_monthly_spend": _money(essential_costs),
             "free_cash_flow_after_investing": round(free_cash_flow, 2),
+            "available_before_planned_investing": round(available_before_planned_investing, 2),
+            "priority_action_capacity": round(capacity_after_priority_ones, 2),
+            "current_plan_feasible": current_plan_feasible,
             "savings_rate": round(savings_rate, 4),
             "debt_service_ratio": round(debt_service_ratio, 4),
             "emergency_fund_months": round(current_reserve_months, 1),

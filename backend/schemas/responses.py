@@ -56,6 +56,7 @@ class FullAnalysisResponse(BaseModel):
     optimization: OptimizationResponse
     advisory_plan: IntegratedAdvisoryPlan
     risk_suitability: Optional[Dict[str, Any]] = None
+    model_metadata: Dict[str, Any]
 
 
 class ConsultantInsightResponse(BaseModel):

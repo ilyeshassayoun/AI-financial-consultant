@@ -347,11 +347,15 @@ function ProjectionView({ selected, comparison, target }) {
 }
 
 function AllocationView({ selected, implementationPlan }) {
+  const alignment = implementationPlan.model_alignment || {};
   return <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
     <div className="lab-allocation">
       <article className="lab-chart-card"><div className="lab-chart-title"><div><span>Risk budget</span><h2>What actually drives the portfolio</h2></div></div><div className="lab-donut-wrapper"><ResponsiveContainer width="100%" height="100%"><PieChart><Pie data={selected.allocation} dataKey="weight" nameKey="name" innerRadius={66} outerRadius={98} paddingAngle={2} animationDuration={900}>{selected.allocation.map(item => <Cell key={item.key} fill={item.color}/>)}</Pie><Tooltip formatter={v => pct(v,0)}/></PieChart></ResponsiveContainer><div className="lab-donut-center"><strong>{pct(selected.expected_volatility)}</strong><span>model volatility</span></div></div><ul className="lab-allocation-list">{selected.allocation.map(item => <li key={item.key}><i style={{ background:item.color }}/><span>{item.name}</span><strong>{pct(item.weight,0)}</strong></li>)}</ul></article>
       <article className="lab-instruments"><div className="lab-chart-title"><div><span>Implementation shortlist</span><h2>Named instruments and their jobs</h2></div><ShieldCheck/></div>{selected.instruments.map(item => <div className="lab-instrument" key={item.isin}><div className="lab-instrument__ticker">{item.ticker}</div><div><strong>{item.name}</strong><span>{item.isin} · TER {pct(item.ter,2)}</span><p>{item.role}</p><small>Risk: {item.risk}</small></div><ArrowUpRight/></div>)}</article>
     </div>
+    {!alignment.exact && alignment.differences?.length > 0 && <aside className="model-alignment-note" role="note" aria-label="Strategic model and order basket difference">
+      <Info size={18}/><div><strong>The order basket is a proxy, not the simulated portfolio.</strong><p>{alignment.note}</p><span>Proxy assumptions: {pct(alignment.implementation_expected_return)} expected return · {pct(alignment.implementation_expected_volatility)} volatility · largest allocation difference {pct(alignment.max_weight_difference, 0)}.</span></div>
+    </aside>}
     <BrokerDepotSimulator implementationPlan={implementationPlan} selectedStrategy={selected} />
   </div>;
 }

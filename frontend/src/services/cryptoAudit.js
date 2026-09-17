@@ -1,5 +1,5 @@
 /**
- * Cryptographic Calculation Verification & Audit Dossier Service (RFC 8785 JCS + SHA-256)
+ * Calculation Snapshot & Integrity Service (RFC 8785 JCS + SHA-256)
  * Generates deterministic canonical serialization and tamper-evident SHA-256 calculation checksums
  * over statutory inputs (§ 32a EStG, SGB VI, DIN 77230) and actuarial projection outputs.
  */
@@ -127,29 +127,35 @@ export async function computeSha256Checksum(data) {
   return jsSha256(bytes);
 }
 
+function finiteNumber(value, fallback = 0) {
+  if (value === null || value === undefined || value === '') return fallback;
+  const parsed = Number(value);
+  return Number.isFinite(parsed) ? parsed : fallback;
+}
+
 /**
  * Extracts and standardizes statutory inputs and outputs for tamper-evident audit.
  */
 export function buildStatutoryAuditPayload(profile = {}, analysis = {}) {
-  const verifiedInputs = {
-    age: Number(profile.age) || 30,
-    retirement_age: Number(profile.retirement_age) || 67,
-    longevity_age: Number(profile.longevity_age) || 95,
-    income: Number(profile.income) || 60000,
-    secondary_income: Number(profile.secondary_income) || 0,
-    tax_class: Number(profile.tax_class) || 1,
+  const recordedInputs = {
+    age: finiteNumber(profile.age, 30),
+    retirement_age: finiteNumber(profile.retirement_age, 67),
+    longevity_age: finiteNumber(profile.longevity_age, 95),
+    income: finiteNumber(profile.income, 60000),
+    secondary_income: finiteNumber(profile.secondary_income),
+    tax_class: finiteNumber(profile.tax_class, 1),
     is_married: Boolean(profile.is_married),
     has_dependents: Boolean(profile.has_dependents),
-    num_children: Number(profile.num_children) || 0,
+    num_children: finiteNumber(profile.num_children),
     church_tax: Boolean(profile.church_tax),
     is_saxony: Boolean(profile.is_saxony),
-    initial_amount: Number(profile.initial_amount) || 5000,
-    monthly_investment: Number(profile.monthly_investment) || 500,
-    investment_years: Number(profile.investment_years) || 20,
+    initial_amount: finiteNumber(profile.initial_amount, 5000),
+    monthly_investment: finiteNumber(profile.monthly_investment, 500),
+    investment_years: finiteNumber(profile.investment_years, 20),
     risk_profile: String(profile.risk_profile || 'medium'),
     investment_strategy: String(profile.investment_strategy || 'balanced_60_40'),
-    safe_withdrawal_rate: Number(profile.safe_withdrawal_rate) || 0.035,
-    target_pension_ratio: Number(profile.target_pension_ratio) || 0.8,
+    safe_withdrawal_rate: finiteNumber(profile.safe_withdrawal_rate, 0.035),
+    target_pension_ratio: finiteNumber(profile.target_pension_ratio, 0.8),
     existing_insurances: Array.isArray(profile.existing_insurances) ? [...profile.existing_insurances].sort() : ['Liability']
   };
 
@@ -158,30 +164,37 @@ export function buildStatutoryAuditPayload(profile = {}, analysis = {}) {
   const investment = analysis.investment || {};
   const plan = analysis.advisory_plan || {};
 
-  const verifiedOutputs = {
-    gross_tax: Number(tax.gross_tax) || 0,
-    net_income: Number(tax.net_income) || 0,
-    effective_rate: Number(tax.effective_tax_rate ?? tax.effective_rate) || 0,
-    marginal_rate: Number(tax.marginal_tax_rate ?? tax.marginal_rate) || 0,
-    projected_state_pension_monthly: Number(pension.pension_gap_monthly ? pension.projected_statutory_pension ?? pension.net_pension_monthly : 0) || 0,
-    pension_gap_monthly: Number(pension.pension_gap_monthly) || 0,
-    terminal_wealth_p50: Number(investment.projected_p50 ?? investment.terminal_wealth) || 0,
+  const modelOutputs = {
+    gross_tax: finiteNumber(tax.tax_amount ?? tax.gross_tax),
+    net_income: finiteNumber(tax.net_income),
+    effective_rate: finiteNumber(tax.effective_tax_rate ?? tax.effective_rate),
+    marginal_rate: finiteNumber(tax.marginal_tax_rate ?? tax.marginal_rate),
+    projected_state_pension_monthly: finiteNumber(
+      pension.state_pension_monthly
+        ?? pension.state_pension_monthly_real_gross
+        ?? pension.projected_statutory_pension
+        ?? pension.net_pension_monthly
+    ),
+    pension_gap_monthly: finiteNumber(pension.pension_gap_monthly),
+    terminal_wealth_p50: finiteNumber(investment.projected_p50 ?? investment.terminal_wealth),
     portfolio_label: String(investment.portfolio_label || 'Balanced'),
-    financial_resilience_score: Number(plan.financial_resilience_score) || 75
+    financial_resilience_score: finiteNumber(plan.financial_resilience_score, 75)
   };
 
-  return { verifiedInputs, verifiedOutputs };
+  return { recordedInputs, modelOutputs };
 }
 
 /**
- * Generates an immutable, verified audit dossier with SHA-256 calculation checksum.
+ * Generates a calculation snapshot with a SHA-256 integrity fingerprint.
+ * The fingerprint detects later changes; it is not an external audit or
+ * independent certification of the calculations.
  */
 export async function generateAuditDossier(profile = {}, analysis = {}, customTimestamp = null) {
-  const { verifiedInputs, verifiedOutputs } = buildStatutoryAuditPayload(profile, analysis);
+  const { recordedInputs, modelOutputs } = buildStatutoryAuditPayload(profile, analysis);
   const timestamp = customTimestamp || new Date().toISOString();
 
   const statutoryStandards = [
-    'DIN 77230 Financial Analysis Standard for Private Households',
+    'Workflow informed by DIN 77230 household analysis categories',
     '§ 32a EStG Income Tax Tariff Progressionszone Formulas',
     'SGB VI Statutory Pension Calculation (Entgeltpunkte & Access Factor)',
     '§ 20 InvStG 30% Equity Fund Partial Exemption (Teilfreistellung)'
@@ -190,8 +203,8 @@ export async function generateAuditDossier(profile = {}, analysis = {}, customTi
   // The payload over which the cryptographic hash is strictly evaluated
   const coreSignablePayload = {
     standards: statutoryStandards,
-    inputs: verifiedInputs,
-    outputs: verifiedOutputs,
+    inputs: recordedInputs,
+    outputs: modelOutputs,
     timestamp
   };
 
@@ -201,20 +214,26 @@ export async function generateAuditDossier(profile = {}, analysis = {}, customTi
     dossier_id: `dossier-${timestamp.slice(0, 10)}-${checksum.slice(0, 8)}`,
     timestamp,
     engine_version: 'Fintech-Actuarial-Engine-v2026.1',
-    statutory_standards: statutoryStandards,
-    cryptographic_verification: {
+    review_status: {
+      profile_inputs: 'self-reported',
+      calculation_outputs: 'model-generated',
+      independently_reviewed: false
+    },
+    planning_references: statutoryStandards,
+    integrity_check: {
       algorithm: 'SHA-256',
       checksum,
       tamper_evident: true,
+      assurance: 'Integrity check only; not an independent audit or certification',
       canonicalization: 'RFC 8785 JSON Canonicalization Scheme'
     },
-    verified_profile_inputs: verifiedInputs,
-    verified_statutory_outputs: verifiedOutputs
+    recorded_profile_inputs: recordedInputs,
+    model_outputs: modelOutputs
   };
 }
 
 /**
- * Triggers a browser download of the verified audit dossier as a JSON file.
+ * Triggers a browser download of the calculation snapshot as a JSON file.
  */
 export function downloadDossierFile(dossier) {
   const jsonContent = JSON.stringify(dossier, null, 2);
@@ -222,7 +241,7 @@ export function downloadDossierFile(dossier) {
   const url = URL.createObjectURL(blob);
   const anchor = document.createElement('a');
   anchor.href = url;
-  anchor.download = `audit_dossier_${dossier?.cryptographic_verification?.checksum?.slice(0, 12) || 'verified'}.json`;
+  anchor.download = `calculation_snapshot_${dossier?.integrity_check?.checksum?.slice(0, 12) || 'unavailable'}.json`;
   document.body.appendChild(anchor);
   anchor.click();
   document.body.removeChild(anchor);

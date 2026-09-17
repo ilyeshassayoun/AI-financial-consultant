@@ -84,6 +84,18 @@ def test_implementation_plan_reconciles_weights_and_cash_flows():
     assert sum(item["monthly_amount"] for item in plan["orders"]) == BASE["monthly_investment"]
     assert sum(item["initial_amount"] for item in plan["orders"]) == BASE["initial_amount"]
     assert all(item["isin"] and item["ticker"] for item in plan["orders"])
+    assert "model_alignment" in plan
+    assert isinstance(plan["model_alignment"]["differences"], list)
+    assert plan["model_alignment"]["implementation_expected_volatility"] > 0
+
+
+def test_proxy_portfolio_discloses_strategic_allocation_mismatch():
+    lab = build_investment_lab({**BASE, "investment_strategy": "all_weather"})
+    alignment = lab["implementation_plan"]["model_alignment"]
+
+    assert alignment["exact"] is False
+    assert alignment["max_weight_difference"] > 0
+    assert {item["asset"] for item in alignment["differences"]} >= {"global_bonds", "inflation_bonds", "cash"}
 
 
 def test_married_allowance_does_not_reduce_after_tax_value():

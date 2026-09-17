@@ -117,7 +117,7 @@ export default function StepTax({
         <header className="tax-hero">
           <div>
             <span className="tax-eyebrow">Germany · tax year 2026 · deterministic planning estimate</span>
-            <h1 id="tax-title">Build a defensible tax position from verified facts</h1>
+            <h1 id="tax-title">Build a defensible tax position from documented inputs</h1>
             <p>Separate assessed liability from payroll withholding, compare full recalculations, and leave every material assumption visible.</p>
           </div>
           <div className={`tax-readiness ${incomplete ? 'is-incomplete' : ''}`}>

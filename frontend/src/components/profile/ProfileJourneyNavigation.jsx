@@ -75,7 +75,7 @@ export default function ProfileJourneyNavigation({
           initial={reduceMotion ? false : { opacity: 0, x: 16 }}
           animate={{ opacity: 1, x: 0 }}
           transition={{ duration: 0.48, delay: 0.2, ease: [0.16, 1, 0.3, 1] }}
-          aria-label={score === null ? 'Plan readiness pending analysis' : `Plan readiness score ${score} out of 100`}
+          aria-label={score === null ? 'Model resilience pending analysis' : `Model resilience score ${score} out of 100`}
         >
           {cockpitMetrics.map((metric) => (
             <div key={metric.label}>

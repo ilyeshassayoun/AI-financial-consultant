@@ -215,7 +215,8 @@ class TestR2SSEStreamingResilience:
         Verifies deterministic offline fallback produces:
         - HTTP 200 with text/event-stream
         - Valid typewriter token stream
-        - Structured function events: highlight_metric, statutory_citation, delta_badge, patch_proposal, done
+        - Grounded statutory citation and completion metadata
+        - No fabricated UI mutation or optimization events
         - Terminating [DONE] marker
         """
         orig_key = os.environ.get("GROQ_API_KEY")
@@ -252,12 +253,12 @@ class TestR2SSEStreamingResilience:
                                 pytest.fail(f"Invalid JSON in SSE data line: {raw_data} (Error: {err})")
 
                 event_names = [ev.get("event") for ev in raw_events]
-                assert "highlight_metric" in event_names
                 assert "statutory_citation" in event_names
-                assert "delta_badge" in event_names
-                assert "patch_proposal" in event_names
                 assert "done" in event_names
                 assert "[DONE]" in event_names
+                assert "highlight_metric" not in event_names
+                assert "delta_badge" not in event_names
+                assert "patch_proposal" not in event_names
         finally:
             if orig_key is not None:
                 os.environ["GROQ_API_KEY"] = orig_key
@@ -289,40 +290,24 @@ class TestR2SSEStreamingResilience:
                         except Exception:
                             pass
 
-                # 1. highlight_metric schema
-                assert "highlight_metric" in parsed_events
-                hl = parsed_events["highlight_metric"]
-                assert "target" in hl and isinstance(hl["target"], str)
-                assert hl["severity"] in ("warning", "info", "danger")
-                assert "duration_ms" in hl and isinstance(hl["duration_ms"], (int, float))
+                # Guests receive source-grounded guidance, never synthesized
+                # highlight/delta/patch events that imply an executed analysis.
+                assert "highlight_metric" not in parsed_events
+                assert "delta_badge" not in parsed_events
+                assert "patch_proposal" not in parsed_events
 
-                # 2. delta_badge schema
-                assert "delta_badge" in parsed_events
-                badge = parsed_events["delta_badge"]
-                assert "target" in badge
-                assert "old_value" in badge
-                assert "new_value" in badge
-                assert "delta" in badge
-
-                # 3. patch_proposal schema
-                assert "patch_proposal" in parsed_events
-                proposal = parsed_events["patch_proposal"]
-                assert "proposal_id" in proposal
-                assert "title" in proposal
-                assert "patch" in proposal and isinstance(proposal["patch"], dict)
-                assert "impact" in proposal and isinstance(proposal["impact"], dict)
-
-                # 4. statutory_citation schema
+                # statutory_citation schema
                 assert "statutory_citation" in parsed_events
                 statute = parsed_events["statutory_citation"]
                 assert "statute" in statute
                 assert "official_url" in statute and statute["official_url"].startswith("http")
 
-                # 5. done schema
+                # done schema
                 assert "done" in parsed_events
                 done_ev = parsed_events["done"]
                 assert "tokens" in done_ev and done_ev["tokens"] > 0
                 assert "execution_time_ms" in done_ev
+                assert done_ev["patches_proposed"] == 0
         finally:
             if orig_key is not None:
                 os.environ["GROQ_API_KEY"] = orig_key

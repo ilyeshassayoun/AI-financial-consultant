@@ -55,6 +55,17 @@ IMPLEMENTATION_WEIGHTS: Dict[str, Dict[str, float]] = {
     "real_asset_income": {"eunl": .40, "euna": .25, "iwdp": .25, "4gld": .10},
 }
 
+# Asset exposures represented by the named order basket. This is kept
+# separate from product weights so the API can quantify, rather than hide,
+# any gap between the strategic model and its illustrative implementation.
+IMPLEMENTATION_ASSET_WEIGHTS: Dict[str, Dict[str, float]] = {
+    "global_core": {"world_equity": .85, "em_equity": .15},
+    "balanced_60_40": {"world_equity": .60, "global_bonds": .40},
+    "factor_tilt": {"world_equity": .65, "small_value": .35},
+    "all_weather": {"world_equity": .35, "global_bonds": .50, "gold": .15},
+    "real_asset_income": {"world_equity": .40, "global_bonds": .25, "listed_property": .25, "gold": .10},
+}
+
 TAXABLE_GAIN_SHARE = {
     "world_equity": .70,
     "em_equity": .70,
@@ -395,6 +406,21 @@ def _implementation_plan(strategy: Dict[str, Any], initial: float, monthly: floa
             "monthly_amount": round(monthly * weight, 2),
         })
     weighted_ter = sum(item["weight"] * item["ter"] for item in orders)
+    strategic_weights = STRATEGIES[strategy["id"]]["weights"]
+    implementation_assets = IMPLEMENTATION_ASSET_WEIGHTS[strategy["id"]]
+    asset_keys = sorted(set(strategic_weights) | set(implementation_assets))
+    differences = [
+        {
+            "asset": key,
+            "label": ASSETS[key]["label"],
+            "strategic_weight": round(strategic_weights.get(key, 0.0), 4),
+            "implementation_weight": round(implementation_assets.get(key, 0.0), 4),
+            "difference": round(implementation_assets.get(key, 0.0) - strategic_weights.get(key, 0.0), 4),
+        }
+        for key in asset_keys
+        if abs(implementation_assets.get(key, 0.0) - strategic_weights.get(key, 0.0)) > .0001
+    ]
+    implementation_return, implementation_volatility, _ = _portfolio_moments(implementation_assets)
     return {
         "orders": orders,
         "weight_total": round(sum(item["weight"] for item in orders), 4),
@@ -402,6 +428,14 @@ def _implementation_plan(strategy: Dict[str, Any], initial: float, monthly: floa
         "monthly_total": round(monthly, 2),
         "annual_contribution": round(monthly * 12, 2),
         "weighted_ter": round(weighted_ter, 5),
+        "model_alignment": {
+            "exact": not differences,
+            "differences": differences,
+            "max_weight_difference": round(max((abs(item["difference"]) for item in differences), default=0.0), 4),
+            "implementation_expected_return": round(implementation_return, 4),
+            "implementation_expected_volatility": round(implementation_volatility, 4),
+            "note": "The named instruments are an illustrative proxy. Model results belong to the strategic asset allocation; the order basket has its own indicative risk and return shown here.",
+        },
         "rebalance_band": .05,
         "review_cadence": "Annual, or when a sleeve drifts by 5 percentage points",
         "disclaimer": "Illustrative order blueprint, not an order. Verify instrument eligibility, current fees, replication, tax treatment and savings-plan availability with the chosen provider.",

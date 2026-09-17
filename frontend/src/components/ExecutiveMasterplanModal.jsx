@@ -106,7 +106,7 @@ export default function ExecutiveMasterplanModal({ isOpen, onClose, analysis, pr
                 Ilyes Financial Advisory 360° Masterplan
               </h2>
               <span className="badge badge-brand" style={{ fontSize: '0.68rem' }}>
-                DIN 77230 CERTIFIED
+                DIN-INFORMED MODEL
               </span>
             </div>
             <span style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', fontWeight: 600 }}>
@@ -176,7 +176,7 @@ export default function ExecutiveMasterplanModal({ isOpen, onClose, analysis, pr
         {/* 5-Pillar Dimension Health Breakdown */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
           <span style={{ fontSize: '0.74rem', fontWeight: 800, color: 'var(--text-primary)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
-            5-PILLAR ACTUARIAL EVALUATION (DIN 77230 STANDARDS)
+            5-PILLAR HOUSEHOLD MODEL (DIN-INFORMED WORKFLOW)
           </span>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))', gap: '8px' }}>
             {[

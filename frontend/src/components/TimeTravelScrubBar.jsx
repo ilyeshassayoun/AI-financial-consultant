@@ -431,7 +431,7 @@ export default function TimeTravelScrubBar() {
                 Current Household Profile Head
               </div>
               <div style={{ fontSize: '0.72rem', color: 'var(--text-secondary, #64748b)', marginTop: '2px' }}>
-                Displaying live verified inputs. Any changes here persist to your session storage.
+                Displaying the current recorded inputs. Changes here persist to your session storage.
               </div>
             </div>
           )}

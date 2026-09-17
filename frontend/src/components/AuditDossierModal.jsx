@@ -1,11 +1,13 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { ShieldCheck, Download, Copy, Check, X, CheckCircle2, Lock } from 'lucide-react';
 import { generateAuditDossier, downloadDossierFile } from '../services/cryptoAudit';
+import FocusTrap from './FocusTrap';
 
 export default function AuditDossierModal({ isOpen, onClose, profile, analysis }) {
   const requestKey = isOpen ? JSON.stringify({ profile, analysis }) : '';
   const [generation, setGeneration] = useState({ key: '', dossier: null, failed: false });
   const [copied, setCopied] = useState(false);
+  const dialogRef = useRef(null);
 
   useEffect(() => {
     if (!isOpen) return;
@@ -28,19 +30,11 @@ export default function AuditDossierModal({ isOpen, onClose, profile, analysis }
     };
   }, [isOpen, profile, analysis, requestKey]);
 
-  useEffect(() => {
-    const handleKeyDown = (e) => {
-      if (e.key === 'Escape' && isOpen) onClose();
-    };
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [isOpen, onClose]);
-
   if (!isOpen) return null;
 
   const dossier = generation.key === requestKey ? generation.dossier : null;
   const loading = generation.key !== requestKey;
-  const checksum = dossier?.cryptographic_verification?.checksum || '...';
+  const checksum = dossier?.integrity_check?.checksum || '...';
 
   const handleCopyChecksum = () => {
     if (!checksum) return;
@@ -58,9 +52,6 @@ export default function AuditDossierModal({ isOpen, onClose, profile, analysis }
 
   return (
     <div
-      role="dialog"
-      aria-modal="true"
-      aria-labelledby="audit-dossier-title"
       style={{
         position: 'fixed',
         inset: 0,
@@ -73,7 +64,12 @@ export default function AuditDossierModal({ isOpen, onClose, profile, analysis }
         overflowY: 'auto'
       }}
     >
+      <FocusTrap isActive={isOpen} containerRef={dialogRef} onEscape={onClose} />
       <div
+        ref={dialogRef}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="audit-dossier-title"
         style={{
           width: 'min(760px, 100%)',
           maxHeight: '90vh',
@@ -125,10 +121,10 @@ export default function AuditDossierModal({ isOpen, onClose, profile, analysis }
                   color: 'var(--text-primary, #0f172a)'
                 }}
               >
-                Cryptographic Statutory Audit Dossier
+                Calculation record &amp; integrity check
               </h2>
               <p style={{ margin: '2px 0 0', fontSize: '0.78rem', color: 'var(--text-secondary, #64748b)' }}>
-                Immutable calculation verification stamped with SHA-256 canonical hash
+                Export the recorded inputs and model outputs with a SHA-256 fingerprint
               </p>
             </div>
           </div>
@@ -179,7 +175,7 @@ export default function AuditDossierModal({ isOpen, onClose, profile, analysis }
                   fontWeight: 700
                 }}
               >
-                VERIFIED TAMPER-EVIDENT
+                SNAPSHOT INTEGRITY
               </span>
             </div>
             <div
@@ -237,10 +233,10 @@ export default function AuditDossierModal({ isOpen, onClose, profile, analysis }
             }}
           >
             <h4 style={{ margin: '0 0 10px', fontSize: '0.84rem', color: 'var(--text-primary, #0f172a)', fontWeight: 700 }}>
-              Statutory Compliance & Legal References
+              Model references &amp; planning basis
             </h4>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '8px' }}>
-              {(dossier?.statutory_standards || []).map((std, i) => (
+              {(dossier?.planning_references || []).map((std, i) => (
                 <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '0.76rem', color: 'var(--text-secondary, #475569)' }}>
                   <CheckCircle2 size={14} color="#059669" />
                   <span>{std}</span>
@@ -260,24 +256,24 @@ export default function AuditDossierModal({ isOpen, onClose, profile, analysis }
               }}
             >
               <h5 style={{ margin: '0 0 10px', fontSize: '0.8rem', color: 'var(--maison-gold, #c5a059)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
-                Verified Household Inputs
+                Household inputs recorded
               </h5>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', fontSize: '0.78rem' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                   <span style={{ color: 'var(--text-secondary, #64748b)' }}>Gross Annual Income:</span>
-                  <strong>{money(dossier?.verified_profile_inputs?.income)}</strong>
+                  <strong>{money(dossier?.recorded_profile_inputs?.income)}</strong>
                 </div>
                 <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                   <span style={{ color: 'var(--text-secondary, #64748b)' }}>Age / Target Retirement:</span>
-                  <strong>{dossier?.verified_profile_inputs?.age ?? 30} / {dossier?.verified_profile_inputs?.retirement_age ?? 67}</strong>
+                  <strong>{dossier?.recorded_profile_inputs?.age ?? 30} / {dossier?.recorded_profile_inputs?.retirement_age ?? 67}</strong>
                 </div>
                 <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                   <span style={{ color: 'var(--text-secondary, #64748b)' }}>Tax Class & Status:</span>
-                  <strong>Class {dossier?.verified_profile_inputs?.tax_class ?? 1} {dossier?.verified_profile_inputs?.is_married ? '(Married)' : '(Single)'}</strong>
+                  <strong>Class {dossier?.recorded_profile_inputs?.tax_class ?? 1} {dossier?.recorded_profile_inputs?.is_married ? '(Married)' : '(Single)'}</strong>
                 </div>
                 <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                   <span style={{ color: 'var(--text-secondary, #64748b)' }}>Monthly Savings / SWR:</span>
-                  <strong>{money(dossier?.verified_profile_inputs?.monthly_investment)} / mo · {pct(dossier?.verified_profile_inputs?.safe_withdrawal_rate)}</strong>
+                  <strong>{money(dossier?.recorded_profile_inputs?.monthly_investment)} / mo · {pct(dossier?.recorded_profile_inputs?.safe_withdrawal_rate)}</strong>
                 </div>
               </div>
             </div>
@@ -291,24 +287,24 @@ export default function AuditDossierModal({ isOpen, onClose, profile, analysis }
               }}
             >
               <h5 style={{ margin: '0 0 10px', fontSize: '0.8rem', color: 'var(--maison-pine-deep, #173d29)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
-                Verified Actuarial Outputs
+                Model outputs recorded
               </h5>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', fontSize: '0.78rem' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                   <span style={{ color: 'var(--text-secondary, #64748b)' }}>Effective Tax Rate:</span>
-                  <strong>{pct(dossier?.verified_statutory_outputs?.effective_rate)}</strong>
+                  <strong>{pct(dossier?.model_outputs?.effective_rate)}</strong>
                 </div>
                 <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                   <span style={{ color: 'var(--text-secondary, #64748b)' }}>Net Take-Home Income:</span>
-                  <strong>{money(dossier?.verified_statutory_outputs?.net_income)}</strong>
+                  <strong>{money(dossier?.model_outputs?.net_income)}</strong>
                 </div>
                 <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                   <span style={{ color: 'var(--text-secondary, #64748b)' }}>Monthly Rentenlücke (Net Gap):</span>
-                  <strong style={{ color: '#b85d52' }}>{money(dossier?.verified_statutory_outputs?.pension_gap_monthly)} / mo</strong>
+                  <strong style={{ color: '#b85d52' }}>{money(dossier?.model_outputs?.pension_gap_monthly)} / mo</strong>
                 </div>
                 <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                   <span style={{ color: 'var(--text-secondary, #64748b)' }}>Capital P50 / Resilience Score:</span>
-                  <strong>{money(dossier?.verified_statutory_outputs?.terminal_wealth_p50)} · {dossier?.verified_statutory_outputs?.financial_resilience_score ?? 75}/100</strong>
+                  <strong>{money(dossier?.model_outputs?.terminal_wealth_p50)} · {dossier?.model_outputs?.financial_resilience_score ?? 75}/100</strong>
                 </div>
               </div>
             </div>
@@ -327,7 +323,7 @@ export default function AuditDossierModal({ isOpen, onClose, profile, analysis }
           }}
         >
           <div style={{ fontSize: '0.72rem', color: 'var(--text-secondary, #64748b)' }}>
-            Cryptographically sealed under DIN 77230 standards
+            Integrity fingerprint only · no independent audit or certification
           </div>
           <div style={{ display: 'flex', gap: '10px' }}>
             <button
@@ -366,7 +362,7 @@ export default function AuditDossierModal({ isOpen, onClose, profile, analysis }
               }}
             >
               <Download size={15} color="var(--maison-gold, #c5a059)" />
-              <span>Download Verified Audit Dossier (JSON)</span>
+              <span>Download calculation snapshot (JSON)</span>
             </button>
           </div>
         </footer>

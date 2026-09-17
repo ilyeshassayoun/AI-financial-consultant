@@ -138,5 +138,7 @@ class RetirementProjectionResponse(BaseModel):
     replacement_ratio: float
     solvency_score: float
     required_monthly_savings_to_close_gap: float
+    additional_monthly_savings_required: float = 0
+    required_monthly_savings_total: float = 0
     private_nest_egg_projected: float
     calculation_basis: Dict[str, Any]

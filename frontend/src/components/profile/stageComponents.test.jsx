@@ -118,7 +118,7 @@ describe('FinancialHealthStage', () => {
     expect(screen.getByText('Income protection')).toBeInTheDocument();
     expect(screen.getByText('Retirement funding')).toBeInTheDocument();
     expect(screen.getByText('Modeled benefit target met')).toBeInTheDocument();
-    expect(screen.getByText('DIN 77230')).toBeInTheDocument();
+    expect(screen.getByText('DIN-informed')).toBeInTheDocument();
   });
 });
 

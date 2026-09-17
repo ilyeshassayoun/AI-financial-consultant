@@ -1,4 +1,4 @@
-"""Cryptographic calculation verification and tamper-evident audit dossier router."""
+"""Calculation snapshot and tamper-evident integrity fingerprint router."""
 
 from __future__ import annotations
 
@@ -60,7 +60,7 @@ def _build_dossier(
 
     plan_summary = {
         "financial_resilience_score": analysis["advisory_plan"].get("financial_resilience_score"),
-        "emergency_fund_target": round(float(analysis["advisory_plan"].get("emergency_fund_target", 0)), 2),
+        "emergency_fund_target": round(float(analysis["advisory_plan"].get("household_kpis", {}).get("emergency_fund_target", 0)), 2),
     }
 
     dossier_body = {
@@ -81,7 +81,13 @@ def _build_dossier(
         "checksum": checksum,
         "algorithm": "SHA-256 (RFC 8785)",
         "timestamp": datetime.now(timezone.utc).isoformat(),
-        "verification_seal": f"FINTECH-SEAL-{checksum[:16].upper()}",
+        "integrity_fingerprint": f"SHA256-{checksum[:16].upper()}",
+        "assurance": "Integrity check only; not an independent audit, certification, or regulated recommendation.",
+        "review_status": {
+            "profile_inputs": "self-reported",
+            "calculation_outputs": "model-generated",
+            "independently_reviewed": False,
+        },
         "statutory_citations": STATUTORY_CITATIONS,
         "dossier": dossier_body,
     }
@@ -89,10 +95,10 @@ def _build_dossier(
 
 @router.post("/dossier")
 def generate_audit_dossier_post(profile: ClientProfile, response: Response) -> Dict[str, Any]:
-    """Generate tamper-evident cryptographic audit dossier stamped with RFC 8785 SHA-256 checksum."""
+    """Generate a calculation snapshot stamped with an RFC 8785 SHA-256 fingerprint."""
     dossier = _build_dossier(profile)
     short_hash = dossier["checksum"][:8]
-    response.headers["Content-Disposition"] = f'attachment; filename="audit_dossier_{short_hash}.json"'
+    response.headers["Content-Disposition"] = f'attachment; filename="calculation_snapshot_{short_hash}.json"'
     return dossier
 
 
@@ -104,7 +110,7 @@ def generate_audit_dossier_get(
     current_savings: float = Query(default=20000.0, ge=0),
     monthly_investment: float = Query(default=500.0, ge=0),
 ) -> Dict[str, Any]:
-    """GET endpoint generating verified cryptographic audit dossier."""
+    """GET endpoint generating a calculation snapshot and integrity fingerprint."""
     profile = ClientProfile(
         income=income,
         age=age,
@@ -113,5 +119,5 @@ def generate_audit_dossier_get(
     )
     dossier = _build_dossier(profile)
     short_hash = dossier["checksum"][:8]
-    response.headers["Content-Disposition"] = f'attachment; filename="audit_dossier_{short_hash}.json"'
+    response.headers["Content-Disposition"] = f'attachment; filename="calculation_snapshot_{short_hash}.json"'
     return dossier

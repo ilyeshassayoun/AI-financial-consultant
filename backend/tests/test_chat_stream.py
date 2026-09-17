@@ -22,8 +22,15 @@ def test_chat_stream_is_available_to_guest_sessions(monkeypatch):
     response = client.post("/api/chat/stream", json=payload)
 
     assert response.status_code == 200
-    assert "Model-grounded explanation" in response.text
-    assert "Investments:" in response.text
+    tokens = []
+    for line in response.text.splitlines():
+        if line.startswith("data: ") and line[6:] != "[DONE]":
+            payload = json.loads(line[6:])
+            if "token" in payload:
+                tokens.append(payload["token"])
+    answer = "".join(tokens)
+    assert "Model-grounded explanation" in answer
+    assert "Investments:" in answer
     assert "data: [DONE]" in response.text
 
 

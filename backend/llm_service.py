@@ -166,11 +166,18 @@ def generate_step_ai_consultation(step: str, profile: dict, analysis: dict) -> d
         pen_gap = ret.get("pension_gap_monthly", 0)
         rep_ratio = ret.get("replacement_ratio", 0.6) * 100
         ep_total = ret.get("entgeltpunkte_total", 45.0)
-        req_savings = ret.get("required_monthly_savings_to_close_gap", 200)
+        additional_savings = ret.get(
+            "additional_monthly_savings_required",
+            ret.get("required_monthly_savings_to_close_gap", 0),
+        )
+        required_total = ret.get(
+            "required_monthly_savings_total",
+            monthly_inv + additional_savings,
+        )
         
         verdict = f"Actuarial DRV Solvency Audit: At planned retirement age {ret_age}, statutory state pension (GRV) covers €{round(state_pen):,}/mo ({ep_total:.1f} Entgeltpunkte accumulated). "
         if pen_gap > 0:
-            verdict += f"Your inflation-adjusted Rentenlücke is €{round(pen_gap):,}/mo (Replacement ratio: {rep_ratio:.0f}% vs 80% target). Adding €{round(req_savings):,}/mo into your private ETF portfolio bridges 100% of this deficit."
+            verdict += f"Your inflation-adjusted Rentenlücke is €{round(pen_gap):,}/mo (Replacement ratio: {rep_ratio:.0f}% vs 80% target). The model raises total monthly private saving from €{round(monthly_inv):,} to €{round(required_total):,}, an additional €{round(additional_savings):,}/mo."
         else:
             verdict += f"Your private ETF and 3-pillar retirement streams fully close the Rentenlücke gap (Replacement ratio: {rep_ratio:.0f}%)."
             
@@ -182,10 +189,10 @@ def generate_step_ai_consultation(step: str, profile: dict, analysis: dict) -> d
             "key_metrics": [
                 {"label": "DRV Statutory Monthly Pension", "value": f"€{round(state_pen):,}/mo"},
                 {"label": "Net Rentenlücke Gap", "value": f"€{round(pen_gap):,}/mo" if pen_gap > 0 else "Fully Covered"},
-                {"label": "Required Extra Savings", "value": f"+€{round(req_savings):,}/mo" if req_savings > 0 else "None"}
+                {"label": "Required Extra Savings", "value": f"+€{round(additional_savings):,}/mo" if additional_savings > 0 else "None"}
             ],
             "recommended_actions": [
-                {"id": "increase_savings_gap", "label": f"Bridge 100% Gap (+€{round(req_savings)}/mo ETF)", "patch": {"monthly_investment": round(monthly_inv + req_savings)}},
+                {"id": "increase_savings_gap", "label": f"Bridge 100% Gap (+€{round(additional_savings)}/mo ETF)", "patch": {"monthly_investment": round(required_total)}},
                 {"id": "delay_retirement", "label": "Simulate Retirement at Age 67", "patch": {"retirement_age": 67}}
             ]
         }
@@ -290,7 +297,7 @@ async def generate_financial_advice(
         "content": (
             "You explain an educational German household-finance model with statutory legal accuracy. "
             "The deterministic context is authoritative; you must not recalculate statutory results, invent numbers, imply certification, or promise outcomes. "
-            "Use only figures and source links present in the context. Clearly distinguish estimates from verified facts, cite relevant statutory provisions (§ 32a EStG, SGB VI, § 20 InvStG, § 823 BGB), "
+            "Use only figures and source links present in the context. Clearly distinguish model estimates, self-reported inputs, and source-grounded statutory facts; cite relevant statutory provisions (§ 32a EStG, SGB VI, § 20 InvStG, § 823 BGB), "
             "and recommend a qualified tax adviser (Steuerberater) or regulated financial adviser when individual advice is required.\n\n"
             f"Financial Audit Context:\n{context}\n\n"
             f"Statutory German Legal Corpus (RAG Grounding):\n{statutory_notes}"
@@ -385,7 +392,7 @@ async def stream_financial_advice(
         "content": (
             "You explain an educational German household-finance model. The deterministic context is authoritative: "
             "do not recalculate its figures, invent numbers, imply certification, or promise outcomes. Distinguish "
-            "estimates from verified facts and recommend a qualified professional for individual advice.\n\n"
+            "model estimates from self-reported inputs and source-grounded statutory facts, and recommend a qualified professional for individual advice.\n\n"
             f"Context:\n{context}\n\nStatutory Law References:\n{statutory_notes}"
         ),
     }

@@ -21,6 +21,12 @@ export default function FinancialHealthStage({ analysis }) {
     if (value >= 55) return { label: 'Review', color: 'var(--accent-ochre)' };
     return { label: 'Action needed', color: 'var(--accent-coral)' };
   };
+  const targetStatus = (ratio) => {
+    if (!Number.isFinite(ratio)) return { label: 'Analysis pending', color: 'var(--text-muted)' };
+    if (ratio >= 1) return { label: 'On track', color: 'var(--accent-emerald)' };
+    if (ratio >= .75) return { label: 'Review', color: 'var(--accent-ochre)' };
+    return { label: 'Action needed', color: 'var(--accent-coral)' };
+  };
 
   const money = (value) => `€${Math.round(Number(value) || 0).toLocaleString()}`;
   const reserveMonths = Number(householdKpis.emergency_fund_months) || 0;
@@ -34,6 +40,8 @@ export default function FinancialHealthStage({ analysis }) {
   const potentialTaxSavings = Number(analysis?.optimization?.summary?.total_potential_tax_savings);
   const priorityAction = advisoryPlan?.action_plan?.[0];
   const hasAdequateBU = componentScore('protection') !== null && buGap <= 50;
+  const priorityOne = advisoryPlan?.action_plan?.find((item) => item.priority === 1);
+  const foundationReady = advisoryPlan?.plan_feasible === true && !priorityOne;
 
   const pillarAudits = [
     {
@@ -44,7 +52,7 @@ export default function FinancialHealthStage({ analysis }) {
       benchmark: 'Target: required reserve fully funded',
       icon: Wallet,
       highlight: `${reserveMonths.toFixed(1)} months funded`,
-      ...statusFor(componentScore('liquidity')),
+      ...targetStatus(componentScore('liquidity') === null ? NaN : componentScore('liquidity') / 100),
     },
     {
       pillar: 'Cash-flow capacity',
@@ -54,7 +62,9 @@ export default function FinancialHealthStage({ analysis }) {
       benchmark: 'Model target: 20% savings capacity',
       icon: TrendingUp,
       highlight: `${(savingsRate * 100).toFixed(1)}% savings capacity`,
-      ...statusFor(componentScore('cash_flow')),
+      ...(householdKpis.current_plan_feasible === false
+        ? { label: 'Action needed', color: 'var(--accent-coral)' }
+        : statusFor(componentScore('cash_flow'))),
     },
     {
       pillar: 'Debt resilience',
@@ -74,7 +84,11 @@ export default function FinancialHealthStage({ analysis }) {
       benchmark: 'Target: modeled monthly benefit gap closed',
       icon: ShieldCheck,
       highlight: buGap <= 50 ? 'Modeled benefit target met' : `${money(buGap)} monthly gap`,
-      ...statusFor(componentScore('protection')),
+      ...(componentScore('protection') === null
+        ? statusFor(null)
+        : buGap <= 50
+          ? { label: 'On track', color: 'var(--accent-emerald)' }
+          : { label: 'Action needed', color: 'var(--accent-coral)' }),
     },
     {
       pillar: 'Retirement funding',
@@ -84,7 +98,7 @@ export default function FinancialHealthStage({ analysis }) {
       benchmark: 'Target: 100% of modeled income need',
       icon: Layers,
       highlight: `${(retirementFunding * 100).toFixed(1)}% funded`,
-      ...statusFor(componentScore('retirement')),
+      ...targetStatus(retirementFunding),
     },
   ].map((pillar) => ({ ...pillar, status: pillar.label, statusColor: pillar.color }));
 
@@ -99,14 +113,14 @@ export default function FinancialHealthStage({ analysis }) {
         <div className="profile-audit__score" aria-label={score === null ? 'Overall resilience score pending analysis' : `Overall resilience score ${score} out of 100`}>
           <span>Overall score</span>
           <strong>{score ?? '—'}</strong>
-          <em>{score === null ? 'Complete the analysis' : score >= 80 ? 'Strong foundation' : 'Action plan needed'}</em>
+          <em>{score === null ? 'Complete the analysis' : foundationReady ? 'Foundation on track' : 'Priorities remain'}</em>
         </div>
       </header>
 
       <div className="profile-audit__summary" aria-label="Audit summary">
         <div><span>Signals reviewed</span><strong>05</strong></div>
         <div><span>Priority focus</span><strong>{score === null ? '—' : pillarAudits.filter((p) => p.score !== null && p.score < 70).length || '—'}</strong></div>
-        <div><span>Framework</span><strong>DIN 77230</strong></div>
+        <div><span>Method</span><strong>DIN-informed</strong></div>
       </div>
 
       <section className="profile-audit__section" aria-labelledby="solvency-signals-title">
@@ -172,7 +186,7 @@ export default function FinancialHealthStage({ analysis }) {
 
       <div className="profile-audit__method">
         <Sparkles size={15} />
-        <span>Uses DIN 77230 with EStG § 32a, InvStG § 20 and SGB VI references.</span>
+        <span>Workflow informed by DIN 77230, with EStG § 32a, InvStG § 20 and SGB VI references.</span>
         <strong>Fee-only · independent</strong>
       </div>
     </section>

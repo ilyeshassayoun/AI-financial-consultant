@@ -11,7 +11,7 @@ import StatutoryCitations from './advisor/StatutoryCitations';
 const stepPrompts = {
   welcome: [
     'How does this 360° German financial audit work?',
-    'What German statutory laws are verified?',
+    'Which German statutory sources does the model reference?',
     'What is the DIN 77230 actuarial standard?'
   ],
   profile: [

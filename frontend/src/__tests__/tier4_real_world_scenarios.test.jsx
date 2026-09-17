@@ -130,7 +130,7 @@ describe('Tier 4: Real-World Scenarios — E2E Journey & Offline Backend Simulat
           />
         </ErrorBoundary>
       );
-      expect(screen.getByText(/Build a defensible tax position from verified facts/i)).toBeInTheDocument();
+      expect(screen.getByText(/Build a defensible tax position from documented inputs/i)).toBeInTheDocument();
 
       // Advance to Investment
       nextStep();

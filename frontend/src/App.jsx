@@ -238,6 +238,27 @@ function App() {
     window.scrollTo({ top: 0, behavior: 'instant' });
   }, [currentStep]);
 
+  // Keep multi-page journeys oriented: each route or sub-step starts at the
+  // top and announces its first heading to keyboard/screen-reader users.
+  useEffect(() => {
+    const orientPage = () => {
+      window.scrollTo({ top: 0, behavior: 'instant' });
+      const main = document.getElementById('main-content');
+      const heading = main?.querySelector('h1, h2');
+      if (heading) {
+        heading.setAttribute('tabindex', '-1');
+        heading.focus({ preventScroll: true });
+      }
+    };
+    const frame = typeof window.requestAnimationFrame === 'function'
+      ? window.requestAnimationFrame(orientPage)
+      : window.setTimeout(orientPage, 0);
+    return () => {
+      if (typeof window.cancelAnimationFrame === 'function') window.cancelAnimationFrame(frame);
+      else window.clearTimeout(frame);
+    };
+  }, [currentStep, currentSubStep]);
+
   useEffect(() => {
     if (!shouldRunAnalysis) return undefined;
 
@@ -338,7 +359,7 @@ function App() {
         <ErrorBoundary fallback={ErrorFallback} resetKey={`${currentStep}:${currentSubStep}`}>
           <Suspense fallback={<div className="route-loading" role="status" aria-live="polite">Preparing this section…</div>}>
             <PageTransition transitionKey={currentStep}>
-            {currentStep === 'welcome' && <StepWelcome nextStep={nextStep} analysis={analysis} />}
+            {currentStep === 'welcome' && <StepWelcome nextStep={nextStep} hasSavedProgress={Boolean(analysis)} />}
             {currentStep === 'profile' && (
               <StepProfile
                 profile={effectiveProfile}
