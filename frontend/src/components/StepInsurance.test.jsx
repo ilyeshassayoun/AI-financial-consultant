@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from 'vitest';
-import { render, screen } from '@testing-library/react';
+import { fireEvent, render, screen } from '@testing-library/react';
 import StepInsurance from './StepInsurance';
 
 Element.prototype.scrollIntoView = vi.fn();
@@ -92,5 +92,13 @@ describe('StepInsurance utility functions', () => {
 
     expect(screen.getByText('Open essential gaps: Income & disability cover.')).toBeInTheDocument();
     expect(screen.queryByText(/Open essential gaps: bu/)).not.toBeInTheDocument();
+  });
+
+  it('turns the policy mandate into a trackable implementation checklist', () => {
+    render(<StepInsurance profile={{ existing_insurances: [] }} updateProfile={vi.fn()} nextStep={vi.fn()} analysisStatus="success" subStep={5} setSubStep={vi.fn()} analysis={{ insurance_lab: { summary: {}, implementation: ['Request broker comparison.'] } }} />);
+    fireEvent.click(screen.getByRole('checkbox', { name: /Request broker comparison/ }));
+    expect(screen.getByText('1 of 1 actions complete')).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('checkbox', { name: /I reviewed the protection gaps/ }));
+    expect(screen.queryByText('Pending')).toBeInTheDocument();
   });
 });

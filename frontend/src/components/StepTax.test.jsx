@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from 'vitest';
-import { render, screen } from '@testing-library/react';
+import { fireEvent, render, screen } from '@testing-library/react';
 import StepTax from './StepTax';
 
 Element.prototype.scrollIntoView = vi.fn();
@@ -98,5 +98,21 @@ describe('StepTax utility functions', () => {
     />);
 
     expect(screen.getByText('Included in the household estimate when married and joint assessment are enabled.')).toBeInTheDocument();
+  });
+
+  it('lets the household inspect bridge lines and track memo evidence', () => {
+    const analysis = { tax_lab: {
+      headline: { assessed_tax: 12000 },
+      bridge: [{ step: 'Gross income', amount: 60000 }, { step: 'Employment costs', delta: -2000 }],
+      documents: [{ id: 'work', label: 'Work receipts', reason: 'Support the deduction', required: true }],
+      workflow: ['Gather evidence'],
+    } };
+    const { rerender } = render(<StepTax profile={{}} updateProfile={vi.fn()} subStep={1} setSubStep={vi.fn()} analysisStatus="success" analysis={analysis} />);
+    fireEvent.click(screen.getByRole('button', { name: /Employment costs/ }));
+    expect(screen.getByText(/Reduces the modeled base/)).toBeInTheDocument();
+
+    rerender(<StepTax profile={{}} updateProfile={vi.fn()} subStep={5} setSubStep={vi.fn()} analysisStatus="success" analysis={analysis} />);
+    fireEvent.click(screen.getByRole('checkbox', { name: /Work receipts/ }));
+    expect(screen.getByText('1 of 1 priority records checked')).toBeInTheDocument();
   });
 });

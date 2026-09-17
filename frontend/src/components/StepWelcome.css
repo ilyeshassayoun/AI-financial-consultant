@@ -199,6 +199,16 @@
   background: #f8fafc;
   text-align: center;
   flex-direction: column;
+  animation: welcomeMetricFloat 7s ease-in-out infinite;
+}
+
+.welcome-snapshot-metric:nth-child(2) { animation-delay: -1.7s; }
+.welcome-snapshot-metric:nth-child(3) { animation-delay: -3.4s; }
+.welcome-snapshot-metric:nth-child(4) { animation-delay: -5.1s; }
+
+@keyframes welcomeMetricFloat {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-4px); }
 }
 
 .welcome-snapshot-metric svg {

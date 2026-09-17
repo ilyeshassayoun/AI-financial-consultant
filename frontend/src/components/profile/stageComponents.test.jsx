@@ -146,6 +146,8 @@ describe('ProfileJourneyNavigation', () => {
 
     expect(screen.getByTestId('child-content')).toBeInTheDocument();
     expect(screen.getByRole('progressbar', { name: 'Profile setup progress' })).toHaveAttribute('aria-valuenow', '2');
+    expect(screen.queryByLabelText('Live household signal')).not.toBeInTheDocument();
+    expect(screen.queryByRole('navigation', { name: 'Profile setup stages' })).not.toBeInTheDocument();
 
     await userEvent.click(screen.getByRole('button', { name: /Previous/i }));
     expect(setSubStep).toHaveBeenCalled();

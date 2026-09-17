@@ -6,14 +6,9 @@ export default function ProfileJourneyNavigation({
   subStep = 0,
   subStepTitles = [],
   stageLabels = [],
-  stageDescriptions = [],
-  cockpitCopy = [],
-  score = null,
-  cockpitMetrics = [],
   setSubStep,
   nextStep,
   prevStep,
-  onOpenChat,
   children
 }) {
   const reduceMotion = useReducedMotion();
@@ -53,60 +48,7 @@ export default function ProfileJourneyNavigation({
         </div>
       </header>
 
-      <motion.section
-        className="profile-cockpit"
-        initial={reduceMotion ? false : { opacity: 0, y: 24 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.55, delay: 0.08, ease: [0.16, 1, 0.3, 1] }}
-        aria-label="Live household signal"
-      >
-        <div className="profile-cockpit__copy">
-          <span>Live plan signal</span>
-          <h2>{cockpitCopy[subStep]}</h2>
-          <p>{stageDescriptions[subStep]}. Recommendations update automatically.</p>
-          {onOpenChat && (
-            <button type="button" className="profile-cockpit__ask" onClick={() => onOpenChat(cockpitCopy[subStep])}>
-              Ask the adviser <ArrowRight size={14} />
-            </button>
-          )}
-        </div>
-        <motion.div
-          className="profile-cockpit__metrics"
-          initial={reduceMotion ? false : { opacity: 0, x: 16 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ duration: 0.48, delay: 0.2, ease: [0.16, 1, 0.3, 1] }}
-          aria-label={score === null ? 'Model resilience pending analysis' : `Model resilience score ${score} out of 100`}
-        >
-          {cockpitMetrics.map((metric) => (
-            <div key={metric.label}>
-              <strong>{metric.value}</strong>
-              <span>{metric.label}</span>
-            </div>
-          ))}
-        </motion.div>
-      </motion.section>
-
       <div className="profile-journey__workspace">
-        <nav className="profile-journey__rail" aria-label="Profile setup stages">
-          <h2>Your journey</h2>
-          <div>
-            {stageLabels.map((label, index) => (
-              <button
-                key={label}
-                type="button"
-                className={index === subStep ? 'is-active' : ''}
-                aria-current={index === subStep ? 'step' : undefined}
-                aria-label={`${index + 1}. ${label}: ${stageDescriptions[index]}`}
-                onClick={() => setSubStep(index)}
-              >
-                <span>{String(index + 1).padStart(2, '0')}</span>
-                <span><strong>{label}</strong><small>{stageDescriptions[index]}</small></span>
-              </button>
-            ))}
-          </div>
-          <p>You can revisit any stage without losing your answers.</p>
-        </nav>
-
         <motion.div
           key={subStep}
           className="profile-journey__content"

@@ -47,6 +47,8 @@ describe('Tier 1: Feature Coverage — Navigation, Routes & Layout', () => {
       const setStep = vi.fn();
       render(<TopNav currentStep="profile" setStep={setStep} />);
 
+      expect(screen.getByText('Northstar Financial')).toBeInTheDocument();
+
       const activeBtn = screen.getByRole('button', { name: 'Mandate & Cashflow' });
       expect(activeBtn).toHaveAttribute('aria-current', 'page');
 
@@ -96,6 +98,8 @@ describe('Tier 1: Feature Coverage — Navigation, Routes & Layout', () => {
       render(<StepWelcome nextStep={nextStep} analysis={mockFullAnalysis} />);
 
       expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent(/A clearer plan/i);
+      expect(screen.queryByText(/Independent financial planning · Germany/i)).not.toBeInTheDocument();
+      expect(screen.queryByText(/product commissions/i)).not.toBeInTheDocument();
       const ctaBtn = screen.getByRole('button', { name: /Build my financial plan/i });
       expect(ctaBtn).toBeInTheDocument();
 

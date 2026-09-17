@@ -15,7 +15,7 @@ const STATS = [
   { value: '§ 32a', unit: 'EStG', label: 'Statutory tax engine' },
   { value: '600', unit: 'draws', label: 'Simulation depth' },
   { value: '3-pillar', unit: 'model', label: 'Retirement planning' },
-  { value: '0.00%', unit: 'fees', label: 'Product commissions' },
+  { value: 'DIN', unit: '77230', label: 'Structured risk review' },
 ];
 
 const PILLARS = [
@@ -47,7 +47,6 @@ export default function StepWelcome({ nextStep, hasSavedProgress = false }) {
       <FadeInUp delay={0.08}>
         <section className="welcome-hero" aria-labelledby="welcome-title">
           <div className="welcome-hero__copy">
-            <span className="welcome-eyebrow">Independent financial planning · Germany</span>
             <h1 id="welcome-title">A clearer plan for every financial decision.</h1>
             <p className="welcome-hero__lead">
               Connect taxes, protection, investments and retirement in one evidence-led
@@ -64,7 +63,7 @@ export default function StepWelcome({ nextStep, hasSavedProgress = false }) {
                 {hasSavedProgress ? 'Continue my financial plan' : 'Build my financial plan'}
                 <ArrowRight aria-hidden="true" />
               </button>
-              <span className="welcome-duration">{hasSavedProgress ? 'Resume where you left off' : '8–10 minutes'} · No product commissions</span>
+              <span className="welcome-duration">{hasSavedProgress ? 'Resume where you left off' : 'A guided 8–10 minute review'}</span>
             </div>
           </div>
 
@@ -77,11 +76,8 @@ export default function StepWelcome({ nextStep, hasSavedProgress = false }) {
             <div className="welcome-snapshot__metrics">
               <SnapshotMetric icon={Scale} value="§ 32a" label="German tax engine" />
               <SnapshotMetric icon={Clock3} value="600" label="Simulation draws" />
-            </div>
-
-            <div className="welcome-fee-proof">
-              <span>Product commissions</span>
-              <strong>0.00%</strong>
+              <SnapshotMetric icon={Shield} value="3-pillar" label="Retirement map" />
+              <SnapshotMetric icon={TrendingUp} value="4" label="Decision modules" />
             </div>
           </aside>
 

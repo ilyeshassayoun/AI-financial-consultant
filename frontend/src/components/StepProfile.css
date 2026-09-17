@@ -166,7 +166,7 @@
   max-width: 100%;
   min-width: 0;
   display: grid;
-  grid-template-columns: 268px minmax(0, 1fr);
+  grid-template-columns: minmax(0, 1fr);
   align-items: start;
   gap: 24px;
 }

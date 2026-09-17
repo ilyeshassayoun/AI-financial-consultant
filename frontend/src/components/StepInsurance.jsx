@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import {
   AlertTriangle, ArrowLeft, ArrowRight, Building2, ChevronRight, CircleAlert,
   FileCheck2, HeartPulse, Info, Landmark, Printer, ShieldCheck, Stethoscope,
@@ -99,6 +99,8 @@ export default function StepInsurance({
   onRetryAnalysis
 }) {
   const topRef = useRef(null);
+  const [completedActions, setCompletedActions] = useState([]);
+  const [policyAcknowledged, setPolicyAcknowledged] = useState(false);
   const page = Math.max(0, Math.min(pages.length - 1, Number(controlledPage || 0)));
   const setPage = setControlledPage || (() => {});
   const lab = analysis?.insurance_lab;
@@ -155,6 +157,10 @@ export default function StepInsurance({
   };
   const move = target => setPage(Math.max(0, Math.min(pages.length - 1, target)));
   const stressData = (lab.income_stress || []).map(item => ({ duration: `${item.months} mo`, Unprotected: item.without_repair, Protected: item.with_target_cover }));
+  const implementationActions = lab.implementation || [];
+  const toggleAction = index => setCompletedActions(current => current.includes(index)
+    ? current.filter(item => item !== index)
+    : [...current, index]);
   const activePage = pages[page];
   const PageIcon = activePage[2];
 
@@ -238,8 +244,10 @@ export default function StepInsurance({
         {page === 5 && <div className="insurance-policy">
           <div className="insurance-policy-header"><div><span>Household protection policy · {lab.model?.version || '2026.1'}</span><h2>Implementation mandate</h2><p>Prepared from the current household profile. Review after every material life event and at least annually.</p></div><button type="button" className="insurance-print-button" onClick={() => window.print()}><Printer size={17} /> Print / Save PDF</button></div>
           <div className="insurance-policy-grid"><section><h3>Execution gate</h3><strong>{lab.readiness === 'gated' ? 'Do not treat protection as complete' : 'Proceed to broker and policy review'}</strong><p>{(lab.missing_essential || []).length ? `Open essential gaps: ${lab.missing_essential.map(readableGapLabel).join(', ')}.` : 'No essential gap is visible from the supplied profile.'}</p></section><section><h3>Benefit targets</h3><strong>{money(lab.summary?.bu_target_monthly)} BU / month</strong><p>{lab.summary?.term_life_need ? `${money(lab.summary.term_life_need)} term-life capital target.` : 'No dependant-based term-life target modelled.'}</p></section></div>
-          <ol className="insurance-implementation-list">{(lab.implementation || []).map((item, index) => <li key={item}><span>{index + 1}</span><p>{item}</p></li>)}</ol>
-          <div className="insurance-signoff"><div><span>Household review</span><strong>________________________</strong></div><div><span>Broker / adviser review</span><strong>________________________</strong></div><div><span>Next annual review</span><strong>________________________</strong></div></div>
+          <div className="insurance-policy-progress"><div><span>Implementation progress</span><strong>{completedActions.length} of {implementationActions.length} actions complete</strong></div><div role="progressbar" aria-label="Protection implementation completion" aria-valuemin="0" aria-valuemax={Math.max(1, implementationActions.length)} aria-valuenow={completedActions.length}><span style={{width:`${implementationActions.length ? (completedActions.length / implementationActions.length) * 100 : 100}%`}} /></div></div>
+          <ol className="insurance-implementation-list">{implementationActions.map((item, index) => <li key={item} className={completedActions.includes(index) ? 'is-complete' : ''}><label><input type="checkbox" checked={completedActions.includes(index)} onChange={() => toggleAction(index)} /><span>{index + 1}</span><p>{item}</p></label></li>)}</ol>
+          <label className={`insurance-policy-confirmation ${policyAcknowledged ? 'is-checked' : ''}`}><input type="checkbox" checked={policyAcknowledged} onChange={event => setPolicyAcknowledged(event.target.checked)} /><ShieldCheck size={19}/><span><strong>I reviewed the protection gaps and next actions.</strong><small>This is an implementation checklist, not proof of cover or underwriting acceptance.</small></span></label>
+          <div className="insurance-signoff"><div><span>Household review</span><strong>{policyAcknowledged ? new Intl.DateTimeFormat('de-DE').format(new Date()) : 'Pending'}</strong></div><div><span>Broker / adviser review</span><strong>Pending</strong></div><div><span>Actions completed</span><strong>{completedActions.length}/{implementationActions.length}</strong></div></div>
         </div>}
 
         <Assumptions lab={lab} />

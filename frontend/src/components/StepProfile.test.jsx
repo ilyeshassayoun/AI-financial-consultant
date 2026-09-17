@@ -42,13 +42,14 @@ describe('Profile render regression', () => {
     expect(screen.getByLabelText('Overall resilience score pending analysis')).toBeInTheDocument();
   });
 
-  it('lets clients move directly between profile stages from the compact rail', async () => {
+  it('keeps step navigation focused after removing the crowded compact rail', async () => {
     const setSubStep = vi.fn();
     render(<StepProfile profile={{}} subStep={0} setSubStep={setSubStep} updateProfile={vi.fn()} />);
 
-    await userEvent.click(screen.getByRole('button', { name: '2. Timeline: Set the planning horizon' }));
+    expect(screen.queryByRole('navigation', { name: 'Profile setup stages' })).not.toBeInTheDocument();
+    await userEvent.click(screen.getByRole('button', { name: 'Continue' }));
 
-    expect(setSubStep).toHaveBeenCalledWith(1);
+    expect(setSubStep).toHaveBeenCalled();
   });
 
   it('exposes progress and selected goals to assistive technology', () => {

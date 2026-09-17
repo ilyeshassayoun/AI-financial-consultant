@@ -50,6 +50,7 @@ describe('investment audit workflows', () => {
     expect(screen.getByRole('radiogroup', { name: 'What matters most?' })).toBeInTheDocument();
     expect(screen.getAllByRole('radio')).toHaveLength(10);
     expect(screen.getByRole('radio', { name: /10% feels severe/ })).toHaveAttribute('aria-checked', 'false');
+    expect(screen.getByText(/Balanced · 20% loss budget · 10\+ years/)).toBeInTheDocument();
   });
 
   it('cannot show an eligible policy by jumping past a suitability gate', () => {

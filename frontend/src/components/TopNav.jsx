@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Bot, ChevronRight, FileCheck, Menu, ShieldCheck, X } from 'lucide-react';
+import { Bot, ChevronRight, FileCheck, Landmark, Menu, ShieldCheck, X } from 'lucide-react';
 import AuthNavControls from './AuthNavControls';
 import { steps } from './TopNav.constants';
 import './TopNav.css';
@@ -30,10 +30,10 @@ export default function TopNav({ currentStep, setStep, onOpenGDPR, onOpenAdvisor
           aria-label="Return to Portal Home"
           onClick={() => handleNavClick('welcome')}
         >
-          <span className="portal-brand__mark" aria-hidden="true">IH</span>
+          <span className="portal-brand__mark" aria-hidden="true"><Landmark size={19} strokeWidth={1.8} /></span>
           <span className="portal-brand__copy">
-            <strong>Ilyes H</strong>
-            <span>Financial Advisory</span>
+            <strong>Northstar Financial</strong>
+            <span>Planning Studio</span>
           </span>
         </button>
 

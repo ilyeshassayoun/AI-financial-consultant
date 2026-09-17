@@ -59,6 +59,9 @@ export default function StepTax({
 }) {
   const topRef = useRef(null);
   const [page1View, setPage1View] = useState('waterfall');
+  const [selectedBridgeStep, setSelectedBridgeStep] = useState(0);
+  const [checkedDocuments, setCheckedDocuments] = useState([]);
+  const [memoAcknowledged, setMemoAcknowledged] = useState(false);
   const page = Math.max(0, Math.min(pages.length - 1, Number(controlledPage || 0)));
   const setPage = setControlledPage || (() => {});
   const lab = analysis?.tax_lab;
@@ -110,6 +113,13 @@ export default function StepTax({
   const PageIcon = activePage[2];
   const incomplete = (lab.input_flags || []).some(flag => /missing|limited/i.test(flag));
   const scenarioData = (lab.scenarios || []).map(item => ({ ...item, Tax: item.annual_tax }));
+  const bridgeItems = lab.bridge || [];
+  const activeBridgeItem = bridgeItems[Math.min(selectedBridgeStep, Math.max(0, bridgeItems.length - 1))];
+  const requiredDocuments = (lab.documents || []).filter(item => item.required);
+  const checkedRequiredDocuments = requiredDocuments.filter(item => checkedDocuments.includes(item.id)).length;
+  const toggleDocument = id => setCheckedDocuments(current => current.includes(id)
+    ? current.filter(item => item !== id)
+    : [...current, id]);
 
   return (
     <section className="tax-journey animate-fade-in-up" ref={topRef} aria-labelledby="tax-title">
@@ -177,7 +187,7 @@ export default function StepTax({
 
             {page1View === 'waterfall' ? (
               <div className="tax-two-column">
-                <article className="tax-panel"><h2>Statutory deduction bridge</h2><div className="tax-stat-list">{(lab.bridge || []).map(item => <div key={item.step}><span>{item.step}</span><strong>{item.delta ? (item.delta > 0 ? `+ ${money(item.delta)}` : `− ${money(Math.abs(item.delta))}`) : money(item.amount)}</strong></div>)}</div></article>
+                <article className="tax-panel"><h2>Statutory deduction bridge</h2><p>Select a line to inspect how it changes the assessment base.</p><div className="tax-stat-list tax-stat-list--interactive">{bridgeItems.map((item, index) => <button type="button" key={item.step} className={index === selectedBridgeStep ? 'is-active' : ''} aria-pressed={index === selectedBridgeStep} onClick={() => setSelectedBridgeStep(index)}><span>{item.step}</span><strong>{item.delta ? (item.delta > 0 ? `+ ${money(item.delta)}` : `− ${money(Math.abs(item.delta))}`) : money(item.amount)}</strong></button>)}</div>{activeBridgeItem && <div className="tax-bridge-selection" role="status"><span>Selected assessment line</span><strong>{activeBridgeItem.step}</strong><p>{activeBridgeItem.delta ? `${activeBridgeItem.delta < 0 ? 'Reduces' : 'Increases'} the modeled base by ${money(Math.abs(activeBridgeItem.delta))}.` : `Resulting modeled amount: ${money(activeBridgeItem.amount)}.`}</p></div>}</article>
                 <article className="tax-panel tax-panel--focus"><div className="tax-panel-heading"><Landmark size={20} /><div><h2>Income vs. assessment tax</h2><p>German progressive tariff (§ 32a EStG) calculation.</p></div></div><div className="tax-big-number"><span>Effective tax rate</span><strong>{percent(lab.headline?.effective_tax_rate)}</strong><small>Assessed tax divided by gross income.</small></div><div className="tax-callout"><Info size={18} /><p>Payroll tax withholding (Lohnsteuerabzug) is a prepayment; final liability is settled on assessment.</p></div></article>
               </div>
             ) : (
@@ -221,9 +231,10 @@ export default function StepTax({
 
         {page === 5 && <article className="tax-memo">
           <div className="tax-memo-header"><div><span>{lab.model?.name || 'German Tax Engine'} · {lab.model?.version || '2026.1'}</span><h2>Evidence and review mandate</h2><p>Prepared from the current profile. It is a planning memo, not a filed return or legal opinion.</p></div><button type="button" className="tax-print-button" onClick={() => window.print()}><Printer size={17} /> Print / Save PDF</button></div>
-          <div className="tax-memo-grid"><section><h3>Annual assessed tax</h3><strong>{money(lab.headline?.assessed_tax)}</strong><p>Refund / balance: not calculated without withholding and prepayments.</p></section><section><h3>Evidence status</h3><strong>{(lab.documents || []).filter(item => item.required).length} priority records</strong><p>Retain source documents before claiming deductions.</p></section></div>
-          <div className="tax-memo-body"><section><h3>Review workflow</h3><ol>{(lab.workflow || []).map(item => <li key={item}>{item}</li>)}</ol></section><section><h3>Document register</h3><div className="tax-document-list">{(lab.documents || []).map(item => <div key={item.id}><span className={item.required ? 'is-required' : ''}>{item.required ? 'Priority' : 'If applicable'}</span><div><strong>{item.label}</strong><small>{item.reason}</small></div></div>)}</div></section></div>
-          <div className="tax-signoff"><div><span>Household review</span><strong>____________________</strong></div><div><span>Tax professional review</span><strong>____________________</strong></div><div><span>Evidence complete</span><strong>____________________</strong></div></div>
+          <div className="tax-memo-grid"><section><h3>Annual assessed tax</h3><strong>{money(lab.headline?.assessed_tax)}</strong><p>Refund / balance: not calculated without withholding and prepayments.</p></section><section><h3>Evidence status</h3><strong>{checkedRequiredDocuments} of {requiredDocuments.length} priority records checked</strong><p>Mark evidence as gathered before handing the memo to a tax professional.</p><div className="tax-evidence-progress" role="progressbar" aria-label="Priority evidence completion" aria-valuemin="0" aria-valuemax={Math.max(1, requiredDocuments.length)} aria-valuenow={checkedRequiredDocuments}><span style={{ width: `${requiredDocuments.length ? (checkedRequiredDocuments / requiredDocuments.length) * 100 : 100}%` }} /></div></section></div>
+          <div className="tax-memo-body"><section><h3>Review workflow</h3><ol>{(lab.workflow || []).map(item => <li key={item}>{item}</li>)}</ol></section><section><h3>Document register</h3><div className="tax-document-list">{(lab.documents || []).map(item => <label key={item.id} className={checkedDocuments.includes(item.id) ? 'is-checked' : ''}><input type="checkbox" checked={checkedDocuments.includes(item.id)} onChange={() => toggleDocument(item.id)} /><span className={item.required ? 'is-required' : ''}>{item.required ? 'Priority' : 'If applicable'}</span><div><strong>{item.label}</strong><small>{item.reason}</small></div></label>)}</div></section></div>
+          <label className={`tax-review-confirmation ${memoAcknowledged ? 'is-checked' : ''}`}><input type="checkbox" checked={memoAcknowledged} onChange={event => setMemoAcknowledged(event.target.checked)} /><FileCheck2 size={18} /><span><strong>I reviewed the assumptions and evidence gaps.</strong><small>This confirms review only; it does not file a return or validate a deduction.</small></span></label>
+          <div className="tax-signoff"><div><span>Household review</span><strong>{memoAcknowledged ? new Intl.DateTimeFormat('de-DE').format(new Date()) : 'Pending'}</strong></div><div><span>Tax professional review</span><strong>Pending</strong></div><div><span>Priority evidence</span><strong>{checkedRequiredDocuments}/{requiredDocuments.length} checked</strong></div></div>
         </article>}
 
         <Sources lab={lab} />
